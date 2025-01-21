@@ -1,0 +1,57 @@
+version: '3'
+services:
+  service:
+    build: app
+    expose:
+      - "8000"
+    env_file:
+      - ./.env
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs:/etc/nginx/conf.d:ro
+      - ./app/static:/opt/app/static
+      - ./app/media:/opt/app/media
+    depends_on:
+      - service
+    ports:
+      - "80:80"
+    restart: always
+
+  theatre-db:
+    image: postgres:latest
+    env_file:
+      - ./.env
+    volumes:
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+
+  etl:
+    build: etl_project
+    depends_on:
+      - theatre-db
+      - redis
+      - elasticsearch
+    env_file:
+      - etl_project/.env
+    restart: always

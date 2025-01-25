@@ -3,17 +3,17 @@ services:
     build:  &etl
       context: ../
     depends_on:
-      theatre-db:
+      etl-theatre-db:
         condition: service_healthy
-      redis-service:
+      etl-redis-service:
         condition: service_started
     env_file:
       - ./.env
   
-  redis-service:
+  etl-redis-service:
     image: redis
 
-  es-service:
+  etl-es-service:
     image: elasticsearch:8.6.2
     environment:
       - discovery.type=single-node

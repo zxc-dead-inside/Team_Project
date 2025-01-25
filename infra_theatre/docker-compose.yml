@@ -1,11 +1,11 @@
 services:
-  service:
+  theatre-admin-service:
     build: &web-theatre
       context: ../admin_panel
     volumes:
       - static_volume:/opt/app/static/
     depends_on:
-      migrations:
+      theatre-migrations:
         condition: service_completed_successfully
     expose:
       - "8000"
@@ -13,14 +13,14 @@ services:
       - ./.env
     entrypoint: /opt/app/run_uwsgi.sh
  
-  nginx:
+  theatre-nginx:
     image: nginx:latest
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/configs:/etc/nginx/conf.d:ro
       - static_volume:/data/static/:ro
     depends_on:
-      - service
+      - theatre-admin-service
     ports:
       - "8000:80"
 
@@ -34,10 +34,10 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
-      timeout: 5s
+      timeout: 10s
       retries: 5
   
-  migrations:
+  theatre-migrations:
     build: *web-theatre
     command: /opt/app/migrations.sh
     depends_on:
@@ -46,7 +46,7 @@ services:
     env_file:
       - ./.env
 
-  swagger-ui:
+  theatre-swagger-ui:
     image: swaggerapi/swagger-ui
     expose:
       - "8080"
@@ -57,18 +57,20 @@ services:
     environment:
       SWAGGER_JSON: /swagger.yaml
   
-  etl-service:
+  theatre-etl-service:
     build:  &etl
       context: ../etl/postgres_to_es
     depends_on:
       theatre-db:
         condition: service_healthy
-      redis-service:
+      theatre-redis-service:
         condition: service_started
+      theatre-migrations:
+        condition: service_completed_successfully
     env_file:
       - ./.env
   
-  es-service:
+  theatre-es-service:
     image: elasticsearch:8.6.2
     environment:
       - discovery.type=single-node
@@ -78,51 +80,8 @@ services:
     ports:
       - "9201:9200"
   
-  redis-service:
+  theatre-redis-service:
     image: redis
 
 volumes:
   static_volume:
-
-
-# services:
-#   etl-service:
-#     build:  &etl
-#       context: ../etl/postgres_to_es
-#     depends_on:
-#       theatre-db:
-#         condition: service_healthy
-#       redis-service:
-#         condition: service_started
-#     env_file:
-#       - ./.env
-  
-#   redis-service:
-#     image: redis
-
-#   es-service:
-#     image: elasticsearch:8.6.2
-#     environment:
-#       - discovery.type=single-node
-#       - xpack.security.enabled=false
-#       - ES_JAVA_OPTS=-Xms256m
-#       - ES_JAVA_OPTS=-Xmx256m
-#     ports:
-#       - "9201:9200"
-
-#   theatre-db:
-#     image: postgres:16-alpine
-#     volumes:
-#       - ./db/data:/var/lib/postgresql/data
-#       - ./db/dump/movies_database.sql:/docker-entrypoint-initdb.d/init.sql
-#     env_file:
-#       - ./.env
-#     ports:
-#       - "5433:5432"
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -U postgres"]
-#       interval: 5s
-#       timeout: 5s
-#       retries: 5
-
-

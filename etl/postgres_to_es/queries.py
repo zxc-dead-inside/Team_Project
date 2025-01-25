@@ -42,7 +42,7 @@ class Queries:
         return (
             f"""\
             SELECT
-                fw.id,
+                DISTINCT(fw.id),
                 fw.updated_at
             FROM content.film_work fw
             LEFT JOIN content.{table_name} tb ON tb.film_work_id = fw.id
@@ -51,7 +51,8 @@ class Queries:
             OFFSET {offset}
             LIMIT {limit};""")
 
-    def get_people_fw(self, fids: Tuple[UUID]):
+    def get_people_fw(
+            self, fids: Tuple[UUID], offset: int, limit: int):
         """Запрос на получение людей связанных с фильмом."""
 
         return (
@@ -98,7 +99,9 @@ class Queries:
             LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
             LEFT JOIN content.person p ON p.id = pfw.person_id
             WHERE fw.id in {fids}
-            GROUP BY fw.id;""")
+            GROUP BY fw.id
+            LIMIT {limit}
+            OFFSET {offset};""")
 
     def get_genres_fw(
             self, fids: Tuple[UUID], offset: int, limit: int):

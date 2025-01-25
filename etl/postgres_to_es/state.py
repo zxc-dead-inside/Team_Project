@@ -85,17 +85,6 @@ class State:
             logger.error(msg, exc_info=err)
         return data.get(key)
 
-    def rewrite_state(
-            self, current: List[Dict[str, str]], name: str,
-            offset: int) -> List[Dict[str, str]]:
-        """Перезаписывает значения в состоянии."""
-
-        for item in current:
-            if item['name'] == name:
-                item['offset'] = offset
-                item['date'] = STR_TIME_NOW
-        return current
-
     def get_param(
             self,  current: List[Dict[str, str]],
             name: str, param_name: str) -> Any:
@@ -114,7 +103,8 @@ class State:
         for item in current:
             if item['name'] == name:
                 item[param_name] = value
-                return current
+                break
+        return current
 
     def set_param_bulk(
             self, current: List[Dict[str, str]],
@@ -128,14 +118,15 @@ class State:
         return current
 
     def set_init(
-            self,  current: List[Dict[str, str]]
+            self,  current: List[Dict[str, Any]]
             ) -> List[Dict[str, str]]:
         """Меняет флаг процесса инициализации индекса."""
 
         for item in current:
             if item['name'] == 'film_work':
                 item['init'] = not item['init']
-                return current
+                break
+        return current
 
     def get_init(
             self,  current: List[Dict[str, str]]

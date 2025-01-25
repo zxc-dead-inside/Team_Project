@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://127.0.0.1:8000
 paths:
-  /api/v1/movies/:
+  /api/v1/admin/movies/:
     get:
       description: ""
       parameters:
@@ -46,7 +46,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Movie"
   
-  /api/v1/movies/{id}:
+  /api/v1/admin/movies/{id}:
     get:
       description: ""
       parameters:

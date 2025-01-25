@@ -1,8 +1,3 @@
-url = 'http://127.0.0.1:9200/_bulk?filter_path=items.*.error'
-headers = 'Content-Type: application/x-ndjson'
-header = '{"index": {"_index": "movies", "_id": "uuid"}}\n'
-
-
 class EsRequest:
     """Методы формирующие строку для bulk запроса."""
 

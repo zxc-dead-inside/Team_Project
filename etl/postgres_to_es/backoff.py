@@ -23,7 +23,7 @@ def check_connection():
                 if self.pg_conn.broken:
                     logger.debug(
                         'Попытка восстановить соединение с БД.')
-                    self.pg_conn.rollback()
+                    # self.pg_conn.rollback()
                     self.pg_conn = psycopg.connect(
                         **dsl, row_factory=dict_row,
                         cursor_factory=ClientCursor)
@@ -74,16 +74,9 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
                     result = func(*args, **kwargs)
                     return result
                 except psycopg.OperationalError as err:
-                    # count += 1
                     logger.debug(
                         f'Попытка соединения {count} завершилась '
                         'ошибкой', exc_info=err)
-
-                    # if delay < border_sleep_time:
-                    #     delay = start_sleep_time * (
-                    #         factor ** (count/2))
-                    # else:
-                    #     delay = border_sleep_time
                     logger.debug(
                         'Следующая попытка через '
                         f'{delay:.2f} секунд.')

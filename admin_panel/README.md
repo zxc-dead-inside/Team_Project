@@ -1,21 +1,25 @@
+# Странички и эндпоинты API
 - Админка доступна по адресу
 http://localhost:8000/admin
 
 - API доступно по адресу
-https://localhost:8000/api/v1/
+https://localhost:8000/api/v1/admin/
 
 - Поддреживается два get запроса
-https://localhost:8000/api/v1/movies/
-https://localhost:8000/api/v1/movies/{id}/
+https://localhost:8000/api/v1/admin/movies/
+https://localhost:8000/api/v1/admin/movies/{id}/
 
 - Подробнее можно посмотреть на
 https://localhost:8082/swagger/
 
-В файле `./infra/.env_example` представлен пример файла переменных `.env`.
+В файле `./infra-theatre/.env_example` представлен пример файла переменных `.env`.
 При использовании в проде измените секрты:
 SECRET_KEY, POSTGRES_PASSWORD, DJANGO_SUPERUSER_PASSWORD.
 
 При запуске отдельно, вне докера, не забудьте создать `.env` в каталоге `./config`, а значение переменной IS_DOCKERED заменить на False.
+
+# Изменения относительно предыдущего коммита
+API который был в Django из uri `/api/v1` перенес в `/api/v1/admin`, чтобы не мешал fastapi. Возможно мы его совсем дропнем за ненадоностю. Соответсвующие изменения внес в конфиг `nginx` и `swagger`.
 
 
 # Реализация API для кинотеатра

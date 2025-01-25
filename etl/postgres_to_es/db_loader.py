@@ -4,7 +4,7 @@ from psycopg.rows import dict_row
 from backoff import backoff, check_connection
 from queries import queries
 from settings import DB_READ_LIMIT
-from structs import data_structs
+from structs import BaseDataSet, GenreFilmWorks, PeopleFilmWorks
 from utils import get_uuid_list
 
 
@@ -36,10 +36,9 @@ class PostgresLoader:
             self, date, table_name, offset, limit):
         """Получает изменившиеся данные."""
 
-        changed_uuid = self.get_data(
-            data_structs.base_dataset,
-            queries.get_id_by_date(
-                date, table_name, offset, limit))
+        query = queries.get_id_by_date(
+                date, table_name, offset, limit)
+        changed_uuid = self.get_data(BaseDataSet, query)
         return changed_uuid
 
     def get_fw_by_id(self, ids, mtm_name, key_field):
@@ -49,13 +48,40 @@ class PostgresLoader:
         offset = 0
         limit = DB_READ_LIMIT
         while True:
-            film_work_uuid = self.get_data(
-                data_structs.base_dataset,
-                queries.get_film_ids_by_id(
-                    mtm_name, key_field, ids, offset, limit))
+            query = queries.get_film_ids_by_id(
+                mtm_name, key_field, ids, offset, limit)
+            film_work_uuid = self.get_data(BaseDataSet, query)
             film_work_ids = get_uuid_list(film_work_uuid)
 
             if len(film_work_ids) == 0:
                 break
-            offset += limit
             yield film_work_ids
+            offset += limit
+
+    def get_fw(self, ids, mtm):
+        """
+        Получает необходимую для изменения в es часть по film_work.
+        """
+
+        offset = 0
+        limit = DB_READ_LIMIT
+
+        if mtm == 'person':
+            struct = PeopleFilmWorks
+
+        elif mtm == 'genre':
+            struct = GenreFilmWorks
+
+        while True:
+            if mtm == 'person':
+                query = queries.get_people_fw(ids, offset, limit)
+
+            elif mtm == 'genre':
+                query = queries.get_genres_fw(ids, offset, limit)
+
+            data = self.get_data(struct, query)
+            data = [item for item in data]
+            if not len(data[0]):
+                break
+            yield data
+            offset += limit

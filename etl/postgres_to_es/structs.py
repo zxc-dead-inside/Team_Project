@@ -1,7 +1,9 @@
 import datetime as dt
 from dataclasses import dataclass
-from typing import Dict, List, Any, Tuple
+from typing import Any, Dict, List
 from uuid import UUID
+
+# type: ignore[arg-type]
 
 
 @dataclass
@@ -30,16 +32,18 @@ class PeopleFilmWorks(BaseDataSet):
     directors: List[Dict[str, Any]]
     writers: List[Dict[str, Any]]
 
-    def get_fields(self) -> Tuple[Any]:
-        return (
+    def get_fields(
+            self
+            ) -> List[str | List[str] | List[Dict[str, Any]]]:
+        return [
             self.id,
-            self.people_to_list(self.directors),
-            self.people_to_list(self.actors),
-            self.people_to_list(self.writers),
+            self.people_to_list(self.directors, 'name'),
+            self.people_to_list(self.actors, 'name'),
+            self.people_to_list(self.writers, 'name'),
             self.directors,
             self.actors,
             self.writers,
-        )
+        ]
 
 
 @dataclass
@@ -50,11 +54,11 @@ class GenreFilmWorks(BaseDataSet):
     """
     genres: List[str]
 
-    def get_fields(self) -> Tuple[Any]:
-        return (
+    def get_fields(self) -> List[str | List[str]]:
+        return [
             self.id,
             list(self.genres)
-        )
+        ]
 
 
 @dataclass
@@ -80,7 +84,7 @@ class FilmWorkChanged(BaseDataSet):
 
 
 @dataclass
-class FilmWorkInit(BaseDataSet):
+class FilmWorkPopulate(BaseDataSet):
     """
     Хранит всю необходимую информацию по фильмам и сериалам для
     загрузки в es.
@@ -97,8 +101,10 @@ class FilmWorkInit(BaseDataSet):
     writers: List[Dict[str, Any]]
     genres: List[str]
 
-    def get_fields(self) -> Tuple[Any]:
-        return (
+    def get_fields(
+            self) -> List[
+                float | str | List[str] | List[Dict[str, Any]]]:
+        return [
             self.id,
             self.rating,
             self.genres,
@@ -110,18 +116,13 @@ class FilmWorkInit(BaseDataSet):
             self.directors,
             self.actors,
             self.writers,
-        )
+        ]
 
 
 @dataclass
 class DataStructs:
     base_dataset: BaseDataSet
-    get_film_work_init: FilmWorkInit
+    get_film_work_populate: FilmWorkPopulate
     get_film_work_changed: FilmWorkChanged
     get_people_fw: PeopleFilmWorks
     get_genres_fw: GenreFilmWorks
-
-
-data_structs = DataStructs(
-    BaseDataSet, FilmWorkInit, FilmWorkChanged, PeopleFilmWorks,
-    GenreFilmWorks)

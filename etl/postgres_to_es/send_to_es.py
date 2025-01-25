@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, List
 
 from elasticsearch import Elasticsearch
+from elastic_transport import HeadApiResponse
 
 from backoff import backoff
 
@@ -14,7 +15,9 @@ class SendToEs:
         self.es_conn = es_conn
 
     @backoff()
-    def check_index_exists(self, name: str = 'movies') -> bool:
+    def check_index_exists(
+        self, name: str = 'movies'
+    ) -> HeadApiResponse:
         """Проверяет наличие указанного индекса в es."""
 
         return self.es_conn.indices.exists(index=name)
@@ -35,10 +38,7 @@ class SendToEs:
         """Отправляет пачку данных в es."""
 
         loggger.debug('Загрузка данных в es.')
-        try:
-            response = self.es_conn.bulk(
-                operations=bulk,
-                filter_path='items.*.error')
-            loggger.debug(response)
-        except Exception as err:
-            loggger.error('Произошла ошибка.', exc_info=err)
+        response = self.es_conn.bulk(
+            operations=bulk,
+            filter_path='items.*.error')
+        loggger.debug(response)

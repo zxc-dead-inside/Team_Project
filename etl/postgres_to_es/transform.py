@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Generator
 
 from es_request import es_requests
 
@@ -11,7 +11,10 @@ class Transform:
 
         return [person['name'] for person in people]
 
-    def prepare(self, batch, name, init: bool = False) -> List[str]:
+    def prepare(
+            self,
+            batch: Generator, name: str,
+            init: bool = False) -> List[str]:
         """Подготавливает пачку данных."""
 
         bulk = []

@@ -1,6 +1,7 @@
-from elasticsearch import Elasticsearch, helpers
+from typing import Any
+
 import backoff
-from typing import List, Dict, Any
+from elasticsearch import Elasticsearch, helpers
 from logger_setup import logger
 
 
@@ -92,7 +93,7 @@ class ElasticsearchLoader:
         wait_for_es()
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5)
-    def load_movies(self, movies: List[Dict[str, Any]]):
+    def load_movies(self, movies: list[dict[str, Any]]):
         sanitized_movies = []
         for movie in movies:
             try:

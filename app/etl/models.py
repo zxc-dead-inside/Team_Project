@@ -7,6 +7,7 @@ class Person(BaseModel):
     id: UUID
     name: str
 
+
 class Movie(BaseModel):
     id: UUID
     imdb_rating: float | None

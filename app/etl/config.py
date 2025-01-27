@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -15,7 +17,7 @@ class Settings(BaseSettings):
 
     # ETL settings
     BATCH_SIZE: int = 100
-    STATE_FILE_PATH: str = "state/etl_state.json"
+    STATE_FILE_PATH: Path = Path("state/etl_state.json")
 
     SLEEP_TIME: int = 60
 

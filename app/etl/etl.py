@@ -1,34 +1,15 @@
 import asyncio
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
 import asyncpg
 from elasticsearch import AsyncElasticsearch
-from pydantic import PostgresDsn, ValidationError
-from pydantic_settings import BaseSettings
+from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-
-class Settings(BaseSettings):
-    """Application settings validated by Pydantic."""
-
-    postgres_dsn: PostgresDsn
-    elasticsearch_host: str
-    elasticsearch_port: int
-    batch_size: int = 100
-    state_file_path: Path = Path("etl_state.json")
-
-    class Config:
-        env_file = ".env"
+from .config import Settings
+from .logger_setup import logger
 
 
 class ETLState:
@@ -68,16 +49,16 @@ class MovieETL:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.state = ETLState(settings.state_file_path)
+        self.state = ETLState(settings.STATE_FILE_PATH)
         self.es_client = AsyncElasticsearch(
-            hosts=[f"{settings.elasticsearch_host}:{settings.elasticsearch_port}"]
+            hosts=[f"{settings.ELASTICSEARCH_HOST}:{settings.ELASTICSEARCH_PORT}"]
         )
 
     async def init_postgres_pool(self):
         """Initialize PostgreSQL connection pool."""
-        print("self.settings.postgres_dsn: ", self.settings.postgres_dsn)
+        logger.info("self.settings.postgres_dsn: ", self.settings.postgres_dsn)
         self.pg_pool = await asyncpg.create_pool(str(self.settings.postgres_dsn))
-        print("self.pg_pool: ", self.pg_pool)
+        logger.info("self.pg_pool: ", self.pg_pool)
 
     @retry(
         stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
@@ -116,7 +97,7 @@ class MovieETL:
         """
 
         async with self.pg_pool.acquire() as conn:
-            rows = await conn.fetch(query, last_id, self.settings.batch_size)
+            rows = await conn.fetch(query, last_id, self.settings.BATCH_SIZE)
             return [dict(row) for row in rows]
 
     def transform_movie(self, movie: dict[str, Any]) -> dict[str, Any]:

@@ -56,6 +56,20 @@ services:
     networks:
       - theatre_network
 
+  fastapi:
+    build: api/
+    # expose:
+    #   - "7000"
+    ports:
+      - "9000:9000"
+    env_file:
+      - api/.env
+    depends_on:
+      - elasticsearch
+      - service
+    networks:
+      - theatre_network
+
 volumes:
   static-data:
   esdata:

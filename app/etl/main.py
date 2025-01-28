@@ -5,6 +5,7 @@ from config import Settings
 from elasticsearch_loader import ElasticsearchLoader
 from logger_setup import logger
 from postgres_extractor import PostgresExtractor
+
 from state import JsonFileStorage, State
 
 

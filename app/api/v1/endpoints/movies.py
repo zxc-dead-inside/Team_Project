@@ -1,5 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query
-from v1.models import MovieResponse
+from v1.models.movies_models import (
+    MovieDetailResponse,
+    MovieListResponse,
+    serialize_movie_detail,
+    serialize_movie_list,
+)
 
 from configs.config import settings
 from configs.elasticsearch import es_client
@@ -8,7 +13,7 @@ from configs.elasticsearch import es_client
 router = APIRouter()
 
 
-@router.get("/", response_model=list[MovieResponse])
+@router.get("/", response_model=list[MovieListResponse])
 async def get_movies(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -43,15 +48,15 @@ async def get_movies(
 
         response = await es_client.search(index=settings.MOVIE_INDEX, body=body)
 
-        return [hit["_source"] for hit in response["hits"]["hits"]]
+        return await serialize_movie_list(response)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/{movie_id}", response_model=MovieResponse)
+@router.get("/{movie_id}", response_model=MovieDetailResponse)
 async def get_movie(movie_id: str):
     try:
         response = await es_client.get(index=settings.MOVIE_INDEX, id=movie_id)
-        return response["_source"]
+        return await serialize_movie_detail(response)
     except Exception as e:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise HTTPException(status_code=404, detail="Movie not found") from e

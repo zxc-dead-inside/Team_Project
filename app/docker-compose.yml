@@ -57,13 +57,11 @@ services:
       - theatre_network
 
   fastapi:
-    build: api/
-    # expose:
-    #   - "7000"
+    build: fastapi/
     ports:
       - "9000:9000"
     env_file:
-      - api/.env
+      - fastapi/.env
     depends_on:
       - elasticsearch
       - service

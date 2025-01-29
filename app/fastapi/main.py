@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
 
+from api.api import api_router
+from core.config import settings
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from v1.api import api_router
-
-from configs.config import settings
 
 
 app = FastAPI(

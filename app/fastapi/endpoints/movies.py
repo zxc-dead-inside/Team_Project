@@ -1,13 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
-from v1.models.movies_models import (
+from core.config import settings
+from core.elasticsearch import es_client
+from models.movies_models import (
     MovieDetailResponse,
     MovieListResponse,
     serialize_movie_detail,
     serialize_movie_list,
 )
 
-from configs.config import settings
-from configs.elasticsearch import es_client
+from fastapi import APIRouter, HTTPException, Query
 
 
 router = APIRouter()

@@ -1,0 +1,3 @@
+ELASTICSEARCH_HOST=<host_here>
+#host.docker.internal -> for development
+ELASTICSEARCH_PORT=<port_here>

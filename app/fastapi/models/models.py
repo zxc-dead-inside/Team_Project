@@ -1,156 +1,351 @@
-from datetime import date
+"""
+Models for the movie database application.
+
+This module contains Pydantic models for handling movie-related data structures,
+including films, persons, genres, and search functionality.
+"""
+
+from datetime import UTC, datetime, timedelta
+from functools import cached_property
+from typing import Annotated, Literal, NewType, TypeAlias
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 
-# Base Models for DB
-class GenreBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=50)
-    description: str | None = Field(None, max_length=200)
+# Custom types
+RoleType: TypeAlias = Literal["actor", "director", "writer"]
+PersonName = NewType("PersonName", str)
 
 
-class Genre(GenreBase):
-    id: UUID
+class BaseAPIModel(BaseModel):
+    """Base model with common configuration for all API models."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PersonBase(BaseModel):
-    first_name: str = Field(..., min_length=1, max_length=50)
-    last_name: str = Field(..., min_length=1, max_length=50)
-    birth_date: date | None = None
-    biography: str | None = Field(None, max_length=1000)
-    photo_url: HttpUrl | None = None
+    model_config = ConfigDict(
+        frozen=True,
+        from_attributes=True,
+        strict=True,
+        validate_assignment=True,
+        populate_by_name=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        },
+    )
 
     @property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+    def cache_key(self) -> str:
+        """Generate cache key for Redis."""
+        return f"{self.__class__.__name__.lower()}:{self.uuid}"
+
+    @property
+    def cache_ttl(self) -> timedelta:
+        """Default cache TTL."""
+        return timedelta(hours=1)
+
+
+class Genre(BaseAPIModel):
+    """Genre model representing movie categories."""
+
+    uuid: UUID = Field(
+        description="Unique identifier for the genre",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    name: Annotated[str, StringConstraints(min_length=1, max_length=100)] = Field(
+        description="Name of the genre",
+        examples=["Action", "Drama", "Science Fiction"],
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Action",
+            }
+        }
+    )
+
+
+class PersonBase(BaseAPIModel):
+    """Base model for person-related data."""
+
+    uuid: UUID = Field(
+        description="Unique identifier for the person",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    full_name: PersonName = Field(
+        description="Full name of the person",
+        examples=["John Doe", "Jane Smith"],
+        max_length=255,
+        min_length=1,
+    )
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_name_format(cls, v: str) -> PersonName:
+        """Validate name format and normalization."""
+        names = v.split()
+        if len(names) < 2:
+            raise ValueError("Full name must include both first and last name")
+        return PersonName(" ".join(name.capitalize() for name in names))
+
+
+class MovieRole(BaseAPIModel):
+    """Model representing a person's role in a film."""
+
+    uuid: UUID = Field(
+        description="Unique identifier for the film",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    roles: list[RoleType] = Field(
+        description="List of roles the person had in the film",
+        min_length=1,
+        examples=[["actor"], ["director", "writer"]],
+    )
+
+    @model_validator(mode="after")
+    def validate_roles(self) -> "MovieRole":
+        """Validate that roles are from allowed values."""
+        allowed_roles = {"actor", "director", "writer"}
+        if not all(role.lower() in allowed_roles for role in self.roles):
+            raise ValueError(f"Invalid role. Allowed roles are: {allowed_roles}")
+        return self
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                "roles": ["actor", "director"],
+            }
+        }
 
 
 class Person(PersonBase):
-    id: UUID
+    """Complete person model including filmography."""
 
-    model_config = ConfigDict(from_attributes=True)
+    films: list[MovieRole] = Field(
+        description="List of films the person was involved in",
+        default_factory=list,
+    )
 
-
-# Elasticsearch-specific nested models
-class ElasticPersonNested(BaseModel):
-    id: str  # UUID as string for ES
-    name: str  # full name for ES
-
-
-class MovieBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
-    original_title: str | None = Field(None, max_length=200)
-    release_date: date
-    description: str | None = Field(
-        None, max_length=10000
-    )  # matches ES 'description' field
-    runtime: int | None = Field(None, ge=0)
-    poster_url: HttpUrl | None = None
-    imdb_id: str | None = Field(None, pattern=r"^tt\d{7,8}$")
-    imdb_rating: float | None = Field(None, ge=0, le=10)  # matches ES field
+    @cached_property
+    def role_count(self) -> dict[RoleType, int]:
+        """Count of each role type across all films."""
+        counts: dict[RoleType, int] = {"actor": 0, "director": 0, "writer": 0}
+        for film in self.films:
+            for role in film.roles:
+                counts[role] += 1
+        return counts
 
 
-class Movie(MovieBase):
-    id: UUID
-    genres: list[Genre] = []
-    directors: list[Person] = []
-    actors: list[Person] = []
-    writers: list[Person] = []
+class PersonShort(PersonBase):
+    """Simplified person model for nested references in film details."""
 
-    model_config = ConfigDict(from_attributes=True)
+    role_type: RoleType = Field(
+        description="Primary role of the person in the film",
+    )
 
 
-# Elasticsearch Movie Document Model
-class MovieElastic(BaseModel):
-    id: str  # UUID as string for ES
-    imdb_rating: float | None = None
-    title: str
-    description: str | None = None
-    actors_names: list[str] = []  # Flattened list of actor names
-    writers_names: list[str] = []  # Flattened list of writer names
-    directors_names: list[str] = []  # Flattened list of director names
-    genres: list[str] = []  # List of genre names
-    actors: list[ElasticPersonNested] = []
-    directors: list[ElasticPersonNested] = []
-    writers: list[ElasticPersonNested] = []
+class MovieShort(BaseAPIModel):
+    """Simplified film model for lists and search results."""
 
-    model_config = ConfigDict(from_attributes=True)
+    uuid: UUID = Field(
+        description="Unique identifier for the film",
+        examples=["123e4567-e89b-12d3-a456-426614174000"],
+    )
+    title: Annotated[str, StringConstraints(min_length=1, max_length=255)] = Field(
+        description="Title of the film",
+        examples=["The Example Movie"],
+    )
+    imdb_rating: float = Field(
+        description="IMDB rating of the film",
+        ge=0,
+        le=10,
+        decimal_places=1,
+        examples=[8.5],
+    )
 
-    @classmethod
-    def from_movie(cls, movie: Movie) -> "MovieElastic":
-        return cls(
-            id=str(movie.id),
-            imdb_rating=movie.imdb_rating,
-            title=movie.title,
-            description=movie.description,
-            actors_names=[person.full_name for person in movie.actors],
-            writers_names=[person.full_name for person in movie.writers],
-            directors_names=[person.full_name for person in movie.directors],
-            genres=[genre.name for genre in movie.genres],
-            actors=[
-                ElasticPersonNested(id=str(actor.id), name=actor.full_name)
-                for actor in movie.actors
-            ],
-            directors=[
-                ElasticPersonNested(id=str(director.id), name=director.full_name)
-                for director in movie.directors
-            ],
-            writers=[
-                ElasticPersonNested(id=str(writer.id), name=writer.full_name)
-                for writer in movie.writers
-            ],
+
+class MovieFull(MovieShort):
+    """Complete film model with all details."""
+
+    description: Annotated[str, StringConstraints(max_length=10000)] = Field(
+        description="Detailed description of the film"
+    )
+    genre: list[Genre] = Field(
+        description="List of film genres",
+        min_length=1,
+    )
+    actors: list[PersonBase] = Field(
+        description="Actors in the movie",
+        default_factory=list,
+    )
+    writers: list[PersonBase] = Field(
+        description="Writers in the movie",
+        default_factory=list,
+    )
+    directors: list[PersonBase] = Field(
+        description="Directors in the movie",
+        min_length=1,
+    )
+    created_at: datetime = Field(
+        description="Film creation timestamp",
+        default_factory=lambda: datetime.now(UTC),
+    )
+    file_path: HttpUrl | None = Field(
+        None,
+        description="URL to the film file",
+        examples=["https://example.com/movies/123.mp4"],
+        json_schema_extra={
+            "format": "uri",
+            "pattern": "^https?://.*",
+        },
+    )
+
+    @model_validator(mode="after")
+    def validate_participants(self) -> "MovieFull":
+        """Validate that film has at least one participant."""
+        if not (self.actors or self.writers or self.directors):
+            raise ValueError("Film must have at least one participant")
+        return self
+
+    @cached_property
+    def participant_count(self) -> int:
+        """Total number of unique participants."""
+        return len(
+            {
+                person.uuid
+                for group in (self.actors, self.writers, self.directors)
+                for person in group
+            }
         )
 
+    @property
+    def cache_ttl(self) -> timedelta:
+        """Cache TTL for movies based on rating."""
+        if self.imdb_rating >= 8.0:
+            return timedelta(hours=12)  # Popular movies cached for shorter time
+        return timedelta(hours=24)
 
-# Create/Update Models
-class GenreCreate(GenreBase):
-    pass
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "uuid": "123e4567-e89b-12d3-a456-426614174000",
+                "title": "The Example Movie",
+                "imdb_rating": 8.5,
+                "description": "An amazing example movie...",
+                "genre": [
+                    {"uuid": "123e4567-e89b-12d3-a456-426614174001", "name": "Action"}
+                ],
+                "created_at": "2024-01-01T00:00:00Z",
+            }
+        }
+    )
 
-
-class GenreUpdate(GenreBase):
-    name: str | None = Field(None, min_length=1, max_length=50)
-
-
-class PersonCreate(PersonBase):
-    pass
-
-
-class PersonUpdate(PersonBase):
-    first_name: str | None = Field(None, min_length=1, max_length=50)
-    last_name: str | None = Field(None, min_length=1, max_length=50)
-
-
-class MovieCreate(MovieBase):
-    genre_ids: list[UUID] = []
-    director_ids: list[UUID] = []
-    actor_ids: list[UUID] = []
-    writer_ids: list[UUID] = []
-
-
-class MovieUpdate(MovieBase):
-    title: str | None = Field(None, min_length=1, max_length=200)
-    original_title: str | None = None
-    release_date: date | None = None
-    genre_ids: list[UUID] | None = None
-    director_ids: list[UUID] | None = None
-    actor_ids: list[UUID] | None = None
-    writer_ids: list[UUID] | None = None
-
-
-# Response Models
-class GenreResponse(Genre):
-    movies_count: int = 0
+    class Config:
+        elasticsearch_mapping = {
+            "properties": {
+                "title": {"type": "text", "analyzer": "english"},
+                "description": {
+                    "type": "text",
+                    "analyzer": "english",
+                    "search_analyzer": "english",
+                },
+                "imdb_rating": {"type": "float"},
+                "created_at": {"type": "date"},
+                "genre": {"type": "nested"},
+            }
+        }
 
 
-class PersonResponse(Person):
-    directed_movies: list[Movie] = []
-    acted_movies: list[Movie] = []
-    written_movies: list[Movie] = []
+class SearchParams(BaseAPIModel):
+    """Base model for search parameters."""
+
+    query: Annotated[str, StringConstraints(min_length=1, max_length=100)] = Field(
+        description="Search query string",
+        examples=["star wars"],
+    )
+    page_number: int = Field(
+        description="Page number for pagination",
+        ge=1,
+        default=1,
+    )
+    page_size: int = Field(
+        description="Number of items per page",
+        ge=1,
+        le=100,
+        default=50,
+    )
 
 
-class MovieResponse(Movie):
-    average_rating: float | None = Field(None, ge=0, le=10)
-    ratings_count: int = 0
+class MovieSearch(SearchParams):
+    """Film search parameters with additional filtering options."""
+
+    genre_uuid: UUID | None = Field(
+        None,
+        description="Filter by genre UUID",
+    )
+    min_rating: float | None = Field(
+        None,
+        description="Minimum IMDB rating",
+        ge=0,
+        le=10,
+    )
+    release_year: int | None = Field(
+        None,
+        description="Filter by release year",
+        ge=1888,  # First movie year
+    )
+    sort_by: Literal["rating", "title", "release_date"] = Field(
+        default="rating",
+        description="Field to sort results by",
+    )
+    order: Literal["asc", "desc"] = Field(
+        default="desc",
+        description="Sort order",
+    )
+
+
+class PersonSearch(SearchParams):
+    """Person search parameters with role filtering."""
+
+    role_type: RoleType | None = Field(
+        None,
+        description="Filter by person's role",
+    )
+
+
+class PaginatedResponse(BaseAPIModel):
+    """Base model for paginated responses."""
+
+    total: int = Field(
+        description="Total number of items",
+        ge=0,
+    )
+    page_number: int = Field(
+        description="Current page number",
+        ge=1,
+    )
+    page_size: int = Field(
+        description="Number of items per page",
+        ge=1,
+    )
+
+
+class MovieSearchResponse(PaginatedResponse):
+    """Paginated response for film search."""
+
+    items: list[MovieShort] = Field(description="List of films")
+
+
+class PersonSearchResponse(PaginatedResponse):
+    """Paginated response for person search."""
+
+    items: list[Person] = Field(description="List of persons")

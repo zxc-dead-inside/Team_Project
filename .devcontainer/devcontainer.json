@@ -2,7 +2,7 @@
     "name": "Async_API_sprint_1",
     "runArgs": [
         "--env-file", ".devcontainer/devcontainer.env",
-        "--network=dev_network",
+        "--network=theatre_network",
         "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro"
     ],
     "build": {

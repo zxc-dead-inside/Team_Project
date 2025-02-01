@@ -23,8 +23,37 @@ class PostgresExtractor:
             cur.execute(query)
             return cur.fetchone()[0]
 
+    def extrac_genres(
+            self, last_modified: str | None,
+    ) -> list[dict[str, Any]]:
+        """
+        Extract genres modified after a specific timestamp.
+        Returns: (genres, latest_person_modified, latest_genre_modified)
+        """
+
+        query = """
+        SELECT
+            g.id,
+            g.name,
+            g.modified
+        FROM content.genre g
+        WHERE g.modified > %s::timestamp
+        ORDER BY g.modified;
+        """
+
+        with self._get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, (last_modified,))
+                results = cur.fetchall()
+                logger.info(f'{len(results)} records were fetched.')
+
+                if results:
+                    return results
+            return []
+
+
     def extract_movies(
-        self, last_modified: str | None, batch_size: int
+        self, last_modified: str | None, batch_size: int, offset: int,
     ) -> tuple[list[dict[str, Any]], datetime | None, datetime | None]:
         """
         Extract movies modified after a specific timestamp.
@@ -34,7 +63,7 @@ class PostgresExtractor:
 
         query = """
         WITH updated_ids AS (
-            SELECT DISTINCT 
+            SELECT DISTINCT
                 fw.id,
                 MAX(p.modified) as max_person_modified,
                 MAX(g.modified) as max_genre_modified
@@ -43,10 +72,11 @@ class PostgresExtractor:
             LEFT JOIN content.person p ON p.id = pfw.person_id
             LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
             LEFT JOIN content.genre g ON g.id = gfw.genre_id
-            WHERE fw.modified > %s::timestamp 
+            WHERE fw.modified > %s::timestamp
             OR p.modified > %s::timestamp
             OR g.modified > %s::timestamp
             GROUP BY fw.id
+            ORDER BY fw.id
         )
         SELECT
             fw.id,
@@ -77,15 +107,17 @@ class PostgresExtractor:
         LEFT JOIN content.genre g ON g.id = gfw.genre_id
         GROUP BY fw.id, ui.max_person_modified, ui.max_genre_modified
         ORDER BY fw.modified
-        LIMIT %s;
+        LIMIT %s
+        OFFSET %s;
         """
 
         with self._get_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    query, (last_modified, last_modified, last_modified, batch_size)
+                    query, (last_modified, last_modified, last_modified, batch_size, offset)
                 )
                 results = cur.fetchall()
+                logger.info(f'{len(results)} records were fetched.')
 
                 if results:
                     processed_results = []

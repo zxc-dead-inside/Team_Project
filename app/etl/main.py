@@ -1,5 +1,6 @@
 import time
 from datetime import UTC, datetime
+from typing import Generator, List
 
 from config import Settings
 from elasticsearch_loader import ElasticsearchLoader
@@ -12,7 +13,10 @@ from state import JsonFileStorage, State
 def get_latest_modified_timestamp(
     movies, persons_modified, genres_modified
 ) -> datetime | None:
-    """Get the latest modification timestamp across all entity types."""
+    """
+    Get the latest modification timestamp across all entity types.
+    """
+
     timestamps = []
 
     # Add movie modifications
@@ -30,6 +34,43 @@ def get_latest_modified_timestamp(
     return max(timestamps) if timestamps else None
 
 
+def transfer_movies(
+        postgres_extractor: PostgresExtractor,
+        last_modified: str,
+        settings: Settings,
+        state: State,
+        offset: int
+) -> Generator[List, None, None]:
+    """
+    Extract movies and their related modifications from PostgreSQL
+    """
+
+    modified = last_modified
+    while True:
+        movies, persons_modified, genres_modified = (
+            postgres_extractor.extract_movies(
+                last_modified, settings.BATCH_SIZE, offset)
+        )
+
+        if not movies:
+            stats = state.get_statistics('movies')
+            logger.info(f"Current ETL Statistics: {stats}")
+            offset = 0
+            state.set_state("offset", offset, 'movies')
+            state.set_state("last_modified", modified, 'movies')
+            return None
+        logger.info(f"Found {len(movies)} movies to process")
+        yield movies
+        latest_modified = get_latest_modified_timestamp(
+            movies, persons_modified, genres_modified)
+        if latest_modified is not None:
+            if latest_modified.isoformat() > modified:
+                modified = latest_modified.isoformat()
+        offset += settings.BATCH_SIZE
+        state.set_state("offset", offset, 'movies')
+        stats = state.get_statistics('movies')
+
+
 def main():
     # Load configuration
     settings = Settings()
@@ -42,70 +83,91 @@ def main():
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT
     )
 
-    # Set processing start time if not already set
-    if not state.get_state("processing_started_at"):
-        state.set_state("processing_started_at", datetime.now(UTC).isoformat())
-
-    # Log initial statistics
-    stats = state.get_statistics()
-    logger.info(f"ETL Process Statistics: {stats}")
-
     while True:
         try:
-            last_modified = state.get_state("last_modified") or "1970-01-01T00:00:00"
-            logger.info(f"Current state timestamp: {last_modified}")
+            for index in settings.INDECIES:
+                last_modified = state.get_state(
+                    "last_modified", index) or settings.BASE_DATE
 
-            # Extract movies and their related modifications from PostgreSQL
-            movies, persons_modified, genres_modified = (
-                postgres_extractor.extract_movies(last_modified, settings.BATCH_SIZE)
-            )
+                state.set_state(
+                    "processing_started_at",
+                    datetime.now(UTC).isoformat(), index)
 
-            if not movies:
-                logger.info("No new movies to process. Sleeping...")
-                stats = state.get_statistics()
-                logger.info(f"Current ETL Statistics: {stats}")
-                time.sleep(settings.SLEEP_TIME)
-                continue
+                if index == 'movies':
+                    logger.info(f" Starting {index} ETL")
+                    logger.info(
+                        f"Current state timestamp: {last_modified}")
+                    offset = state.get_state("offset", index) or 0
 
-            logger.info(f"Found {len(movies)} movies to process")
+                    movies = transfer_movies(
+                        postgres_extractor, last_modified, settings,
+                        state, offset)
 
-            try:
-                # Load movies to Elasticsearch
-                es_loader.load_movies(movies)
+                    if movies is None:
+                        continue
 
-                state.increment_processed(len(movies))
+                    try:
+                        # Load movies to Elasticsearch
+                        es_loader.load_movies(movies)
+                        offset = 0
+                        state.set_state("offset", offset, index)
 
-                # Calculate and update the latest modification timestamp
-                latest_modified = get_latest_modified_timestamp(
-                    movies, persons_modified, genres_modified
-                )
-
-                if latest_modified:
-                    new_timestamp = latest_modified.isoformat()
-                    if new_timestamp > last_modified:
-                        state.set_state("last_modified", new_timestamp)
-                        logger.info(
-                            f"Updated last_modified timestamp to: {new_timestamp}"
+                    except Exception as e:
+                        logger.error(f"Failed to process batch: {e}",
+                                     exc_info=True)
+                        stats = state.get_statistics(index)
+                        logger.error(
+                            f"Batch processing failed. Total failed: "
+                            f"{stats['total_failed']}"
                         )
+                        raise
+                    stats = state.get_statistics(index)
+                    logger.info(
+                        f"Current {index} ETL Statistics: {stats}")
 
-                # Log success with updated statistics
-                stats = state.get_statistics()
-                logger.info(
-                    f"Successfully processed {len(movies)} movies. "
-                    f"Total processed: {stats['total_processed']}"
-                )
+                elif index == "genres":
+                    logger.info(f" Starting {index} ETL")
+                    last_modified = (
+                        state.get_state("last_modified", index)
+                        or settings.BASE_DATE)
+                    genres = postgres_extractor.extrac_genres(
+                        last_modified)
 
-            except Exception as e:
-                state.increment_failed(len(movies))
-                logger.error(f"Failed to process batch: {e}", exc_info=True)
-                stats = state.get_statistics()
-                logger.error(
-                    f"Batch processing failed. Total failed: {stats['total_failed']}"
-                )
-                raise
+                    if not genres:
+                        continue
+
+                    logger.info(f"{len(genres)}")
+                    latest_modified = max(
+                        [genre[-1] for genre in genres])
+                    logger.info(f"{latest_modified.isoformat()}")
+
+                    try:
+                        es_loader.load_genres(genres)
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to process batch: {e}",
+                            exc_info=True)
+                        stats = state.get_statistics(index)
+                        logger.error(
+                            "Batch processing failed. Total failed: "
+                            f"{stats['total_failed']}"
+                        )
+                        raise
+
+                    if latest_modified.isoformat() > last_modified:
+                        state.set_state(
+                            "last_modified",
+                            latest_modified.isoformat(), index)
+
+                elif index == "persons":
+                    logger.info(f" Starting {index} ETL")
+
+            logger.info("No new ETL to process. Sleeping...")
+            time.sleep(settings.SLEEP_TIME)
 
         except Exception as e:
-            logger.error(f"Error during ETL process: {e}", exc_info=True)
+            logger.error(
+                f"Error during ETL process: {e}", exc_info=True)
             time.sleep(settings.SLEEP_TIME)
 
 

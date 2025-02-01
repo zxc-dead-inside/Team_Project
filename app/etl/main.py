@@ -126,10 +126,6 @@ def main():
                         f"Current {index} ETL Statistics: {stats}")
 
                 elif index == "genres":
-                    logger.info(f" Starting {index} ETL")
-                    last_modified = (
-                        state.get_state("last_modified", index)
-                        or settings.BASE_DATE)
                     genres = postgres_extractor.extrac_genres(
                         last_modified)
 

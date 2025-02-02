@@ -137,7 +137,7 @@ def main():
     # Initialize components
     storage = JsonFileStorage(settings.STATE_FILE_PATH)
     state = State(storage)
-    postgres_extractor = PostgresExtractor(str(settings.postgres_dsn))
+    postgres_extractor = PostgresExtractor(settings.postgres_dsn)
     es_loader = ElasticsearchLoader(
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT
     )
@@ -185,8 +185,7 @@ def main():
                 elif index == "genres":
                     logger.info(f" Starting {index} ETL")
 
-                    genres = postgres_extractor.extract_genres(
-                        last_modified)
+                    genres = postgres_extractor.extract_genres(last_modified)
 
                     if not genres:
                         continue

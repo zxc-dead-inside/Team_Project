@@ -228,7 +228,7 @@ class ElasticsearchLoader:
                     # Create a new dict with only the fields we want to index
                     sanitized_movie = {
                         "id": movie["id"],
-                        "imdb_rating": movie.get("imdb_rating", None),
+                        "imdb_rating": movie.get("rating", None),
                         "title": movie.get("title", ""),
                         "description": movie.get("description", ""),
                         "actors_names": movie.get("actors_names", []),

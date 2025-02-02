@@ -26,13 +26,8 @@ class Settings(BaseSettings):
 
     @property
     def postgres_dsn(self) -> str:
-        return "postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}".format(
-            USER=self.POSTGRES_USER,
-            PASSWORD=self.POSTGRES_PASSWORD,
-            HOST=self.SQL_HOST,
-            PORT=self.SQL_PORT,
-            DBNAME=self.POSTGRES_DB
-        )
+        return (f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"@{self.SQL_HOST}:{self.SQL_PORT}/{self.POSTGRES_DB}")
 
     class Config:
         env_file = ".env"

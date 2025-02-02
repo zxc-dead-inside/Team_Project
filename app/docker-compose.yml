@@ -67,8 +67,8 @@ services:
     depends_on:
       - elasticsearch
       - service
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
 volumes:
   static-data:

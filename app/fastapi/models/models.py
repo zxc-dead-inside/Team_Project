@@ -168,7 +168,6 @@ class MovieShort(BaseAPIModel):
         description="IMDB rating of the film",
         ge=0,
         le=10,
-        decimal_places=1,
         examples=[8.5],
     )
 
@@ -248,21 +247,6 @@ class MovieFull(MovieShort):
             }
         }
     )
-
-    class Config:
-        elasticsearch_mapping = {
-            "properties": {
-                "title": {"type": "text", "analyzer": "english"},
-                "description": {
-                    "type": "text",
-                    "analyzer": "english",
-                    "search_analyzer": "english",
-                },
-                "imdb_rating": {"type": "float"},
-                "created_at": {"type": "date"},
-                "genre": {"type": "nested"},
-            }
-        }
 
 
 class SearchParams(BaseAPIModel):

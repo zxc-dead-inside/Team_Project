@@ -10,3 +10,6 @@ state
 __pycache__/
 
 notebooks/*
+
+app/data
+app/state

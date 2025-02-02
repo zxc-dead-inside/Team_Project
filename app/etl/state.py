@@ -39,45 +39,74 @@ class JsonFileStorage(BaseStorage):
             return {}
 
 
-class State:
+class SingletonMeta(type):
+    """
+    В Python класс Одиночка можно реализовать по-разному. Возможные способы
+    включают себя базовый класс, декоратор, метакласс. Мы воспользуемся
+    метаклассом, поскольку он лучше всего подходит для этой цели.
+    """
+
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        """
+        Данная реализация не учитывает возможное изменение передаваемых
+        аргументов в `__init__`.
+        """
+        if cls not in cls._instances:
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
+
+
+class State(metaclass=SingletonMeta):
     """Class for state management with tracking."""
 
     def __init__(self, storage: BaseStorage) -> None:
         self.storage = storage
         self._state = storage.retrieve_state()
 
-        # Initialize counters if they don't exist
-        if "total_processed" not in self._state:
-            self._state["total_processed"] = 0
-        if "total_failed" not in self._state:
-            self._state["total_failed"] = 0
-        if "processing_started_at" not in self._state:
-            self._state["processing_started_at"] = None
-
-    def set_state(self, key: str, value: Any) -> None:
+    def set_state(self, key: str, value: Any, index: str) -> None:
         """Set state for a specific key."""
-        self._state[key] = value
+
+        if self._state.get(index) is None:
+            self._state[index] = {}
+        self._state[index].update({key: value})
         self.storage.save_state(self._state)
 
-    def get_state(self, key: str) -> Any:
+    def get_state(self, key: str, index: str) -> Any:
         """Get state for a specific key."""
-        return self._state.get(key)
 
-    def increment_processed(self, count: int = 1) -> None:
+        if self._state.get(index) is None:
+            return None
+        return self._state.get(index).get(key)
+
+    def increment_processed(self, index: str, count: int = 1) -> None:
         """Increment the number of successfully processed movies."""
-        self._state["total_processed"] = self._state.get("total_processed", 0) + count
+
+        self._state[index]["total_processed"] = self._state[index].get("total_processed", 0) + count
         self.storage.save_state(self._state)
 
-    def increment_failed(self, count: int = 1) -> None:
+    def increment_failed(self, index: int, count: int = 1) -> None:
         """Increment the number of failed movie processing attempts."""
-        self._state["total_failed"] = self._state.get("total_failed", 0) + count
+
+        self._state[index]["total_failed"] = self._state[index].get("total_failed", 0) + count
         self.storage.save_state(self._state)
 
-    def get_statistics(self) -> dict[str, Any]:
+    def get_statistics(self, index: str) -> dict[str, Any]:
         """Get processing statistics."""
-        return {
-            "total_processed": self._state.get("total_processed", 0),
-            "total_failed": self._state.get("total_failed", 0),
-            "last_modified": self._state.get("last_modified"),
-            "processing_started_at": self._state.get("processing_started_at"),
-        }
+
+        if self._state.get(index) is not None:
+            return {
+                "total_processed": self._state[index].get("total_processed", 0),
+                "total_failed": self._state[index].get("total_failed", 0),
+                "last_modified": self._state[index].get("last_modified"),
+                "processing_started_at": self._state[index].get("processing_started_at"),
+            }
+        else:
+            return {
+                "total_processed": 0,
+                "total_failed": 0,
+                "last_modified": None,
+                "processing_started_at": None,
+            }

@@ -1,5 +1,7 @@
 # Environments
 .venv
+venv
+state
 *.egg-info
 
 *.env

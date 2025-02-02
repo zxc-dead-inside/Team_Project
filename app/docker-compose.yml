@@ -10,8 +10,8 @@ services:
       - theatre-db
     volumes:
       - static-data:/var/www/static/
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
   nginx:
     image: nginx:latest
@@ -23,8 +23,8 @@ services:
       - service
     ports:
       - "80:80"
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
   theatre-db:
     image: postgres:14
@@ -32,20 +32,22 @@ services:
       - ./.env
     volumes:
       - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
   elasticsearch:
     image: elasticsearch:8.6.2
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms256m
+      - ES_JAVA_OPTS=-Xmx256m
     ports:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
   movies-etl:
     build: etl/
@@ -53,8 +55,8 @@ services:
       - etl/.env
     volumes:
       - ./state:/app/state
-    networks:
-      - theatre_network
+    # networks:
+    #   - theatre_network
 
   fastapi:
     build: fastapi/
@@ -72,7 +74,7 @@ volumes:
   static-data:
   esdata:
 
-networks:
-  theatre_network:
-    name: theatre_network
-    external: true
+# networks:
+#   theatre_network:
+#     name: theatre_network
+#     external: true

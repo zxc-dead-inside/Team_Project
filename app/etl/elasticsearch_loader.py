@@ -2,7 +2,10 @@ from typing import Any
 
 import backoff
 from elasticsearch import Elasticsearch, helpers
+
+from config import es_indices_settings as esis
 from logger_setup import logger
+from state import State
 
 
 class ElasticsearchLoader:
@@ -89,55 +92,101 @@ class ElasticsearchLoader:
             # Create index with mapping if it doesn't exist
             if not self.es.indices.exists(index="movies"):
                 self.es.indices.create(index="movies", body=self.index_config)
+            if not self.es.indices.exists(index='genres'):
+                self.es.indices.create(
+                    index='genres', mappings=esis.genres_mappings
+                )
 
         wait_for_es()
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5)
-    def load_movies(self, movies: list[dict[str, Any]]):
-        sanitized_movies = []
-        for movie in movies:
+    def load_genres(self, genres: list[dict[str, Any]]):
+        state = State()
+        sanitized_genres = []
+        for genre in genres:
             try:
-                # Create a new dict with only the fields we want to index
-                sanitized_movie = {
-                    "id": movie["id"],
-                    "imdb_rating": movie.get("imdb_rating", None),
-                    "title": movie.get("title", ""),
-                    "description": movie.get("description", ""),
-                    "actors_names": movie.get("actors_names", []),
-                    "writers_names": movie.get("writers_names", []),
-                    "directors_names": movie.get("directors_names", []),
-                    "genres": movie.get("genres", []),
-                    "actors": movie.get("actors", []),
-                    "directors": movie.get("directors", []),
-                    "writers": movie.get("writers", []),
+                sanitized_genre = {
+                    "id": genre["id"],
+                    "name": genre.get("name", "")
                 }
-
-                # Replace None values with appropriate defaults
-                for key, value in sanitized_movie.items():
-                    if value is None:
-                        if key == "imdb_rating":
-                            sanitized_movie[key] = 0.0  # Default value for imdb_rating
-                        else:
-                            sanitized_movie[key] = (
-                                []
-                                if key.endswith("_names")
-                                or key in ["genres", "actors", "directors", "writers"]
-                                else ""
-                            )
-
-                sanitized_movies.append(sanitized_movie)
+                sanitized_genres.append(sanitized_genre)
             except Exception as e:
-                logger.error(f"Error sanitizing movie: {movie}, error: {e}")
-
+                logger.error(
+                    f"Error sanitizing movie: {genre}, error: {e}")
         actions = [
-            {"_index": "movies", "_id": movie["id"], "_source": movie}
-            for movie in sanitized_movies
-        ]
-
+                {"_index": "genres",
+                 "_id": genre["id"],
+                 "_source": genre}
+                for genre in sanitized_genres
+            ]
         try:
             helpers.bulk(self.es, actions)
+            state.increment_processed('genres', len(genres))
+            stats = state.get_statistics('genres')
+            logger.info(
+                f"Successfully processed {len(genres)} genres. "
+                f"Total processed: {stats['total_processed']}")
         except helpers.BulkIndexError as e:
             logger.error(f"Bulk index error: {e}")
             for error in e.errors:
                 logger.error(f"Failed document: {error}")
+            state.increment_failed('genres', len(genres))
             raise
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5)
+    def load_movies(self, movies: list[dict[str, Any]]):
+        state = State()
+        sanitized_movies = []
+        for items in movies:
+            for movie in items:
+                try:
+                    # Create a new dict with only the fields we want to index
+                    sanitized_movie = {
+                        "id": movie["id"],
+                        "imdb_rating": movie.get("imdb_rating", None),
+                        "title": movie.get("title", ""),
+                        "description": movie.get("description", ""),
+                        "actors_names": movie.get("actors_names", []),
+                        "writers_names": movie.get("writers_names", []),
+                        "directors_names": movie.get("directors_names", []),
+                        "genres": movie.get("genres", []),
+                        "actors": movie.get("actors", []),
+                        "directors": movie.get("directors", []),
+                        "writers": movie.get("writers", []),
+                    }
+
+                    # Replace None values with appropriate defaults
+                    for key, value in sanitized_movie.items():
+                        if value is None:
+                            if key == "imdb_rating":
+                                sanitized_movie[key] = 0.0  # Default value for imdb_rating
+                            else:
+                                sanitized_movie[key] = (
+                                    []
+                                    if key.endswith("_names")
+                                    or key in ["genres", "actors", "directors", "writers"]
+                                    else ""
+                                )
+
+                    sanitized_movies.append(sanitized_movie)
+                except Exception as e:
+                    logger.error(f"Error sanitizing movie: {movie}, error: {e}")
+
+            actions = [
+                {"_index": "movies", "_id": movie["id"], "_source": movie}
+                for movie in sanitized_movies
+            ]
+
+            try:
+                helpers.bulk(self.es, actions)
+                state.increment_processed('movies', len(items))
+                stats = state.get_statistics('movies')
+                logger.info(
+                    f"Successfully processed {len(items)} movies. "
+                    f"Total processed: {stats['total_processed']}")
+            except helpers.BulkIndexError as e:
+                logger.error(f"Bulk index error: {e}")
+                for error in e.errors:
+                    logger.error(f"Failed document: {error}")
+                state.increment_failed('movies', len(items))
+                raise

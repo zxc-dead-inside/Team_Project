@@ -183,10 +183,10 @@ def main():
                     logger.info(f"Current {index} ETL Statistics: {stats}")
 
                 elif index == "genres":
+
                     logger.info(f" Starting {index} ETL")
 
-                    genres = postgres_extractor.extract_genres(
-                        last_modified)
+                    genres = postgres_extractor.extract_genres(last_modified)
 
                     if not genres:
                         continue

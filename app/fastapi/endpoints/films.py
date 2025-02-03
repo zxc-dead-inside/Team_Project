@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException, Query
 
 from core.config import settings
 from core.elasticsearch import es_client
-from models.models import MovieSearchResponse, MovieShort, MovieFull
+from models.models import (
+    MovieSearchResponse,
+    MovieShort,
+    MovieFull,
+    serialize_film_detail
+)
 
 
 router = APIRouter()
@@ -61,17 +66,7 @@ async def get_films(
             items=movies,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/{film_id}/", response_model=MovieFull)
-async def get_movie(film_id: str):
-    try:
-        response = await es_client.get(index=settings.MOVIE_INDEX, id=film_id)
-        return MovieFull(uuid=UUID(response["id"]), **response["_source"])
-
-    except Exception as e:
-        raise HTTPException(status_code=404, detail="Movie not found") from e
+        raise HTTPException(status_code=404, detail="Not found") from e
 
 
 @router.get("", response_model=MovieSearchResponse)
@@ -98,8 +93,10 @@ async def get_films(
             body["sort"] = [{sort_field: {"order": sort_order}}]
 
         if genre:
+            response = await es_client.get(index=settings.GENRE_INDEX, id=genre)
+            genre_name = response['_source']['name']
             query["bool"]["filter"] = [
-                {"term": {"genres": str(genre)}}
+                {"term": {"genres": str(genre_name)}}
             ]
 
         response = await es_client.search(index=settings.MOVIE_INDEX, body=body)
@@ -117,4 +114,13 @@ async def get_films(
             items=movies,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=404, detail="Not found") from e
+
+
+@router.get("/{film_id}/", response_model=MovieFull)
+async def get_movie(film_id: str):
+    try:
+        response = await es_client.get(index=settings.MOVIE_INDEX, id=film_id)
+        return await serialize_film_detail(response)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Movie not found") from e

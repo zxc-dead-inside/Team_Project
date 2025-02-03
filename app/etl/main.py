@@ -11,7 +11,10 @@ from state import JsonFileStorage, State
 
 
 def get_latest_modified_timestamp(
-    movies, persons_modified, genres_modified
+    objects_modified=None,
+    filmworks_modified=None,
+    persons_modified=None,
+    genres_modified=None
 ) -> datetime | None:
     """
     Get the latest modification timestamp across all entity types.
@@ -19,9 +22,15 @@ def get_latest_modified_timestamp(
 
     timestamps = []
 
-    # Add movie modifications
-    if movies:
-        timestamps.extend(movie["modified"] for movie in movies)
+    # Add objects modifications
+    if objects_modified:
+        timestamps.extend(
+            object["modified"] for object in objects_modified
+        )
+
+    # Add filmwork modifications if available
+    if filmworks_modified:
+        timestamps.append(filmworks_modified)
 
     # Add person modifications if available
     if persons_modified:
@@ -55,8 +64,7 @@ def transfer_movies(
         if not movies:
             stats = state.get_statistics('movies')
             logger.info(f"Current ETL Statistics: {stats}")
-            offset = 0
-            state.set_state("offset", offset, 'movies')
+            state.set_state("offset", 0, 'movies')
             state.set_state("last_modified", modified, 'movies')
             return None
         logger.info(f"Found {len(movies)} movies to process")
@@ -71,6 +79,57 @@ def transfer_movies(
         stats = state.get_statistics('movies')
 
 
+def transfer_objects(
+        postgres_extractor: PostgresExtractor,
+        last_modified: str,
+        settings: Settings,
+        state: State,
+        offset: int,
+        index: str
+) -> Generator[List, None, None]:
+    """
+    Extract objects and their related modifications from PostgreSQL
+    """
+    objects_modified, filmworks_modified, persons_modified, genres_modified = \
+        None, None, None, None
+    modified = last_modified
+
+    while True:
+        if index == 'movies':
+            objects_modified, persons_modified, genres_modified = (
+                postgres_extractor.extract_movies(
+                    last_modified, settings.BATCH_SIZE, offset)
+            )
+        elif index == 'persons':
+            objects_modified, filmworks_modified = (
+                postgres_extractor.extract_persons(
+                    last_modified, settings.BATCH_SIZE, offset)
+            )
+
+        if not objects_modified:
+            stats = state.get_statistics(index)
+            logger.info(f"Current ETL Statistics: {stats}")
+            state.set_state("offset", 0, index)
+            state.set_state("last_modified", modified, index)
+            return None
+        logger.info(f"Found {len(objects_modified)} {index} to process")
+        yield objects_modified
+
+        latest_modified = get_latest_modified_timestamp(
+            objects_modified,
+            filmworks_modified,
+            persons_modified,
+            genres_modified
+        )
+
+        if latest_modified is not None:
+            if latest_modified.isoformat() > modified:
+                modified = latest_modified.isoformat()
+        offset += settings.BATCH_SIZE
+        state.set_state("offset", offset, index)
+        stats = state.get_statistics(index)
+
+
 def main():
     # Load configuration
     settings = Settings()
@@ -78,7 +137,7 @@ def main():
     # Initialize components
     storage = JsonFileStorage(settings.STATE_FILE_PATH)
     state = State(storage)
-    postgres_extractor = PostgresExtractor(str(settings.postgres_dsn))
+    postgres_extractor = PostgresExtractor(settings.postgres_dsn)
     es_loader = ElasticsearchLoader(
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT
     )
@@ -101,7 +160,8 @@ def main():
 
                     movies = transfer_movies(
                         postgres_extractor, last_modified, settings,
-                        state, offset)
+                        state, offset
+                    )
 
                     if movies is None:
                         continue
@@ -109,9 +169,7 @@ def main():
                     try:
                         # Load movies to Elasticsearch
                         es_loader.load_movies(movies)
-                        offset = 0
-                        state.set_state("offset", offset, index)
-
+                        state.set_state("offset", 0, index)
                     except Exception as e:
                         logger.error(f"Failed to process batch: {e}",
                                      exc_info=True)
@@ -122,17 +180,17 @@ def main():
                         )
                         raise
                     stats = state.get_statistics(index)
-                    logger.info(
-                        f"Current {index} ETL Statistics: {stats}")
+                    logger.info(f"Current {index} ETL Statistics: {stats}")
 
                 elif index == "genres":
-                    genres = postgres_extractor.extrac_genres(
-                        last_modified)
+
+                    logger.info(f" Starting {index} ETL")
+
+                    genres = postgres_extractor.extract_genres(last_modified)
 
                     if not genres:
                         continue
 
-                    logger.info(f"{len(genres)}")
                     latest_modified = max(
                         [genre[-1] for genre in genres])
                     logger.info(f"{latest_modified.isoformat()}")
@@ -150,6 +208,9 @@ def main():
                         )
                         raise
 
+                    stats = state.get_statistics(index)
+                    logger.info(f"Current {index} ETL Statistics: {stats}")
+
                     if latest_modified.isoformat() > last_modified:
                         state.set_state(
                             "last_modified",
@@ -157,6 +218,32 @@ def main():
 
                 elif index == "persons":
                     logger.info(f" Starting {index} ETL")
+                    logger.info(
+                        f"Current state timestamp: {last_modified}")
+                    offset = state.get_state("offset", index) or 0
+
+                    persons = transfer_objects(
+                        postgres_extractor, last_modified, settings,
+                        state, offset, index
+                    )
+                    if persons is None:
+                        continue
+
+                    try:
+                        # Load movies to Elasticsearch
+                        es_loader.load_persons(persons)
+                        state.set_state("offset", 0, index)
+                    except Exception as e:
+                        logger.error(f"Failed to process batch: {e}",
+                                     exc_info=True)
+                        stats = state.get_statistics(index)
+                        logger.error(
+                            f"Batch processing failed. Total failed: "
+                            f"{stats['total_failed']}"
+                        )
+                        raise
+                    stats = state.get_statistics(index)
+                    logger.info(f"Current {index} ETL Statistics: {stats}")
 
             logger.info("No new ETL to process. Sleeping...")
             time.sleep(settings.SLEEP_TIME)

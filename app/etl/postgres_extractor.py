@@ -101,11 +101,11 @@ class PostgresExtractor:
                 json_agg(
                     DISTINCT jsonb_build_object(
                         'id', g.id,
-                        'name', g.full_name
+                        'name', g.name
                     )
                 ) FILTER (WHERE g.id IS NOT NULL),
                 '[]'
-            ) as genres,
+            ) as genres
         FROM updated_ids ui
         JOIN content.film_work fw ON fw.id = ui.id
         LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id

@@ -67,7 +67,7 @@ services:
       - elasticsearch
       - service
     # networks:
-    #  - theatre_network
+    #   - theatre_network
 
 volumes:
   static-data:

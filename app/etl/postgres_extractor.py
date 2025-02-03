@@ -97,7 +97,15 @@ class PostgresExtractor:
                 ) FILTER (WHERE p.id IS NOT NULL),
                 '[]'
             ) as persons,
-            ARRAY_AGG(DISTINCT g.name) as genres
+            COALESCE(
+                json_agg(
+                    DISTINCT jsonb_build_object(
+                        'id', g.id,
+                        'name', g.full_name
+                    )
+                ) FILTER (WHERE g.id IS NOT NULL),
+                '[]'
+            ) as genres,
         FROM updated_ids ui
         JOIN content.film_work fw ON fw.id = ui.id
         LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
@@ -180,7 +188,11 @@ class PostgresExtractor:
                             for p in persons
                             if p["role"] == "writer"
                         ]
-
+                        genres = processed_row["genres"]
+                        processed_row["genres"] = [
+                            {"id": g["id"], "name": g["name"]}
+                            for g in genres
+                        ]
                         processed_results.append(processed_row)
 
                     return (

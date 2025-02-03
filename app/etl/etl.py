@@ -28,7 +28,8 @@ class ETLState:
                     state = json.load(f)
                     self.last_processed_id = state.get("last_processed_id")
                     logger.info(
-                        f"Loaded state: last_processed_id = {self.last_processed_id}"
+                        "Loaded state: last_processed_id ="
+                        f" {self.last_processed_id}"
                     )
         except Exception as e:
             logger.error(f"Error loading state: {e}")
@@ -61,7 +62,8 @@ class MovieETL:
         logger.info("self.pg_pool: ", self.pg_pool)
 
     @retry(
-        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10)
     )
     async def fetch_movies_batch(
         self, last_id: int | None = None

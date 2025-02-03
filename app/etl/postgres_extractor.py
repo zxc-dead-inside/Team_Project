@@ -23,7 +23,7 @@ class PostgresExtractor:
             cur.execute(query)
             return cur.fetchone()[0]
 
-    def extrac_genres(
+    def extract_genres(
             self, last_modified: str | None,
     ) -> list[dict[str, Any]]:
         """
@@ -50,7 +50,6 @@ class PostgresExtractor:
                 if results:
                     return results
             return []
-
 
     def extract_movies(
         self, last_modified: str | None, batch_size: int, offset: int,
@@ -114,7 +113,13 @@ class PostgresExtractor:
         with self._get_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    query, (last_modified, last_modified, last_modified, batch_size, offset)
+                    query, (
+                        last_modified,
+                        last_modified,
+                        last_modified,
+                        batch_size,
+                        offset
+                    )
                 )
                 results = cur.fetchall()
                 logger.info(f'{len(results)} records were fetched.')
@@ -130,12 +135,16 @@ class PostgresExtractor:
                         # Track latest modifications
                         if row["max_person_modified"] and (
                             not latest_person_modified
-                            or row["max_person_modified"] > latest_person_modified
+                            or row[
+                                "max_person_modified"
+                            ] > latest_person_modified
                         ):
                             latest_person_modified = row["max_person_modified"]
                         if row["max_genre_modified"] and (
                             not latest_genre_modified
-                            or row["max_genre_modified"] > latest_genre_modified
+                            or row[
+                                "max_genre_modified"
+                            ] > latest_genre_modified
                         ):
                             latest_genre_modified = row["max_genre_modified"]
 
@@ -152,7 +161,8 @@ class PostgresExtractor:
                             p["name"] for p in persons if p["role"] == "writer"
                         ]
                         processed_row["directors_names"] = [
-                            p["name"] for p in persons if p["role"] == "director"
+                            p["name"]
+                            for p in persons if p["role"] == "director"
                         ]
                         processed_row["actors"] = [
                             {"id": p["id"], "name": p["name"]}
@@ -171,13 +181,106 @@ class PostgresExtractor:
                             if p["role"] == "writer"
                         ]
 
-
                         processed_results.append(processed_row)
 
-                    logger.info(f"Found {len(processed_results)} movies to process")
                     return (
                         processed_results,
                         latest_person_modified,
                         latest_genre_modified,
                     )
                 return [], None, None
+
+    def extract_persons(
+        self, last_modified: str | None, batch_size: int, offset: int,
+    ) -> tuple[list[dict[str, Any]], datetime | None, datetime | None]:
+        """
+        Extract persons modified after a specific timestamp.
+        Returns: (persons, latest_filmwork_modified, latest_genre_modified)
+        """
+        logger.info(f"Extracting persons modified after: {last_modified}")
+
+        query = """
+        WITH updated_ids AS (
+            SELECT DISTINCT
+                p.id,
+                MAX(fw.modified) as max_filmwork_modified
+            FROM content.person p
+            LEFT JOIN content.person_film_work pfw ON pfw.person_id = p.id
+            LEFT JOIN content.film_work fw ON fw.id = pfw.film_work_id
+            WHERE fw.modified > %s::timestamp
+                OR p.modified > %s::timestamp
+            GROUP BY p.id
+            ORDER BY p.id
+        ),
+        film_roles AS (
+            SELECT
+                pfw.person_id,
+                pfw.film_work_id,
+                array_agg(pfw.role) AS roles
+            FROM content.person_film_work pfw
+            GROUP BY pfw.person_id, pfw.film_work_id
+        )
+        SELECT
+            p.id,
+            p.full_name,
+            p.modified,
+            ui.max_filmwork_modified,
+            COALESCE(
+                json_agg(
+                    DISTINCT jsonb_build_object(
+                        'id', fr.film_work_id,
+                        'roles', fr.roles
+                    )
+                ) FILTER (WHERE p.id IS NOT NULL), '[]'
+            ) as films
+        FROM updated_ids ui
+        JOIN content.person p ON p.id = ui.id
+        LEFT JOIN content.person_film_work pfw ON pfw.person_id = p.id
+        LEFT JOIN film_roles fr ON fr.person_id = p.id
+        GROUP BY p.id, ui.max_filmwork_modified
+        ORDER BY p.modified
+        LIMIT %s
+        OFFSET %s;
+        """
+
+        with self._get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    query, (
+                        last_modified,
+                        last_modified,
+                        batch_size,
+                        offset
+                    )
+                )
+                results = cur.fetchall()
+                logger.info(f'{len(results)} records were fetched.')
+
+                if results:
+                    processed_results = []
+                    latest_filmwork_modified = None
+
+                    for row in results:
+                        processed_row = dict(row)
+
+                        # Track latest modifications
+                        if row["max_filmwork_modified"] and (
+                            not latest_filmwork_modified
+                            or row[
+                                "max_filmwork_modified"
+                            ] > latest_filmwork_modified
+                        ):
+                            latest_filmwork_modified = row[
+                                "max_filmwork_modified"
+                            ]
+
+                        # Remove temporary fields
+                        del processed_row["max_filmwork_modified"]
+
+                        processed_results.append(processed_row)
+
+                    return (
+                        processed_results,
+                        latest_filmwork_modified
+                    )
+                return None, []

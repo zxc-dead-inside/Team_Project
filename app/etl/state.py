@@ -2,6 +2,7 @@ import abc
 import json
 import os
 from typing import Any
+from pathlib import Path
 
 
 class BaseStorage(abc.ABC):
@@ -19,11 +20,12 @@ class BaseStorage(abc.ABC):
 class JsonFileStorage(BaseStorage):
     """JSON file storage implementation."""
 
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: Path) -> None:
         self.file_path = file_path
 
     def save_state(self, state: dict[str, Any]) -> None:
         """Save state to JSON file."""
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.file_path, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
 
@@ -84,13 +86,17 @@ class State(metaclass=SingletonMeta):
     def increment_processed(self, index: str, count: int = 1) -> None:
         """Increment the number of successfully processed movies."""
 
-        self._state[index]["total_processed"] = self._state[index].get("total_processed", 0) + count
+        self._state[index]["total_processed"] = self._state[index].get(
+            "total_processed", 0
+        ) + count
         self.storage.save_state(self._state)
 
     def increment_failed(self, index: int, count: int = 1) -> None:
         """Increment the number of failed movie processing attempts."""
 
-        self._state[index]["total_failed"] = self._state[index].get("total_failed", 0) + count
+        self._state[index]["total_failed"] = self._state[index].get(
+            "total_failed", 0
+        ) + count
         self.storage.save_state(self._state)
 
     def get_statistics(self, index: str) -> dict[str, Any]:
@@ -98,10 +104,14 @@ class State(metaclass=SingletonMeta):
 
         if self._state.get(index) is not None:
             return {
-                "total_processed": self._state[index].get("total_processed", 0),
+                "total_processed": self._state[index].get(
+                    "total_processed", 0
+                ),
                 "total_failed": self._state[index].get("total_failed", 0),
                 "last_modified": self._state[index].get("last_modified"),
-                "processing_started_at": self._state[index].get("processing_started_at"),
+                "processing_started_at": self._state[index].get(
+                    "processing_started_at"
+                )
             }
         else:
             return {

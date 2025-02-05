@@ -1,8 +1,8 @@
 """
 Models for the movie database application.
 
-This module contains Pydantic models for handling movie-related data structures,
-including films, persons, genres, and search functionality.
+This module contains Pydantic models for handling movie-related
+data structures, including films, persons, genres, and search functionality.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -16,8 +16,7 @@ from pydantic import (
     Field,
     HttpUrl,
     StringConstraints,
-    field_validator,
-    model_validator,
+    model_validator
 )
 
 from core.elasticsearch import es_client
@@ -89,15 +88,6 @@ class PersonBase(BaseAPIModel):
         max_length=255,
         min_length=1,
     )
-
-    @field_validator("full_name")
-    @classmethod
-    def validate_name_format(cls, v: str) -> PersonName:
-        """Validate name format and normalization."""
-        names = v.split()
-        if len(names) < 2:
-            raise ValueError("Full name must include both first and last name")
-        return PersonName(" ".join(name.capitalize() for name in names))
 
 
 class MovieRole(BaseAPIModel):
@@ -233,7 +223,8 @@ class MovieFull(MovieShort):
     def cache_ttl(self) -> timedelta:
         """Cache TTL for movies based on rating."""
         if self.imdb_rating >= 8.0:
-            return timedelta(hours=12)  # Popular movies cached for shorter time
+            # Popular movies cached for shorter time
+            return timedelta(hours=12)
         return timedelta(hours=24)
 
     model_config = ConfigDict(
@@ -244,7 +235,10 @@ class MovieFull(MovieShort):
                 "imdb_rating": 8.5,
                 "description": "An amazing example movie...",
                 "genre": [
-                    {"uuid": "123e4567-e89b-12d3-a456-426614174001", "name": "Action"}
+                    {
+                        "uuid": "123e4567-e89b-12d3-a456-426614174001",
+                        "name": "Action"
+                    }
                 ],
                 "created_at": "2024-01-01T00:00:00Z",
             }
@@ -255,7 +249,10 @@ class MovieFull(MovieShort):
 class SearchParams(BaseAPIModel):
     """Base model for search parameters."""
 
-    query: Annotated[str, StringConstraints(min_length=1, max_length=100)] = Field(
+    query: Annotated[
+        str,
+        StringConstraints(min_length=1, max_length=100)
+    ] = Field(
         description="Search query string",
         examples=["star wars"],
     )
@@ -376,4 +373,3 @@ async def serialize_film_detail(response: dict) -> MovieFull:
                 person["full_name"] = person.pop("name")
 
     return MovieFull(**film_data)
-

@@ -1,0 +1,323 @@
+{
+	"info": {
+		"_postman_id": "72b1e3ba-8a2d-4211-946f-272950ad4f45",
+		"name": "FastApi Movies",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "FilmsGeneral Главная страница",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films"
+					],
+					"query": [
+						{
+							"key": "sort",
+							"value": "-imdb_rating"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FilmsDetailed Полная информация по фильму.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films/b16d59f7-a386-467b-bea3-35e7ffbba902",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films",
+						"b16d59f7-a386-467b-bea3-35e7ffbba902"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FilmsSearch Поиск по фильмам.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films/search?query=star&page_number=1&page_size=50",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "star"
+						},
+						{
+							"key": "page_number",
+							"value": "1"
+						},
+						{
+							"key": "page_size",
+							"value": "50"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FilmsGeneralFilter Жанр и популярные фильмы в нём. Это просто фильтрация.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating&genre=5373d043-3f41-4ea8-9947-4b746c601bbd",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films"
+					],
+					"query": [
+						{
+							"key": "sort",
+							"value": "-imdb_rating"
+						},
+						{
+							"key": "genre",
+							"value": "5373d043-3f41-4ea8-9947-4b746c601bbd"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GenreList Список жанров.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/genres?sort=-name&page_number=1&page_size=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"genres"
+					],
+					"query": [
+						{
+							"key": "sort",
+							"value": "-name"
+						},
+						{
+							"key": "page_number",
+							"value": "1"
+						},
+						{
+							"key": "page_size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PersonList Список персон",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/persons",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"persons"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PersonSearch Поиск по персонам.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/persons/search?query=Bruce&page_number=1&page_size=50",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"persons",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "Bruce"
+						},
+						{
+							"key": "page_number",
+							"value": "1"
+						},
+						{
+							"key": "page_size",
+							"value": "50"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PersonSearch Данные по персоне.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/persons/967a13ac-a6e5-4f0d-8f66-e8fc55827d83/film",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"persons",
+						"967a13ac-a6e5-4f0d-8f66-e8fc55827d83",
+						"film"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PersonSearch Данные по конкретному жанру.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/genres/c020dab2-e9bd-4758-95ca-dbe363462173/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"genres",
+						"c020dab2-e9bd-4758-95ca-dbe363462173",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FilmSimilar Покажем фильмы того же жанра.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films/c241874f-53d3-411a-8894-37c19d8bf010/similar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films",
+						"c241874f-53d3-411a-8894-37c19d8bf010",
+						"similar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FilmPopular Популярные фильмы в жанре.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/films/popular/?genre=31cabbb5-6389-45c6-9b48-f7f173f6c40f&page_size=2&page_number=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"films",
+						"popular",
+						""
+					],
+					"query": [
+						{
+							"key": "genre",
+							"value": "31cabbb5-6389-45c6-9b48-f7f173f6c40f"
+						},
+						{
+							"key": "page_size",
+							"value": "2"
+						},
+						{
+							"key": "page_number",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

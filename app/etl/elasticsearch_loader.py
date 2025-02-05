@@ -69,7 +69,19 @@ class ElasticsearchLoader:
                     "actors_names": {"type": "text", "analyzer": "ru_en"},
                     "writers_names": {"type": "text", "analyzer": "ru_en"},
                     "directors_names": {"type": "text", "analyzer": "ru_en"},
-                    "genres": {"type": "keyword"},
+                    "genres": {
+                        "type": "nested",
+                        "dynamic": "strict",
+                        "properties": {
+                            "id": {
+                                "type": "keyword"
+                            },
+                            "name": {
+                                "type": "text",
+                                "analyzer": "ru_en"
+                            }
+                        }
+                    },
                     "actors": {
                         "type": "nested",
                         "dynamic": "strict",

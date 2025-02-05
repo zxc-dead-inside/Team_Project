@@ -14,6 +14,7 @@ from models.models import (
 
 router = APIRouter()
 
+
 @router.get("/search/", response_model=MovieSearchResponse)
 async def get_films(
     page_number: int = Query(1, ge=1),

@@ -6,7 +6,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000"
+    ]
 
     # Elasticsearch
     ELASTICSEARCH_HOST: str = (
@@ -19,6 +22,7 @@ class Settings(BaseSettings):
     # Movie index
     MOVIE_INDEX: str = "movies"
     GENRE_INDEX: str = "genres"
+    PERSON_INDEX: str = "persons"
 
     class Config:
         env_file = ".env"

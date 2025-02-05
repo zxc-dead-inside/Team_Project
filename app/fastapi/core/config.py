@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # Movie index
     MOVIE_INDEX: str = "movies"
     GENRE_INDEX: str = "genres"
+    PERSON_INDEX: str = "persons"
 
     class Config:
         env_file = ".env"

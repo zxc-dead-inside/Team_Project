@@ -1,3 +1,5 @@
+import random
+
 from functools import lru_cache
 from typing import Optional
 from uuid import UUID
@@ -7,7 +9,7 @@ from fastapi import Depends
 from typing import List
 
 from db.elastic import get_elastic
-from models.film import Film, FilmSearch, FilmGeneral
+from models.film import Film, FilmGeneral
 from core.config import settings
 
 
@@ -29,13 +31,26 @@ class FilmService:
             return None
         return film
 
+    async def _get_film_from_elastic(
+            self,
+            film_id: str
+            ) -> Optional[Film]:
+        try:
+            doc = await self.elastic.get(
+                index=settings.MOVIE_INDEX,
+                id=film_id
+            )
+        except NotFoundError:
+            return None
+        return Film(**doc['_source'])
+
     async def search_by_query(
             self,
             page_number: int,
             page_size: int,
             search_query: str = None
-            ) -> List[Optional[FilmSearch]]:
-        films = await self._search_film_in_elastic(
+            ) -> List[Optional[FilmGeneral]]:
+        films = await self._search_films_in_elastic(
             page_number,
             page_size,
             search_query
@@ -46,44 +61,12 @@ class FilmService:
             return None
         return films
 
-    async def search_general(
-            self,
-            page_number: int,
-            page_size: int,
-            sort: str = None,
-            genre: UUID = None
-            ) -> List[Optional[FilmGeneral]]:
-        films = await self._search_general_filmsin_elastic(
-            page_number,
-            page_size,
-            sort,
-            genre
-        )
-        if not films:
-            # Если он отсутствует в Elasticsearch, значит,
-            # фильма вообще нет в базе.
-            return None
-        return films
-
-    async def _get_film_from_elastic(
-            self,
-            film_id: str
-            ) -> Optional[FilmSearch]:
-        try:
-            doc = await self.elastic.get(
-                index=settings.MOVIE_INDEX,
-                id=film_id
-            )
-        except NotFoundError:
-            return None
-        return Film(**doc['_source'])
-
     async def _search_films_in_elastic(
             self,
             page_number: int,
             page_size: int,
             search_query: str = None
-            ) -> List[Optional[FilmSearch]]:
+            ) -> List[Optional[FilmGeneral]]:
         try:
             query = {"bool": {"must": [{"match_all": {}}]}}
             skip = (page_number - 1) * page_size
@@ -118,9 +101,28 @@ class FilmService:
             )
         except NotFoundError:
             return None
-        return [FilmSearch(**film['_source']) for film in doc['hits']['hits']]
+        return [FilmGeneral(**film['_source']) for film in doc['hits']['hits']]
 
-    async def _search_general_filmsin_elastic(
+    async def search_general(
+            self,
+            page_number: int,
+            page_size: int,
+            sort: str = None,
+            genre: UUID = None
+            ) -> List[Optional[FilmGeneral]]:
+        films = await self._search_general_films_in_elastic(
+            page_number,
+            page_size,
+            sort,
+            genre
+        )
+        if not films:
+            # Если он отсутствует в Elasticsearch, значит,
+            # фильма вообще нет в базе.
+            return None
+        return films
+
+    async def _search_general_films_in_elastic(
             self,
             page_number: int,
             page_size: int,
@@ -143,18 +145,17 @@ class FilmService:
                         "order": "desc" if sort.startswith("-") else "asc"
                     }
                 }]
-
-            # TODO: Изменить ETL, чтобы в индекс фильмов загружались
-            # идентификаторы жанров.
-            """if genre:
-                response = await es_client.get(
-                    index=settings.GENRE_INDEX
-                    id=genre
-                )
-                genre_name = response['_source']['name']
-                query["bool"]["filter"] = [
-                    {"term": {"genres": str(genre_name)}}
-                ]"""
+            if genre:
+                query["bool"]["filter"] = [{
+                    "nested": {
+                        "path": "genres",
+                        "query": {
+                            "term": {
+                                "genres.id": genre
+                            }
+                        }
+                    }
+                }]
             doc = await self.elastic.search(
                 index=settings.MOVIE_INDEX,
                 body=body
@@ -162,6 +163,40 @@ class FilmService:
         except NotFoundError:
             return None
         return [FilmGeneral(**film['_source']) for film in doc['hits']['hits']]
+
+    async def get_similar_by_id(
+            self,
+            film_id: str,
+            page_number: int,
+            page_size: int
+            ) -> List[Optional[FilmGeneral]]:
+        # Ищим фильм в Elasticsearch
+        film = await self._get_film_from_elastic(film_id)
+        if not film:
+            return None
+        similar_films = await self._search_general_films_in_elastic(
+            page_number=page_number,
+            page_size=page_size,
+            sort='-imdb_rating',
+            genre=random.choice(film.genres).id
+        )
+        return similar_films
+
+    async def get_popular_by_genre_id(
+            self,
+            genre_id: str,
+            page_number: int,
+            page_size: int
+            ) -> List[Optional[FilmGeneral]]:
+        films = await self._search_general_films_in_elastic(
+            page_number=page_number,
+            page_size=page_size,
+            sort='-imdb_rating',
+            genre=genre_id
+        )
+        if not films:
+            return None
+        return films
 
 
 # get_film_service — это провайдер FilmService.

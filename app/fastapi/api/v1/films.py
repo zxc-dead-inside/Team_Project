@@ -5,14 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from core.config import settings
-from core.elasticsearch import es_client
-from models.models import (
-    MovieSearchResponse,
-    MovieShort,
-    MovieFull,
-    serialize_film_detail
-)
 from services.film import FilmService, get_film_service
 
 
@@ -26,6 +18,7 @@ class Person(BaseModel):
 
 
 class Genre(BaseModel):
+    uuid: UUID
     name: str
 
 
@@ -34,22 +27,51 @@ class FilmDetailed(BaseModel):
     title: str
     imdb_rating: float
     description: str
-    genre: List[str]
+    genre: List[Genre]
     actors: List[Person]
     directors: List[Person]
     writers: List[Person]
-
-
-class FilmSearch(BaseModel):
-    uuid: UUID
-    title: str
-    imdb_rating: float
 
 
 class FilmGeneral(BaseModel):
     uuid: UUID
     title: str
     imdb_rating: float
+
+
+@router.get('/popular', response_model=List[FilmGeneral])
+async def films_popular_by_genre(
+    genre: str,
+    page_number: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    film_service: FilmService = Depends(get_film_service)
+) -> List[FilmGeneral]:
+    popular_films = await film_service.get_popular_by_genre_id(
+        genre,
+        page_number=page_number,
+        page_size=page_size
+    )
+    if not popular_films:
+        # Если фильм не найден, отдаём 404 статус.
+        # Желательно пользоваться уже определёнными HTTP-статусами,
+        # которые cодержат enum. Такой код будет более поддерживаемым.
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Popular films not found'
+        )
+    # Перекладываем данные из models.Film в Film.
+    # Обратите внимание, что у модели бизнес-логики есть поле description,
+    # которое отсутствует в модели ответа API.
+    # Если бы использовалась общая модель для бизнес-логики и
+    # формирования ответов API, вы бы предоставляли клиентам данные,
+    # которые им не нужны, и, возможно, данные, которые опасно возвращать
+    return [
+        FilmGeneral(
+            uuid=film.id,
+            title=film.title,
+            imdb_rating=film.imdb_rating
+        ) for film in popular_films
+    ]
 
 
 @router.get('/', response_model=List[FilmGeneral])
@@ -80,13 +102,13 @@ async def film_general(
     ]
 
 
-@router.get('/search', response_model=List[FilmSearch])
+@router.get('/search', response_model=List[FilmGeneral])
 async def film_search(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search_query: str | None = Query(None, alias="query"),
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmSearch]:
+) -> List[FilmGeneral]:
     films = await film_service.search_by_query(
         page_number=page_number,
         page_size=page_size,
@@ -98,7 +120,7 @@ async def film_search(
             detail='Films not found'
         )
     return [
-        FilmSearch(
+        FilmGeneral(
             uuid=film.id,
             title=film.title,
             imdb_rating=film.imdb_rating
@@ -127,31 +149,15 @@ async def film_details(
     # Если бы использовалась общая модель для бизнес-логики и
     # формирования ответов API, вы бы предоставляли клиентам данные,
     # которые им не нужны, и, возможно, данные, которые опасно возвращать
-    tmp = FilmDetailed(
-        uuid=film.id,
-        title=film.title,
-        imdb_rating=film.imdb_rating,
-        description=film.description,
-        genre=film.genres,
-        actors=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.actors
-        ],
-        directors=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.directors
-        ],
-        writers=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.writers
-        ],
-    )
     return FilmDetailed(
         uuid=film.id,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genre=film.genres,
+        genre=[
+            Genre(uuid=genre.id, name=genre.name)
+            for genre in film.genres
+        ],
         actors=[
             Person(uuid=actor.id, full_name=actor.name)
             for actor in film.actors
@@ -165,3 +171,38 @@ async def film_details(
             for actor in film.writers
         ],
     )
+
+
+@router.get('/{film_id}/similar', response_model=List[FilmGeneral])
+async def film_similar(
+    film_id: str,
+    page_number: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    film_service: FilmService = Depends(get_film_service)
+) -> List[FilmGeneral]:
+    similar_films = await film_service.get_similar_by_id(
+        film_id,
+        page_number=page_number,
+        page_size=page_size
+    )
+    if not similar_films:
+        # Если фильм не найден, отдаём 404 статус.
+        # Желательно пользоваться уже определёнными HTTP-статусами,
+        # которые cодержат enum. Такой код будет более поддерживаемым.
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Similar films not found'
+        )
+    # Перекладываем данные из models.Film в Film.
+    # Обратите внимание, что у модели бизнес-логики есть поле description,
+    # которое отсутствует в модели ответа API.
+    # Если бы использовалась общая модель для бизнес-логики и
+    # формирования ответов API, вы бы предоставляли клиентам данные,
+    # которые им не нужны, и, возможно, данные, которые опасно возвращать
+    return [
+        FilmGeneral(
+            uuid=film.id,
+            title=film.title,
+            imdb_rating=film.imdb_rating
+        ) for film in similar_films
+    ]

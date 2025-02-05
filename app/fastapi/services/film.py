@@ -1,14 +1,16 @@
+import json
 import random
 
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
-from typing import List
+from redis.asyncio import Redis
 
 from db.elastic import get_elastic
+from db.redis import get_redis
 from models.film import Film, FilmGeneral
 from core.config import settings
 
@@ -17,19 +19,51 @@ from core.config import settings
 # Никакой магии тут нет. Обычный класс с обычными методами.
 # Этот класс ничего не знает про DI — максимально сильный и независимый.
 class FilmService:
-    def __init__(self, elastic: AsyncElasticsearch):
+    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
+        self.redis = redis
         self.elastic = elastic
 
     # get_by_id возвращает объект фильма.
     # Он опционален, так как фильм может отсутствовать в базе.
     async def get_by_id(self, film_id: str) -> Optional[Film]:
-        # Ищим фильм в Elasticsearch
-        film = await self._get_film_from_elastic(film_id)
+        # Поиск фильма в кэше
+        film = await self._get_film_from_cache(film_id)
         if not film:
+            # Поиск фильма в Elasticsearch
+            film = await self._get_film_from_elastic(film_id)
+            if not film:
             # Если он отсутствует в Elasticsearch, значит,
             # фильма вообще нет в базе.
-            return None
+                return None
+            await self._put_film_to_cache(film)
         return film
+    
+    async def _get_film_from_cache(self, film_id: str) -> Optional[Film]:
+        data = await self.redis.get(film_id)
+        if not data:
+            return None
+        film = Film.model_validate_json((data))
+        return film
+    
+    async def _put_film_to_cache(self, film: Film):
+        await self.redis.set(
+            film.id, film.model_dump_json(), 3600)
+        
+    async def _get_films_from_cache(
+            self, key: str) -> List[Optional[FilmGeneral]]:
+        
+        data = await self.redis.get(
+            f"{settings.MOVIE_INDEX}:{json.dumps(key)}")
+        if not data:
+            return None
+        films = [FilmGeneral(**dict(item)) for item in json.loads(data)]
+        return films
+    
+    async def _put_films_to_cache(self, key: str, data: List[FilmGeneral]):
+        films = json.dumps([item.__dict__ for item in data])
+        await self.redis.set(
+            f"{settings.MOVIE_INDEX}:{json.dumps(key)}",
+            films, 3600)
 
     async def _get_film_from_elastic(
             self,
@@ -50,15 +84,20 @@ class FilmService:
             page_size: int,
             search_query: str = None
             ) -> List[Optional[FilmGeneral]]:
-        films = await self._search_films_in_elastic(
-            page_number,
-            page_size,
-            search_query
-        )
+        
+        films = await self._get_films_from_cache(search_query)
         if not films:
+            films = await self._search_films_in_elastic(
+                page_number,
+                page_size,
+                search_query
+            )
+            if not films:
             # Если он отсутствует в Elasticsearch, значит,
             # фильма вообще нет в базе.
-            return None
+                return None
+    
+            await self._put_films_to_cache(search_query, films)
         return films
 
     async def _search_films_in_elastic(
@@ -82,7 +121,7 @@ class FilmService:
                         "multi_match": {
                             "query": search_query,
                             "fields": [
-                                "title^3",
+                                "title",
                                 "description",
                                 "actors_names",
                                 "directors_names",
@@ -206,6 +245,7 @@ class FilmService:
 # едином экземпляре (синглтона)
 @lru_cache()
 def get_film_service(
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+        redis: Redis = Depends(get_redis),
+        elastic: AsyncElasticsearch = Depends(get_elastic)
 ) -> FilmService:
-    return FilmService(elastic)
+    return FilmService(redis, elastic)

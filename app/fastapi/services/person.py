@@ -19,6 +19,7 @@ class PersonService:
             page_size: int,
             sort: str = None
             ) -> List[Optional[Person]]:
+    
         persons = await self._get_list(
             page_number=page_number,
             page_size=page_size,

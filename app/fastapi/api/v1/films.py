@@ -5,47 +5,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from models.models import Genre, MovieFull, MovieShort, Person
 from services.film import FilmService, get_film_service
 
 
 router = APIRouter()
 
 
-# Модель ответа API
-class Person(BaseModel):
-    uuid: UUID
-    full_name: str
-
-
-class Genre(BaseModel):
-    uuid: UUID
-    name: str
-
-
-class FilmDetailed(BaseModel):
-    uuid: UUID
-    title: str
-    imdb_rating: float
-    description: str
-    genre: List[Genre]
-    actors: List[Person]
-    directors: List[Person]
-    writers: List[Person]
-
-
-class FilmGeneral(BaseModel):
-    uuid: UUID
-    title: str
-    imdb_rating: float
-
-
-@router.get('/popular', response_model=List[FilmGeneral])
+@router.get('/popular', response_model=List[MovieShort])
 async def films_popular_by_genre(
     genre: str,
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmGeneral]:
+) -> List[MovieShort]:
     popular_films = await film_service.get_popular_by_genre_id(
         genre,
         page_number=page_number,
@@ -66,7 +39,7 @@ async def films_popular_by_genre(
     # формирования ответов API, вы бы предоставляли клиентам данные,
     # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return [
-        FilmGeneral(
+        MovieShort(
             uuid=film.id,
             title=film.title,
             imdb_rating=film.imdb_rating
@@ -74,14 +47,14 @@ async def films_popular_by_genre(
     ]
 
 
-@router.get('/', response_model=List[FilmGeneral])
+@router.get('/', response_model=List[MovieShort])
 async def film_general(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     sort: str | None = None,
     genre: UUID | None = None,
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmGeneral]:
+) -> List[MovieShort]:
     films = await film_service.search_general(
         page_number=page_number,
         page_size=page_size,
@@ -94,7 +67,7 @@ async def film_general(
             detail='Films not found'
         )
     return [
-        FilmGeneral(
+        MovieShort(
             uuid=film.id,
             title=film.title,
             imdb_rating=film.imdb_rating
@@ -102,13 +75,13 @@ async def film_general(
     ]
 
 
-@router.get('/search', response_model=List[FilmGeneral])
+@router.get('/search', response_model=List[MovieShort])
 async def film_search(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search_query: str | None = Query(None, alias="query"),
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmGeneral]:
+) -> List[MovieShort]:
     films = await film_service.search_by_query(
         page_number=page_number,
         page_size=page_size,
@@ -120,7 +93,7 @@ async def film_search(
             detail='Films not found'
         )
     return [
-        FilmGeneral(
+        MovieShort(
             uuid=film.id,
             title=film.title,
             imdb_rating=film.imdb_rating
@@ -129,11 +102,11 @@ async def film_search(
 
 
 # Внедряем FilmService с помощью Depends(get_film_service)
-@router.get('/{film_id}', response_model=FilmDetailed)
+@router.get('/{film_id}', response_model=MovieFull)
 async def film_details(
     film_id: str,
     film_service: FilmService = Depends(get_film_service)
-) -> FilmDetailed:
+) -> MovieFull:
     film = await film_service.get_by_id(film_id)
     if not film:
         # Если фильм не найден, отдаём 404 статус.
@@ -149,37 +122,37 @@ async def film_details(
     # Если бы использовалась общая модель для бизнес-логики и
     # формирования ответов API, вы бы предоставляли клиентам данные,
     # которые им не нужны, и, возможно, данные, которые опасно возвращать
-    return FilmDetailed(
+    return MovieFull(
         uuid=film.id,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
         genre=[
-            Genre(uuid=genre.id, name=genre.name)
+            Genre(uuid=UUID(genre.id), name=genre.name)
             for genre in film.genres
         ],
         actors=[
-            Person(uuid=actor.id, full_name=actor.name)
+            Person(uuid=UUID(actor.id), full_name=actor.name)
             for actor in film.actors
         ],
         directors=[
-            Person(uuid=actor.id, full_name=actor.name)
+            Person(uuid=UUID(actor.id), full_name=actor.name)
             for actor in film.directors
         ],
         writers=[
-            Person(uuid=actor.id, full_name=actor.name)
+            Person(uuid=UUID(actor.id), full_name=actor.name)
             for actor in film.writers
         ],
     )
 
 
-@router.get('/{film_id}/similar', response_model=List[FilmGeneral])
+@router.get('/{film_id}/similar', response_model=List[MovieShort])
 async def film_similar(
     film_id: str,
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmGeneral]:
+) -> List[MovieShort]:
     similar_films = await film_service.get_similar_by_id(
         film_id,
         page_number=page_number,
@@ -200,7 +173,7 @@ async def film_similar(
     # формирования ответов API, вы бы предоставляли клиентам данные,
     # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return [
-        FilmGeneral(
+        MovieShort(
             uuid=film.id,
             title=film.title,
             imdb_rating=film.imdb_rating

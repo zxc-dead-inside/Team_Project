@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pydantic_settings import BaseSettings
 
 
@@ -28,6 +29,8 @@ class Settings(BaseSettings):
     MOVIE_INDEX: str = "movies"
     GENRE_INDEX: str = "genres"
     PERSON_INDEX: str = "persons"
+
+    DEFAULT_TTL: timedelta = timedelta(minutes=15)
 
     class Config:
         env_file = ".env"

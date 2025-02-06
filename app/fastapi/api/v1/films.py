@@ -3,7 +3,6 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
 
 from models.models import Genre, MovieFull, MovieShort, Person
 from services.film import FilmService, get_film_service
@@ -128,19 +127,19 @@ async def film_details(
         imdb_rating=film.imdb_rating,
         description=film.description,
         genre=[
-            Genre(uuid=UUID(genre.id), name=genre.name)
+            Genre(uuid=genre.id, name=genre.name)
             for genre in film.genres
         ],
         actors=[
-            Person(uuid=UUID(actor.id), full_name=actor.name)
+            Person(uuid=actor.id, full_name=actor.name)
             for actor in film.actors
         ],
         directors=[
-            Person(uuid=UUID(actor.id), full_name=actor.name)
+            Person(uuid=actor.id, full_name=actor.name)
             for actor in film.directors
         ],
         writers=[
-            Person(uuid=UUID(actor.id), full_name=actor.name)
+            Person(uuid=actor.id, full_name=actor.name)
             for actor in film.writers
         ],
     )

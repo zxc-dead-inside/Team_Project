@@ -53,10 +53,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
-app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
-app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
+app.include_router(api_router, prefix=settings.API_V1_STR)
+# app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
+# app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
+# app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
 
 
 @app.get("/health")

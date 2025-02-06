@@ -1,6 +1,10 @@
 # Environments
 .venv
 venv
+.devcontainer
+.devcontainer_
+_films.py
+_movies.py
 state
 *.egg-info
 

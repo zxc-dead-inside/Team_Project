@@ -30,22 +30,40 @@ http://localhost:9000/docs#/
 
 http://localhost:9000/health
 
-## End points
+## Маршруты API
 
-- Главная страница										+	`/api/v1/films?sort=-imdb_rating&page_size=50&page_number=1`
-- Жанр и популярные фильмы в нём. Это просто фильтрация.	+	`/api/v1/films?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
-- Список жанров.											+	`/api/v1/genres/`
-- Поиск по фильмам.										+	`/api/v1/films/search?query=star&page_number=1&page_size=50`
-- Поиск по персонам.										+	`/api/v1/persons/search?query=captain&page_number=1&page_size=50`
-- Полная информация по фильму.							+	`/api/v1/films/<uuid:UUID>/`
-- покажем фильмы того же жанра.							+	`/api/v1/films/<uuid:UUID>/similar`
-- Данные по персоне.										+	`/api/v1/persons/<uuid:UUID>/`
-- Фильмы по персоне.										+	`/api/v1/persons/<uuid:UUID>/film/`
-- Данные по конкретному жанру.							+	`/api/v1/genres/<uuid:UUID>/`
-- Популярные фильмы в жанре.								+	`/api/v1/films/popular?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
+### Фильмы
+
+- Главная страница: `/api/v1/movies?sort=-imdb_rating&page_size=50&page_number=1`
+- Жанр и популярные фильмы в нём: `/api/v1/movies?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
+- Поиск по фильмам: `/api/v1/movies/search?query=star&page_number=1&page_size=50`
+- Полная информация по фильму: `/api/v1/movies/<uuid:UUID>/`
+- Покажем фильмы того же жанра: `/api/v1/movies/<uuid:UUID>/similar`
+- Популярные фильмы в жанре: `/api/v1/movies/popular?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
+
+### Жанры
+
+- Список жанров: `/api/v1/genres/`
+- Данные по конкретному жанры: `/api/v1/genres/<uuid:UUID>/`
+
+### Персоны
+
+- Поиск по персонам: `/api/v1/persons/search?query=captain&page_number=1&page_size=50`
+- Данные по персоне: `/api/v1/persons/<uuid:UUID>/`
+- Фильмы по персоне: `/api/v1/persons/<uuid:UUID>/film/`
+
 
 ## Redis (кэш)
 
-В данном коммите реализовано сохранение и поиск в кэше:
-- Полная информация по фильму.							+	`/api/v1/films/<uuid:UUID>/`
-- Поиск по фильмам.										+	`/api/v1/films/search?query=star&page_number=1&page_size=50`
+В данном коммите реализовано сохранение и поиск в кэше для всех маршрутов API.
+
+Для подключения к redis добавлены переменные:
+```.env
+REDIS_HOST=<host_here>
+REDIS_PORT=<port_here>
+REDIS_CACHE_DB=<db_number_here>
+```
+
+### Изменения в docker compose
+- Добавлен контейнер с redis
+

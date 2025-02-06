@@ -49,7 +49,7 @@ class FilmService:
             self, film_id: str) -> Optional[MovieDetailResponse]:
         """Trying to get the data from the cache."""
 
-        data = await self.redis.get(film_id)
+        data = await self.redis.get(f"{settings.MOVIE_INDEX}:{film_id}")
         if not data:
             return None
         film = MovieDetailResponse.model_validate_json(data)
@@ -61,7 +61,8 @@ class FilmService:
         """Saves the data to the cache."""
 
         await self.redis.set(
-            str(film.id), film.model_dump_json(), ttl)
+            f"{settings.MOVIE_INDEX}:{str(film.id)}",
+            film.model_dump_json(), ttl)
         
     async def _get_films_from_cache(
             self, key: str) -> List[Optional[MovieShortListResponse]]:
@@ -71,7 +72,8 @@ class FilmService:
             f"{settings.MOVIE_INDEX}:{json.dumps(key)}")
         if not data:
             return None
-        films = [MovieShortListResponse(**dict(item)) for item in json.loads(data)]
+        films = [
+            MovieShortListResponse(**dict(item)) for item in json.loads(data)]
         return films
     
     async def _put_films_to_cache(

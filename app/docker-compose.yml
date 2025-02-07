@@ -1,0 +1,83 @@
+# version: '3'
+services:
+  service:
+    build: django/
+    expose:
+      - "8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - theatre-db
+    volumes:
+      - static-data:/var/www/static/
+    # networks:
+    #   - theatre_network
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs:/etc/nginx/conf.d:ro
+      - static-data:/var/www/static/
+    depends_on:
+      - service
+    ports:
+      - "80:80"
+    # networks:
+    #   - theatre_network
+
+  theatre-db:
+    image: postgres:14
+    env_file:
+      - ./.env
+    volumes:
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    # networks:
+    #   - theatre_network
+
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    # networks:
+    #   - theatre_network
+
+  movies-etl:
+    build: etl/
+    env_file:
+      - etl/.env
+    volumes:
+      - ./state:/app/state
+    # networks:
+    #   - theatre_network
+
+  theatre-redis:
+    image: redis
+
+  fastapi:
+    build: fastapi/
+    ports:
+      - "9000:9000"
+    env_file:
+      - fastapi/.env
+    depends_on:
+      - elasticsearch
+      - service
+      - theatre-redis
+    # networks:
+    #   - theatre_network
+
+volumes:
+  static-data:
+  esdata:
+
+# networks:
+#   theatre_network:
+#     name: theatre_network
+#     external: true

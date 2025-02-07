@@ -1,0 +1,7 @@
+ELASTICSEARCH_HOST=<host_here>
+#host.docker.internal -> for development
+ELASTICSEARCH_PORT=<port_here>
+
+REDIS_HOST=<host_here>
+REDIS_PORT=<port_here>
+REDIS_CACHE_DB=<db_number_here>

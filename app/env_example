@@ -1,0 +1,15 @@
+PROJECT_NAME="Movie theater"
+PROJECT_DESCRIPTION="The best movie theater for averyone"
+
+DEBUG=True
+SECRET_KEY=<secrcet_key_here>
+
+SQL_ENGINE=django.db.backends.postgresql_psycopg2
+POSTGRES_USER=<user_here>
+POSTGRES_PASSWORD=<password_here>
+POSTGRES_DB=<db_here>
+
+SQL_HOST=theatre-db
+SQL_PORT=5432
+SQL_OPTIONS=-c search_path=public,content
+DATABASE_TYPE=postgres

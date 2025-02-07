@@ -1,0 +1,19 @@
+# Environments
+.venv
+venv
+.devcontainer
+.devcontainer_
+_films.py
+_movies.py
+state
+*.egg-info
+
+*.env
+
+
+__pycache__/
+
+notebooks/*
+
+app/data
+app/state

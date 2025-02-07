@@ -12,7 +12,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies?sort=-imdb_rating",
+					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -21,7 +21,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies"
+						"films"
 					],
 					"query": [
 						{
@@ -39,7 +39,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies/3d825f60-9fff-4dfe-b294-1a45fa1e115d",
+					"raw": "http://localhost:9000/api/v1/films/3d825f60-9fff-4dfe-b294-1a45fa1e115d",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -48,7 +48,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies",
+						"films",
 						"3d825f60-9fff-4dfe-b294-1a45fa1e115d"
 					]
 				}
@@ -61,7 +61,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies/search?query=star&page_number=1&page_size=50",
+					"raw": "http://localhost:9000/api/v1/films/search?query=star&page_number=1&page_size=50",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -70,7 +70,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies",
+						"films",
 						"search"
 					],
 					"query": [
@@ -97,7 +97,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies?sort=-imdb_rating&genre=5373d043-3f41-4ea8-9947-4b746c601bbd",
+					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating&genre=5373d043-3f41-4ea8-9947-4b746c601bbd",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -106,7 +106,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies"
+						"films"
 					],
 					"query": [
 						{
@@ -289,7 +289,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies/3d825f60-9fff-4dfe-b294-1a45fa1e115d/similar",
+					"raw": "http://localhost:9000/api/v1/films/3d825f60-9fff-4dfe-b294-1a45fa1e115d/similar",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -298,7 +298,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies",
+						"films",
 						"3d825f60-9fff-4dfe-b294-1a45fa1e115d",
 						"similar"
 					]
@@ -312,7 +312,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/movies/popular/?genre=31cabbb5-6389-45c6-9b48-f7f173f6c40f&page_size=2&page_number=1",
+					"raw": "http://localhost:9000/api/v1/films/popular/?genre=31cabbb5-6389-45c6-9b48-f7f173f6c40f&page_size=2&page_number=1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -321,7 +321,7 @@
 					"path": [
 						"api",
 						"v1",
-						"movies",
+						"films",
 						"popular",
 						""
 					],

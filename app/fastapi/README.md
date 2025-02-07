@@ -34,12 +34,12 @@ http://localhost:9000/health
 
 ### Фильмы
 
-- Главная страница: `/api/v1/movies?sort=-imdb_rating&page_size=50&page_number=1`
-- Жанр и популярные фильмы в нём: `/api/v1/movies?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
-- Поиск по фильмам: `/api/v1/movies/search?query=star&page_number=1&page_size=50`
-- Полная информация по фильму: `/api/v1/movies/<uuid:UUID>/`
-- Покажем фильмы того же жанра: `/api/v1/movies/<uuid:UUID>/similar`
-- Популярные фильмы в жанре: `/api/v1/movies/popular?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
+- Главная страница: `/api/v1/films?sort=-imdb_rating&page_size=50&page_number=1`
+- Жанр и популярные фильмы в нём: `/api/v1/films?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
+- Поиск по фильмам: `/api/v1/films/search?query=star&page_number=1&page_size=50`
+- Полная информация по фильму: `/api/v1/films/<uuid:UUID>/`
+- Покажем фильмы того же жанра: `/api/v1/films/<uuid:UUID>/similar`
+- Популярные фильмы в жанре: `/api/v1/films/popular?genre=<uuid:UUID>&sort=-imdb_rating&page_size=50&page_number=1`
 
 ### Жанры
 

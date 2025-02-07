@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pydantic_settings import BaseSettings
 
 
@@ -19,10 +20,17 @@ class Settings(BaseSettings):
     ELASTICSEARCH_USERNAME: str = ""
     ELASTICSEARCH_PASSWORD: str = ""
 
+    #Redis
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_CACHE_DB: int
+
     # Movie index
     MOVIE_INDEX: str = "movies"
     GENRE_INDEX: str = "genres"
     PERSON_INDEX: str = "persons"
+
+    DEFAULT_TTL: timedelta = timedelta(minutes=15)
 
     class Config:
         env_file = ".env"

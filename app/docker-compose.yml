@@ -57,6 +57,9 @@ services:
     # networks:
     #   - theatre_network
 
+  theatre-redis:
+    image: redis
+
   fastapi:
     build: fastapi/
     ports:
@@ -66,6 +69,7 @@ services:
     depends_on:
       - elasticsearch
       - service
+      - theatre-redis
     # networks:
     #   - theatre_network
 

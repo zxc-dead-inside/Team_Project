@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "72b1e3ba-8a2d-4211-946f-272950ad4f45",
+		"_postman_id": "9dc14d34-460a-44b7-a1ce-9c3ea29d960c",
 		"name": "FastApi Movies",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25492190"
 	},
 	"item": [
 		{
@@ -11,7 +12,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating",
+					"raw": "http://localhost:9000/api/v1/movies?sort=-imdb_rating",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -20,7 +21,7 @@
 					"path": [
 						"api",
 						"v1",
-						"films"
+						"movies"
 					],
 					"query": [
 						{
@@ -38,7 +39,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films/b16d59f7-a386-467b-bea3-35e7ffbba902",
+					"raw": "http://localhost:9000/api/v1/movies/3d825f60-9fff-4dfe-b294-1a45fa1e115d",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -47,8 +48,8 @@
 					"path": [
 						"api",
 						"v1",
-						"films",
-						"b16d59f7-a386-467b-bea3-35e7ffbba902"
+						"movies",
+						"3d825f60-9fff-4dfe-b294-1a45fa1e115d"
 					]
 				}
 			},
@@ -60,7 +61,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films/search?query=star&page_number=1&page_size=50",
+					"raw": "http://localhost:9000/api/v1/movies/search?query=star&page_number=1&page_size=50",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -69,7 +70,7 @@
 					"path": [
 						"api",
 						"v1",
-						"films",
+						"movies",
 						"search"
 					],
 					"query": [
@@ -96,7 +97,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films?sort=-imdb_rating&genre=5373d043-3f41-4ea8-9947-4b746c601bbd",
+					"raw": "http://localhost:9000/api/v1/movies?sort=-imdb_rating&genre=5373d043-3f41-4ea8-9947-4b746c601bbd",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -105,7 +106,7 @@
 					"path": [
 						"api",
 						"v1",
-						"films"
+						"movies"
 					],
 					"query": [
 						{
@@ -214,7 +215,7 @@
 			"response": []
 		},
 		{
-			"name": "PersonSearch Данные по персоне.",
+			"name": "PersonSearch Фильмы по персоне.",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -237,7 +238,30 @@
 			"response": []
 		},
 		{
-			"name": "PersonSearch Данные по конкретному жанру.",
+			"name": "PersonSearch Данные по персоне",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9000/api/v1/persons/967a13ac-a6e5-4f0d-8f66-e8fc55827d83/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9000",
+					"path": [
+						"api",
+						"v1",
+						"persons",
+						"967a13ac-a6e5-4f0d-8f66-e8fc55827d83",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GenreDetailed Данные по конкретному жанру.",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -265,7 +289,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films/c241874f-53d3-411a-8894-37c19d8bf010/similar",
+					"raw": "http://localhost:9000/api/v1/movies/3d825f60-9fff-4dfe-b294-1a45fa1e115d/similar",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -274,8 +298,8 @@
 					"path": [
 						"api",
 						"v1",
-						"films",
-						"c241874f-53d3-411a-8894-37c19d8bf010",
+						"movies",
+						"3d825f60-9fff-4dfe-b294-1a45fa1e115d",
 						"similar"
 					]
 				}
@@ -288,7 +312,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:9000/api/v1/films/popular/?genre=31cabbb5-6389-45c6-9b48-f7f173f6c40f&page_size=2&page_number=1",
+					"raw": "http://localhost:9000/api/v1/movies/popular/?genre=31cabbb5-6389-45c6-9b48-f7f173f6c40f&page_size=2&page_number=1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -297,7 +321,7 @@
 					"path": [
 						"api",
 						"v1",
-						"films",
+						"movies",
 						"popular",
 						""
 					],

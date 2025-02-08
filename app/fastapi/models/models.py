@@ -171,7 +171,7 @@ class MovieFull(MovieShort):
     description: Annotated[str, StringConstraints(max_length=10000)] = Field(
         description="Detailed description of the film"
     )
-    genre: list[Genre] = Field(
+    genre: list[str] = Field(
         description="List of film genres",
         min_length=1,
     )
@@ -234,12 +234,7 @@ class MovieFull(MovieShort):
                 "title": "The Example Movie",
                 "imdb_rating": 8.5,
                 "description": "An amazing example movie...",
-                "genre": [
-                    {
-                        "uuid": "123e4567-e89b-12d3-a456-426614174001",
-                        "name": "Action"
-                    }
-                ],
+                "genre": ["Action", "Drama"],
                 "created_at": "2024-01-01T00:00:00Z",
             }
         }

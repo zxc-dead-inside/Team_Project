@@ -200,12 +200,10 @@ class FilmService:
                 }]
             if genre:
                 query["bool"]["filter"] = [{
-                    "nested": {
-                        "path": "genres",
-                        "query": {
-                            "term": {
-                                "genres.id": genre
-                            }
+                    "term": {
+                        "genres": {
+                            "value": genre,  # genres is a keyword field
+                            "case_insensitive": True
                         }
                     }
                 }]
@@ -250,23 +248,36 @@ class FilmService:
 
     async def get_popular_by_genre_id(
             self, genre_id: str, page_number: int, page_size: int
-            ) -> List[Optional[MovieShortListResponse]]:
-        """Returns the most popular movies in a genre."""
+            ) -> list[MovieShortListResponse | None]:
+        """
+        Returns the most popular movies in a genre.
+        Args:
+            genre_id: Genre identifier
+            page_number: Page number for pagination
+            page_size: Number of items per page
+        
+        Returns:
+            List of movies or None if no movies found
+        """
 
         sort = '-imdb_rating'
-        key = f"{page_number}:{page_size}:{sort}:{genre_id}"
+        cache_key = f"{page_number}:{page_size}:{sort}:{genre_id}"
         
-        films = await self._get_films_from_cache(key)
+        films = await self._get_films_from_cache(cache_key)
+        if films:
+            return films
+
+        films = await self._search_general_films_in_elastic(
+            page_number=page_number,
+            page_size=page_size,
+            sort=sort,
+            genre=genre_id
+        )
+        
         if not films:
-            films = await self._search_general_films_in_elastic(
-                page_number=page_number,
-                page_size=page_size,
-                sort=sort,
-                genre=genre_id
-            )
-            if not films:
-                return None
-            await self._put_films_to_cache(key, films)
+            return None
+            
+        await self._put_films_to_cache(cache_key, films)
         return films
 
 

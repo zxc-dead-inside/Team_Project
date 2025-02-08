@@ -23,7 +23,7 @@ class MovieShortListResponse(BaseModel):
 
 class MovieListResponse(MovieShortListResponse):
     description: str | None = None
-    genres: list[Genre]  # list[str]
+    genres: list[str]
     actors_names: list[str]
     directors_names: list[str]
     writers_names: list[str]

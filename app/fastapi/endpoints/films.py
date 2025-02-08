@@ -2,41 +2,41 @@ from http import HTTPStatus
 from typing import List
 from uuid import UUID
 
+from elasticsearch import BadRequestError
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from models.models import Genre, MovieFull, MovieShort, Person
+from models.models import MovieFull, MovieShort, Person
 from services.film import FilmService, get_film_service
 
 
 router = APIRouter()
 
 
-@router.get('/popular', response_model=List[MovieShort])
+@router.get('/popular', response_model=list[MovieShort])
 async def films_popular_by_genre(
     genre: str,
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
-    film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
-    popular_films = await film_service.get_popular_by_genre_id(
-        genre,
-        page_number=page_number,
-        page_size=page_size
-    )
+     film_service: FilmService = Depends(get_film_service)
+) -> list[MovieShort]:
+
+    try:
+        popular_films = await film_service.get_popular_by_genre_id(
+            genre,
+            page_number=page_number,
+            page_size=page_size
+        )
+    except BadRequestError as error:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f'Invalid genre filter: {error}'
+        ) from error
+
     if not popular_films:
-        # Если фильм не найден, отдаём 404 статус.
-        # Желательно пользоваться уже определёнными HTTP-статусами,
-        # которые cодержат enum. Такой код будет более поддерживаемым.
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Popular films not found'
         )
-    # Перекладываем данные из models.Film в Film.
-    # Обратите внимание, что у модели бизнес-логики есть поле description,
-    # которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и
-    # формирования ответов API, вы бы предоставляли клиентам данные,
-    # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return [
         MovieShort(
             uuid=film.id,
@@ -108,28 +108,16 @@ async def film_details(
 ) -> MovieFull:
     film = await film_service.get_by_id(film_id)
     if not film:
-        # Если фильм не найден, отдаём 404 статус.
-        # Желательно пользоваться уже определёнными HTTP-статусами,
-        # которые cодержат enum. Такой код будет более поддерживаемым.
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Film not found'
         )
-    # Перекладываем данные из models.Film в Film.
-    # Обратите внимание, что у модели бизнес-логики есть поле description,
-    # которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и
-    # формирования ответов API, вы бы предоставляли клиентам данные,
-    # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return MovieFull(
         uuid=film.id,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genre=[
-            Genre(uuid=genre.id, name=genre.name)
-            for genre in film.genres
-        ],
+        genre=film.genres,
         actors=[
             Person(uuid=actor.id, full_name=actor.name)
             for actor in film.actors

@@ -59,6 +59,10 @@ services:
 
   theatre-redis:
     image: redis
+    ports:
+      - "6379:6379"
+    # networks:
+    #   - theatre_network
 
   fastapi:
     build: fastapi/
@@ -70,8 +74,8 @@ services:
       - elasticsearch
       - service
       - theatre-redis
-    # networks:
-    #   - theatre_network
+  # networks:
+  #   - theatre_network
 
 volumes:
   static-data:

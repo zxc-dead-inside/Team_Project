@@ -182,7 +182,7 @@ class MovieFull(MovieShort):
     )
     directors: list[PersonBase] = Field(
         description="Directors in the movie",
-        min_length=1,
+        default_factory=list,
     )
     created_at: datetime = Field(
         description="Film creation timestamp",

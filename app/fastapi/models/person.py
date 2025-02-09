@@ -11,3 +11,8 @@ class Person(BaseModel):
     id: UUID
     full_name: str
     films: list[FilmRoles]
+
+    @property
+    def cache_key(self) -> str:
+        """Generate cache key for Redis."""
+        return f"{self.__class__.__name__.lower()}:{self.id}"

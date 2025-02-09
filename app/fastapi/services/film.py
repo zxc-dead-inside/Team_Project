@@ -47,7 +47,9 @@ class FilmService:
             self, film_id: str) -> MovieDetailResponse | None:
         """Trying to get the data from the cache."""
 
-        data = await self.redis.get(f"{settings.movie_index}:{film_id}")
+        key = f"{settings.movie_index}:moviedetailresponse:{film_id}"
+
+        data = await self.redis.get(key)
         if not data:
             return None
         film = MovieDetailResponse.model_validate_json(data)
@@ -58,16 +60,18 @@ class FilmService:
             ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
-        await self.redis.set(
-            f"{settings.movie_index}:{str(film.id)}",
-            film.model_dump_json(), ttl)
+        key = (f"{settings.movie_index}:{film.cache_key}")
+        await self.redis.set(key, film.model_dump_json(), ttl)
         
     async def _get_films_from_cache(
-            self, key: str) -> list[MovieShortListResponse] | None:
+            self, search_query: str) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the cache."""
+
+        key = (
+            f"{settings.movie_index}:"
+            f"movieshortlistresponse_list:{search_query}")
         
-        data = await self.redis.get(
-            f"{settings.movie_index}:{json.dumps(key)}")
+        data = await self.redis.get(key)
         if not data:
             return None
         films = [
@@ -75,14 +79,16 @@ class FilmService:
         return films
     
     async def _put_films_to_cache(
-            self, key: str, data: list[MovieShortListResponse],
+            self, search_query: str, data: list[MovieShortListResponse],
             ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
+        key = (
+            f"{settings.movie_index}:"
+            f"{data[0].__class__.__name__.lower()}_list:{search_query}")
+        
         films = json.dumps([item.__dict__ for item in data], cls=UUIDEncoder)
-        await self.redis.set(
-            f"{settings.movie_index}:{json.dumps(key)}",
-            films, ttl)
+        await self.redis.set(key, films, ttl)
 
     async def _get_film_from_elastic(
             self, film_id: str

@@ -1,11 +1,5 @@
-from datetime import UTC, datetime
-
-from api.v1 import films, genres, persons
 from contextlib import asynccontextmanager
-
-from core.config import settings
-from db import elastic
-from db import redis
+from datetime import UTC, datetime
 
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -14,22 +8,24 @@ from redis.asyncio import Redis
 
 from api.api import api_router
 from core.config import settings
+from db import elastic
+from db import redis
 
 
 @asynccontextmanager
 async def  lifespan(api: FastAPI):
     redis.redis = Redis(
-        host=settings.REDIS_HOST, port=settings.REDIS_PORT,
-        db=settings.REDIS_CACHE_DB)
+        host=settings.redis_host, port=settings.redis_port,
+        db=settings.redis_cache_db)
     elastic.es = AsyncElasticsearch(
         hosts=[
-            f"http://{settings.ELASTICSEARCH_HOST}:{settings.ELASTICSEARCH_PORT}"
+            f"http://{settings.elasticsearch_host}:{settings.elasticsearch_port}"
         ],
         basic_auth=(
-            settings.ELASTICSEARCH_USERNAME,
-            settings.ELASTICSEARCH_PASSWORD
+            settings.elasticsearch_username,
+            settings.elasticsearch_password
         )
-        if settings.ELASTICSEARCH_USERNAME
+        if settings.elasticsearch_username
         else None
     )
     yield
@@ -37,8 +33,8 @@ async def  lifespan(api: FastAPI):
     elastic.es.close()
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    title=settings.project_name,
+    openapi_url=f"{settings.api_v1_str}/openapi.json",
     docs_url="/api/openapi",
     lifespan=lifespan
 
@@ -47,16 +43,13 @@ app = FastAPI(
 # Set CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
-# app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
-# app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
-# app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
+app.include_router(api_router, prefix=settings.api_v1_str)
 
 
 @app.get("/health")

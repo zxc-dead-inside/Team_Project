@@ -2,19 +2,17 @@ import json
 import random
 from datetime import timedelta
 from functools import lru_cache
-from typing import List, Optional
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
+from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.movies_models import (
     MovieDetailResponse, MovieShortListResponse,
     serialize_movie_short_list)
-from core.config import settings
+from redis.asyncio import Redis
 from services.utils import UUIDEncoder
 
 
@@ -30,7 +28,7 @@ class FilmService:
 
     # get_by_id возвращает объект фильма.
     # Он опционален, так как фильм может отсутствовать в базе.
-    async def get_by_id(self, film_id: str) -> Optional[MovieDetailResponse]:
+    async def get_by_id(self, film_id: str) -> MovieDetailResponse | None:
         """Returns detail film's info by id."""
 
         # Поиск фильма в кэше
@@ -46,10 +44,10 @@ class FilmService:
         return film
     
     async def _get_film_from_cache(
-            self, film_id: str) -> Optional[MovieDetailResponse]:
+            self, film_id: str) -> MovieDetailResponse | None:
         """Trying to get the data from the cache."""
 
-        data = await self.redis.get(f"{settings.MOVIE_INDEX}:{film_id}")
+        data = await self.redis.get(f"{settings.movie_index}:{film_id}")
         if not data:
             return None
         film = MovieDetailResponse.model_validate_json(data)
@@ -57,19 +55,19 @@ class FilmService:
     
     async def _put_film_to_cache(
             self, film: MovieDetailResponse,
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
         await self.redis.set(
-            f"{settings.MOVIE_INDEX}:{str(film.id)}",
+            f"{settings.movie_index}:{str(film.id)}",
             film.model_dump_json(), ttl)
         
     async def _get_films_from_cache(
-            self, key: str) -> List[Optional[MovieShortListResponse]]:
+            self, key: str) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the cache."""
         
         data = await self.redis.get(
-            f"{settings.MOVIE_INDEX}:{json.dumps(key)}")
+            f"{settings.movie_index}:{json.dumps(key)}")
         if not data:
             return None
         films = [
@@ -77,23 +75,23 @@ class FilmService:
         return films
     
     async def _put_films_to_cache(
-            self, key: str, data: List[MovieShortListResponse],
-            ttl: timedelta = settings.DEFAULT_TTL):
+            self, key: str, data: list[MovieShortListResponse],
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
         films = json.dumps([item.__dict__ for item in data], cls=UUIDEncoder)
         await self.redis.set(
-            f"{settings.MOVIE_INDEX}:{json.dumps(key)}",
+            f"{settings.movie_index}:{json.dumps(key)}",
             films, ttl)
 
     async def _get_film_from_elastic(
             self, film_id: str
-            ) -> Optional[MovieDetailResponse]:
+            ) -> MovieDetailResponse | None:
         """Trying to get the data from es."""
 
         try:
             doc = await self.elastic.get(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 id=film_id
             )
         except NotFoundError:
@@ -102,7 +100,7 @@ class FilmService:
 
     async def search_by_query(
             self, page_number: int, page_size: int, search_query: str = None
-            ) -> List[Optional[MovieShortListResponse]]:
+            ) -> list[MovieShortListResponse] | None:
         """Returns the lif of movies by query."""
 
         films = await self._get_films_from_cache(search_query)
@@ -122,7 +120,7 @@ class FilmService:
 
     async def _search_films_in_elastic(
             self, page_number: int, page_size: int, search_query: str = None
-            ) -> List[Optional[MovieShortListResponse]]:
+            ) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the es."""
 
         try:
@@ -154,7 +152,7 @@ class FilmService:
             body["sort"] = [{"imdb_rating": {"order": "desc"}}]
 
             doc = await self.elastic.search(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 body=body
             )
         except NotFoundError:
@@ -163,7 +161,7 @@ class FilmService:
 
     async def search_general(
             self, page_number: int, page_size: int, sort: str = None,
-            genre: UUID = None) -> List[Optional[MovieShortListResponse]]:
+            genre: UUID = None) -> list[MovieShortListResponse] | None:
         """Trying to get the date for main page."""
 
         key = f"{page_number}:{page_size}{sort}:{genre}"
@@ -180,7 +178,7 @@ class FilmService:
 
     async def _search_general_films_in_elastic(
             self, page_number: int, page_size: int, sort: str = None,
-            genre: UUID = None) -> List[Optional[MovieShortListResponse]]:
+            genre: UUID = None) -> list[MovieShortListResponse] | None:
         """Trying to get the date from es for the main page."""
         try:
             query = {"bool": {"must": [{"match_all": {}}]}}
@@ -210,7 +208,7 @@ class FilmService:
                     }
                 }]
             doc = await self.elastic.search(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 body=body
             )
         except NotFoundError:
@@ -219,7 +217,7 @@ class FilmService:
 
     async def get_similar_by_id(
             self, film_id: str, page_number: int, page_size: int
-            ) -> List[Optional[MovieShortListResponse]]:
+            ) -> list[MovieShortListResponse] | None:
         """Trying to get similar movies by film'd id."""
 
         film = await self._get_film_from_elastic(film_id)
@@ -233,9 +231,6 @@ class FilmService:
         similar_films = await self._get_films_from_cache(key)
         if not similar_films:
             # Ищим фильм в Elasticsearch
-            # film = await self._get_film_from_elastic(film_id)
-            # if not film:
-            #     return None
             similar_films = await self._search_general_films_in_elastic(
                 page_number=page_number,
                 page_size=page_size,
@@ -250,7 +245,7 @@ class FilmService:
 
     async def get_popular_by_genre_id(
             self, genre_id: str, page_number: int, page_size: int
-            ) -> List[Optional[MovieShortListResponse]]:
+            ) -> list[MovieShortListResponse] | None:
         """Returns the most popular movies in a genre."""
 
         sort = '-imdb_rating'

@@ -19,9 +19,6 @@ from pydantic import (
     model_validator
 )
 
-from core.elasticsearch import es_client
-from core.config import settings
-
 
 # Custom types
 RoleType: TypeAlias = Literal["actor", "director", "writer"]
@@ -333,43 +330,3 @@ class PersonSearchResponse(PaginatedResponse):
     """Paginated response for person search."""
 
     items: list[Person] = Field(description="List of persons")
-
-
-async def serialize_film_detail(response: dict) -> MovieFull:
-    """Serialize film detail response."""
-    film_data = response["_source"]
-
-    film_data["uuid"] = UUID(film_data.pop("id"))
-    film_data.pop("actors_names")
-    film_data.pop("directors_names")
-    film_data.pop("writers_names")
-
-    genres = film_data.pop("genres")
-    film_data["genre"] = []
-    for genre_name in genres:
-        search_response = await es_client.search(
-            index=settings.GENRE_INDEX,
-            body={
-                "query": {
-                    "match": {"name": genre_name}
-                }
-            }
-        )
-
-        hits = search_response["hits"]["hits"]
-        if hits:
-            genre_data = hits[0]["_source"]
-            film_data["genre"].append({
-                "uuid": UUID(genre_data["id"]),
-                "name": genre_data["name"],
-            })
-        else:
-            film_data["genre"].append({"uuid": None, "name": genre_name})
-
-    for role in ["actors", "directors", "writers"]:
-        if role in film_data:
-            for person in film_data[role]:
-                person["uuid"] = UUID(person.pop("id"))
-                person["full_name"] = person.pop("name")
-
-    return MovieFull(**film_data)

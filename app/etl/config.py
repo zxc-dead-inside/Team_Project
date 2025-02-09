@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from pydantic_settings import BaseSettings
 
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
 
 class ESIndexSettings(BaseSettings):
-    movies_settings:  Dict[str, Any] = {
+    movies_settings:  dict[str, Any] = {
         "refresh_interval": "1s",
         "analysis": {
             "filter": {
@@ -75,7 +75,7 @@ class ESIndexSettings(BaseSettings):
         }
     }
 
-    movies_mappings: Dict[str, Any] = {
+    movies_mappings: dict[str, Any] = {
         "dynamic": "strict",
         "properties": {
             "id": {
@@ -164,7 +164,7 @@ class ESIndexSettings(BaseSettings):
         }
     }
 
-    genres_mappings: Dict[str, Any] = {
+    genres_mappings: dict[str, Any] = {
         "dynamic": "strict",
         "properties": {
             "id": {
@@ -176,7 +176,7 @@ class ESIndexSettings(BaseSettings):
         }
     }
 
-    persons_settings: Dict[str, Any] = {
+    persons_settings: dict[str, Any] = {
         "settings": {
             "refresh_interval": "1s",
             "analysis": {
@@ -219,7 +219,7 @@ class ESIndexSettings(BaseSettings):
         }
     }
 
-    persons_mapping: Dict[str, Any] = {
+    persons_mapping: dict[str, Any] = {
         "mappings": {
             "dynamic": "strict",
             "properties": {

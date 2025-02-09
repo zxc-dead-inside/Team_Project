@@ -1,6 +1,6 @@
 import time
 from datetime import UTC, datetime
-from typing import Generator, List
+from typing import Generator
 
 from config import Settings
 from elasticsearch_loader import ElasticsearchLoader
@@ -49,7 +49,7 @@ def transfer_movies(
         settings: Settings,
         state: State,
         offset: int
-) -> Generator[List, None, None]:
+) -> Generator[list, None, None]:
     """
     Extract movies and their related modifications from PostgreSQL
     """
@@ -86,7 +86,7 @@ def transfer_objects(
         state: State,
         offset: int,
         index: str
-) -> Generator[List, None, None]:
+) -> Generator[list, None, None]:
     """
     Extract objects and their related modifications from PostgreSQL
     """

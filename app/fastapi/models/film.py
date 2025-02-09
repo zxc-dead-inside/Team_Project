@@ -1,7 +1,6 @@
 # Используем pydantic для упрощения работы при перегонке
 # данных из json в объекты.
 from pydantic import BaseModel
-from typing import List
 
 
 class Person(BaseModel):
@@ -19,10 +18,10 @@ class Film(BaseModel):
     title: str
     imdb_rating: float
     description: str
-    genres: List[Genre]
-    actors: List[Person]
-    directors: List[Person]
-    writers: List[Person]
+    genres: list[Genre]
+    actors: list[Person]
+    directors: list[Person]
+    writers: list[Person]
 
 
 class FilmGeneral(BaseModel):

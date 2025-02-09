@@ -1,16 +1,14 @@
 import json
 from datetime import timedelta
 from functools import lru_cache
-from typing import Optional, List
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
+from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.genre import Genre
-from core.config import settings
+from redis.asyncio import Redis
 from services.utils import UUIDEncoder
 
 
@@ -21,7 +19,7 @@ class GenreService:
 
     async def get_list(
             self, page_number: int, page_size: int,
-            sort: str = None) -> List[Optional[Genre]]:
+            sort: str = None) -> list[Genre] | None:
         
         key  = f"{page_number}:{page_size}:{sort}"
         genres = await self._get_list_from_cache(key)
@@ -33,7 +31,7 @@ class GenreService:
             await self._put_list_to_cache(key, genres)
         return genres
     
-    async def _get_list_from_cache(self, key: str) -> List[Optional[Genre]]:
+    async def _get_list_from_cache(self, key: str) -> list[Genre] | None:
         """Trying to get the data from cache."""
 
         data = await self.redis.get(
@@ -43,7 +41,7 @@ class GenreService:
         return [Genre(**dict(item)) for item in json.loads(data)]
     
     async def _put_list_to_cache(
-            self, key: str, data: List[Genre],
+            self, key: str, data: list[Genre],
             ttl: timedelta = settings.DEFAULT_TTL):
 
         items = json.dumps([item.__dict__ for item in data], cls=UUIDEncoder)
@@ -56,7 +54,7 @@ class GenreService:
             page_number: int,
             page_size: int,
             sort: str = None
-            ) -> List[Optional[Genre]]:
+            ) -> list[Genre] | None:
         try:
             skip = (page_number - 1) * page_size
             body = {
@@ -78,7 +76,7 @@ class GenreService:
             return None
         return [Genre(**genre['_source']) for genre in doc['hits']['hits']]
 
-    async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+    async def get_by_id(self, genre_id: str) -> Genre | None:
 
         genre = await self._get_genre_from_cache(genre_id)
         if not genre:
@@ -88,7 +86,7 @@ class GenreService:
         await self._put_genre_to_cache(genre)
         return genre
     
-    async def _get_genre_from_cache(self, genre_id: str) -> Optional[Genre]:
+    async def _get_genre_from_cache(self, genre_id: str) -> Genre | None:
         """Trying to get the genre by id."""
 
         genre = await self.redis.get(f"{settings.GENRE_INDEX}:{genre_id}")
@@ -108,7 +106,7 @@ class GenreService:
     async def _get_genre_from_elastic(
             self,
             genre_id: str
-            ) -> Optional[Genre]:
+            ) -> Genre | None:
         try:
             doc = await self.elastic.get(
                 index=settings.GENRE_INDEX,

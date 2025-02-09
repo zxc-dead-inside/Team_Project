@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,13 +10,13 @@ from services.film import FilmService, get_film_service
 router = APIRouter()
 
 
-@router.get('/popular', response_model=List[MovieShort])
+@router.get('/popular', response_model=list[MovieShort])
 async def films_popular_by_genre(
     genre: str,
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
+) -> list[MovieShort]:
     popular_films = await film_service.get_popular_by_genre_id(
         genre,
         page_number=page_number,
@@ -46,14 +45,14 @@ async def films_popular_by_genre(
     ]
 
 
-@router.get('/', response_model=List[MovieShort])
+@router.get('/', response_model=list[MovieShort])
 async def film_general(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     sort: str | None = None,
     genre: UUID | None = None,
     film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
+) -> list[MovieShort]:
     films = await film_service.search_general(
         page_number=page_number,
         page_size=page_size,
@@ -74,13 +73,13 @@ async def film_general(
     ]
 
 
-@router.get('/search', response_model=List[MovieShort])
+@router.get('/search', response_model=list[MovieShort])
 async def film_search(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search_query: str | None = Query(None, alias="query"),
     film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
+) -> list[MovieShort]:
     films = await film_service.search_by_query(
         page_number=page_number,
         page_size=page_size,
@@ -145,13 +144,13 @@ async def film_details(
     )
 
 
-@router.get('/{film_id}/similar', response_model=List[MovieShort])
+@router.get('/{film_id}/similar', response_model=list[MovieShort])
 async def film_similar(
     film_id: str,
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
+) -> list[MovieShort]:
     similar_films = await film_service.get_similar_by_id(
         film_id,
         page_number=page_number,

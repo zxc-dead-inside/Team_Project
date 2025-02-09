@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,13 +12,13 @@ from services.person import PersonService, get_person_service
 router = APIRouter()
 
 
-@router.get('/', response_model=List[PersonBase])
+@router.get('/', response_model=list[PersonBase])
 async def persons_list(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     sort: str | None = None,
     person_service: PersonService = Depends(get_person_service)
-) -> List[PersonBase]:
+) -> list[PersonBase]:
     persons = await person_service.get_list(
         page_number=page_number,
         page_size=page_size,
@@ -38,13 +37,13 @@ async def persons_list(
     ]
 
 
-@router.get('/search', response_model=List[Person])
+@router.get('/search', response_model=list[Person])
 async def persons_search(
     page_number: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     query: str = None,
     person_service: PersonService = Depends(get_person_service)
-) -> List[Person]:
+) -> list[Person]:
     persons = await person_service.search_query(
         page_number=page_number,
         page_size=page_size,
@@ -88,12 +87,12 @@ async def get_by_id(
     )
 
 
-@router.get('/{person_id}/film', response_model=List[MovieShort])
+@router.get('/{person_id}/film', response_model=list[MovieShort])
 async def get_films_by_person_id(
     person_id: str,
     person_service: PersonService = Depends(get_person_service),
     film_service: FilmService = Depends(get_film_service)
-) -> List[MovieShort]:
+) -> list[MovieShort]:
     person = await person_service.get_by_id(
         person_id=person_id
     )

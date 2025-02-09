@@ -35,18 +35,18 @@ class GenreService:
         """Trying to get the data from cache."""
 
         data = await self.redis.get(
-            f"{settings.GENRE_INDEX}:{json.dumps(key)}")
+            f"{settings.genre_index}:{json.dumps(key)}")
         if not data:
              return None
         return [Genre(**dict(item)) for item in json.loads(data)]
     
     async def _put_list_to_cache(
             self, key: str, data: list[Genre],
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
 
         items = json.dumps([item.__dict__ for item in data], cls=UUIDEncoder)
         await self.redis.set(
-            f"{settings.GENRE_INDEX}:{json.dumps(key)}",
+            f"{settings.genre_index}:{json.dumps(key)}",
             items, ttl)
 
     async def _get_list(
@@ -69,7 +69,7 @@ class GenreService:
                     }
                 }]
             doc = await self.elastic.search(
-                index=settings.GENRE_INDEX,
+                index=settings.genre_index,
                 body=body
             )
         except NotFoundError:
@@ -89,18 +89,18 @@ class GenreService:
     async def _get_genre_from_cache(self, genre_id: str) -> Genre | None:
         """Trying to get the genre by id."""
 
-        genre = await self.redis.get(f"{settings.GENRE_INDEX}:{genre_id}")
+        genre = await self.redis.get(f"{settings.genre_index}:{genre_id}")
         if not genre:
             return None
 
         return Genre.model_validate_json(genre)
     
     async def _put_genre_to_cache(
-            self, genre: Genre, ttl: timedelta = settings.DEFAULT_TTL):
+            self, genre: Genre, ttl: timedelta = settings.default_ttl):
         """Saves the genre to the cache."""
 
         await self.redis.set(
-            f"{settings.GENRE_INDEX}:{str(genre.id)}",
+            f"{settings.genre_index}:{str(genre.id)}",
             genre.model_dump_json(), ttl)
 
     async def _get_genre_from_elastic(
@@ -109,7 +109,7 @@ class GenreService:
             ) -> Genre | None:
         try:
             doc = await self.elastic.get(
-                index=settings.GENRE_INDEX,
+                index=settings.genre_index,
                 id=genre_id
             )
         except NotFoundError:

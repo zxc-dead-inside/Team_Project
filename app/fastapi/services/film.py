@@ -47,7 +47,7 @@ class FilmService:
             self, film_id: str) -> MovieDetailResponse | None:
         """Trying to get the data from the cache."""
 
-        data = await self.redis.get(f"{settings.MOVIE_INDEX}:{film_id}")
+        data = await self.redis.get(f"{settings.movie_index}:{film_id}")
         if not data:
             return None
         film = MovieDetailResponse.model_validate_json(data)
@@ -55,11 +55,11 @@ class FilmService:
     
     async def _put_film_to_cache(
             self, film: MovieDetailResponse,
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
         await self.redis.set(
-            f"{settings.MOVIE_INDEX}:{str(film.id)}",
+            f"{settings.movie_index}:{str(film.id)}",
             film.model_dump_json(), ttl)
         
     async def _get_films_from_cache(
@@ -67,7 +67,7 @@ class FilmService:
         """Trying to get the data from the cache."""
         
         data = await self.redis.get(
-            f"{settings.MOVIE_INDEX}:{json.dumps(key)}")
+            f"{settings.movie_index}:{json.dumps(key)}")
         if not data:
             return None
         films = [
@@ -76,12 +76,12 @@ class FilmService:
     
     async def _put_films_to_cache(
             self, key: str, data: list[MovieShortListResponse],
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
         films = json.dumps([item.__dict__ for item in data], cls=UUIDEncoder)
         await self.redis.set(
-            f"{settings.MOVIE_INDEX}:{json.dumps(key)}",
+            f"{settings.movie_index}:{json.dumps(key)}",
             films, ttl)
 
     async def _get_film_from_elastic(
@@ -91,7 +91,7 @@ class FilmService:
 
         try:
             doc = await self.elastic.get(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 id=film_id
             )
         except NotFoundError:
@@ -152,7 +152,7 @@ class FilmService:
             body["sort"] = [{"imdb_rating": {"order": "desc"}}]
 
             doc = await self.elastic.search(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 body=body
             )
         except NotFoundError:
@@ -208,7 +208,7 @@ class FilmService:
                     }
                 }]
             doc = await self.elastic.search(
-                index=settings.MOVIE_INDEX,
+                index=settings.movie_index,
                 body=body
             )
         except NotFoundError:

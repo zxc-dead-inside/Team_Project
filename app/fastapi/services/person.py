@@ -46,7 +46,7 @@ class PersonService:
                     }
                 }]
             doc = await self.elastic.search(
-                index=settings.PERSON_INDEX,
+                index=settings.person_index,
                 body=body
             )
         except NotFoundError:
@@ -57,19 +57,19 @@ class PersonService:
         """Trying to get the data from cache."""
 
         data = await self.redis.get(
-            f"{settings.PERSON_INDEX}:{json.dumps(key)}")
+            f"{settings.person_index}:{json.dumps(key)}")
         if not data:
              return None
         return [Person.model_validate_json(item) for item in json.loads(data)]
     
     async def _put_list_to_cache(
             self, key: str, data: list[Person],
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
         
         items = json.dumps([item.model_dump_json() for item in data])
         await self.redis.set(
-            f"{settings.PERSON_INDEX}:{json.dumps(key)}",
+            f"{settings.person_index}:{json.dumps(key)}",
             items, ttl)
 
     async def search_query(
@@ -108,7 +108,7 @@ class PersonService:
                     }
                 ]
             doc = await self.elastic.search(
-                index=settings.PERSON_INDEX,
+                index=settings.person_index,
                 body=body
             )
         except NotFoundError:
@@ -132,7 +132,7 @@ class PersonService:
             self, person_id: str) -> Person | None:
         """Trying to get the data from the cache."""
 
-        data = await self.redis.get(f"{settings.PERSON_INDEX}:{person_id}")
+        data = await self.redis.get(f"{settings.person_index}:{person_id}")
         if not data:
             return None
         person = Person.model_validate_json(data)
@@ -140,11 +140,11 @@ class PersonService:
 
     async def _put_person_to_cache(
             self, data: Person,
-            ttl: timedelta = settings.DEFAULT_TTL):
+            ttl: timedelta = settings.default_ttl):
         """Saves the data to the cache."""
 
         await self.redis.set(
-            f"{settings.PERSON_INDEX}:{str(data.id)}",
+            f"{settings.person_index}:{str(data.id)}",
             data.model_dump_json(), ttl)
 
     async def _get_person_from_elastic(
@@ -153,7 +153,7 @@ class PersonService:
             ) -> Person | None:
         try:
             doc = await self.elastic.get(
-                index=settings.PERSON_INDEX,
+                index=settings.person_index,
                 id=person_id
             )
         except NotFoundError:

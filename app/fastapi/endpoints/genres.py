@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import Genre
@@ -9,9 +10,12 @@ router = APIRouter()
 
 @router.get('/', response_model=list[Genre])
 async def genre_list(
-    page_number: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    sort: str | None = None,
+    page_number: Annotated[
+        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100,
+        description="Number of items per page, must be between 1 and 100")] = 10,
+    sort: Annotated[str | None, Query(
+        description="Sorting criteria, optional")] = None,
     genre_service: GenreService = Depends(get_genre_service)
 ) -> list[Genre]:
     genres = await genre_service.get_list(

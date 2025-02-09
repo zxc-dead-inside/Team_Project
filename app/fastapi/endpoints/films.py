@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,8 +14,10 @@ router = APIRouter()
 @router.get('/popular', response_model=list[MovieShort])
 async def films_popular_by_genre(
     genre: str,
-    page_number: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_number: Annotated[
+        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100,
+        description="Number of items per page, must be between 1 and 100")] = 10,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
     popular_films = await film_service.get_popular_by_genre_id(
@@ -47,9 +50,12 @@ async def films_popular_by_genre(
 
 @router.get('/', response_model=list[MovieShort])
 async def film_general(
-    page_number: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    sort: str | None = None,
+    page_number: Annotated[
+        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100,
+        description="Number of items per page, must be between 1 and 100")] = 10,
+    sort: Annotated[str | None, Query(
+        description="Sorting criteria, optional")] = None,
     genre: UUID | None = None,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
@@ -75,9 +81,12 @@ async def film_general(
 
 @router.get('/search', response_model=list[MovieShort])
 async def film_search(
-    page_number: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    search_query: str | None = Query(None, alias="query"),
+    page_number: Annotated[
+        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100,
+        description="Number of items per page, must be between 1 and 100")] = 10,
+    search_query: Annotated[str | None, Query(alias="query",
+        description="Search query for filtering movies")] = None,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
     films = await film_service.search_by_query(
@@ -147,8 +156,10 @@ async def film_details(
 @router.get('/{film_id}/similar', response_model=list[MovieShort])
 async def film_similar(
     film_id: str,
-    page_number: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_number: Annotated[
+        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100,
+        description="Number of items per page, must be between 1 and 100")] = 10,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
     similar_films = await film_service.get_similar_by_id(

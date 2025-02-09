@@ -1,11 +1,5 @@
-from datetime import UTC, datetime
-
-from api.v1 import films, genres, persons
 from contextlib import asynccontextmanager
-
-from core.config import settings
-from db import elastic
-from db import redis
+from datetime import UTC, datetime
 
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -14,6 +8,8 @@ from redis.asyncio import Redis
 
 from api.api import api_router
 from core.config import settings
+from db import elastic
+from db import redis
 
 
 @asynccontextmanager
@@ -54,9 +50,6 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
-# app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
-# app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
-# app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
 
 
 @app.get("/health")

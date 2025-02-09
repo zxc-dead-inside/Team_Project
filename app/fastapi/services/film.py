@@ -233,9 +233,6 @@ class FilmService:
         similar_films = await self._get_films_from_cache(key)
         if not similar_films:
             # Ищим фильм в Elasticsearch
-            # film = await self._get_film_from_elastic(film_id)
-            # if not film:
-            #     return None
             similar_films = await self._search_general_films_in_elastic(
                 page_number=page_number,
                 page_size=page_size,

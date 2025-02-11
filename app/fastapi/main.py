@@ -4,19 +4,16 @@ from datetime import UTC, datetime
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from redis.asyncio import Redis
 
 from api.api import api_router
 from core.config import settings
+from db.redis import redis_connector
 from db import elastic
-from db import redis
 
 
 @asynccontextmanager
-async def  lifespan(api: FastAPI):
-    redis.redis = Redis(
-        host=settings.redis_host, port=settings.redis_port,
-        db=settings.redis_cache_db)
+async def lifespan(api: FastAPI):
+    await redis_connector.connect()
     elastic.es = AsyncElasticsearch(
         hosts=[
             f"http://{settings.elasticsearch_host}:{settings.elasticsearch_port}"
@@ -29,7 +26,7 @@ async def  lifespan(api: FastAPI):
         else None
     )
     yield
-    redis.redis.close()
+    await redis_connector.disconnect()
     elastic.es.close()
 
 app = FastAPI(

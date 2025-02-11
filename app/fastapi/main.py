@@ -10,6 +10,7 @@ from api.api import api_router
 from core.config import settings
 from db import elastic
 from db import redis
+from db.elastic import es_connector
 
 
 @asynccontextmanager
@@ -28,9 +29,11 @@ async def  lifespan(api: FastAPI):
         if settings.elasticsearch_username
         else None
     )
+    await es_connector.connect()
     yield
     redis.redis.close()
     elastic.es.close()
+    es_connector.disconnect()
 
 app = FastAPI(
     title=settings.project_name,

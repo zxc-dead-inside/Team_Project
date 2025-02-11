@@ -3,12 +3,19 @@ from redis.asyncio import Redis
 from core.config import settings
 
 
-redis_url = f"redis://{settings.redis_host}:{settings.redis_port}/{settings.redis_cache_db}"
-
 class RedisConnector:
 
     def __init__(self):
         self._redis: Redis | None = None
+
+    @property
+    def redis_url(self) -> str:
+        return (
+            f"redis://{settings.redis_host}:"
+            f"{settings.redis_port}/"
+            f"{settings.redis_cache_db}"
+        )
+
     async def connect(self):
         if self._redis is None:
             self._redis = await aioredis.from_url(

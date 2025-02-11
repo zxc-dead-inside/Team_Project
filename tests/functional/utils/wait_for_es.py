@@ -1,11 +1,13 @@
-import os
+# import os
 import time
+
 from elasticsearch import Elasticsearch
+from settings import test_settings
+
 
 if __name__ == "__main__":
-    es_host = os.getenv("ELASTICSEARCH_HOST", "elasticsearch")
     es_client = Elasticsearch(
-        hosts=f"http://{es_host}:9200", verify_certs=False, ssl_show_warn=False
+        hosts=test_settings.es_url, verify_certs=False, ssl_show_warn=False
     )
 
     while True:

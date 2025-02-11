@@ -1,10 +1,15 @@
-import os
 import time
+
 import redis
+from settings import test_settings
+
 
 if __name__ == "__main__":
-    redis_host = os.getenv("REDIS_HOST", "theatre-redis")
-    redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
+    redis_client = redis.Redis(
+        host=test_settings.redis_host,
+        port=test_settings.redis_port,
+        decode_responses=True,
+    )
 
     while True:
         try:

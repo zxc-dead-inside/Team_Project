@@ -1,0 +1,73 @@
+services:
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  theatre-redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fastapi:
+    build: 
+      context: ../../app/fastapi
+      dockerfile: Dockerfile
+    image: fastapi-image
+    ports:
+      - "9000:9000"
+    env_file:
+      - ../../app/fastapi/.env
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      theatre-redis:
+        condition: service_healthy
+
+  tests:
+    image: fastapi-image
+    volumes:
+      - ../../tests:/tests
+      - pip_cache:/root/.cache/pip
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      theatre-redis:
+        condition: service_healthy
+      fastapi:
+        condition: service_started
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - REDIS_HOST=theatre-redis
+      - API_HOST=fastapi
+      - PYTHONPATH=/tests/functional
+    entrypoint: >
+      sh -c "
+      python -m venv /tests/venv &&
+      . /tests/venv/bin/activate &&
+      pip install --upgrade pip &&
+      pip install --no-cache-dir -r /tests/functional/requirements.txt &&
+      python /tests/functional/utils/wait_for_es.py &&
+      python /tests/functional/utils/wait_for_redis.py &&
+      pytest /tests/functional/src"
+
+volumes:
+  esdata:
+  pip_cache:

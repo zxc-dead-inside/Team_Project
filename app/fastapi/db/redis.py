@@ -19,7 +19,7 @@ class RedisConnector:
     async def connect(self):
         if self._redis is None:
             self._redis = await aioredis.from_url(
-                redis_url,
+                self.redis_url,
                 encoding="utf-8",
                 decode_responses=True
             )

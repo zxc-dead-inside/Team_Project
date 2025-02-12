@@ -32,9 +32,11 @@ async def lifespan(api: FastAPI):
 app = FastAPI(
     title=settings.project_name,
     openapi_url=f"{settings.api_v1_str}/openapi.json",
-    docs_url="/api/openapi",
+    description="API documentation",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    version="1.0.0",
     lifespan=lifespan
-
 )
 
 # Set CORS middleware

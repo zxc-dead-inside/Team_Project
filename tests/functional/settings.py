@@ -3,17 +3,32 @@ from pydantic_settings import BaseSettings
 
 
 class TestSettings(BaseSettings):
-    es_host: str = Field('elasticsearch', env='elasticsearch_host')
-    es_port: int = Field(9200, env='elasticsearch_port')
+    # Elasticsearch settings
+    es_host: str = Field(
+        default="elasticsearch", json_schema_extra={"env": "elasticsearch_host"}
+    )
+    es_port: int = Field(default=9200, json_schema_extra={"env": "elasticsearch_port"})
 
-    redis_host: str = Field('theatre-redis', env='REDIS_HOST')
-    redis_port: int = Field(6379, env='REDIS_PORT')
+    film_index: str = Field(default="movies")
+    person_index: str = Field(default="persons")
 
-    # service_url: str = ... fast-api url set up
+    # Redis settings
+    redis_host: str = Field(
+        default="theatre-redis", json_schema_extra={"env": "redis_host"}
+    )
+    redis_port: int = Field(default=6379, json_schema_extra={"env": "redis_port"})
+
+    # FastAPI service settings
+    api_host: str = Field(default="fastapi")
+    api_port: int = Field(default=9000)
 
     @property
     def es_url(self) -> str:
-        return f'http://{self.es_host}:{self.es_port}'
+        return f"http://{self.es_host}:{self.es_port}"
+
+    @property
+    def service_url(self) -> str:
+        return f"{self.api_host}:{self.api_port}"
 
 
 test_settings = TestSettings()

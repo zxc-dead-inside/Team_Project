@@ -60,13 +60,14 @@ services:
       - PYTHONPATH=/tests/functional
     entrypoint: >
       sh -c "
+      cd /tests/functional &&
       python -m venv /tests/venv &&
       . /tests/venv/bin/activate &&
       pip install --upgrade pip &&
-      pip install --no-cache-dir -r /tests/functional/requirements.txt &&
-      python /tests/functional/utils/wait_for_es.py &&
-      python /tests/functional/utils/wait_for_redis.py &&
-      pytest /tests/functional/src"
+      pip install --no-cache-dir -r requirements.txt &&
+      python utils/wait_for_es.py &&
+      python utils/wait_for_redis.py &&
+      pytest src -v"
 
 volumes:
   esdata:

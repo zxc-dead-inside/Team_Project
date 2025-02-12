@@ -99,7 +99,3 @@ class FilmSearchService:
         if results is None:
             return None
         return await serialize_movie_short_list(results)
-
-
-               
-

@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from models.movies_models import MovieDetailResponse, MovieShortListResponse
-
 
 class AbstractSearchPlatfrom(ABC):
     """Abstract class for search platform."""

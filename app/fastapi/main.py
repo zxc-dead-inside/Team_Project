@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,22 +13,10 @@ from db.elastic import es_connector
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     await redis_connector.connect()
-    elastic.es = AsyncElasticsearch(
-        hosts=[
-            f"http://{settings.elasticsearch_host}:{settings.elasticsearch_port}"
-        ],
-        basic_auth=(
-            settings.elasticsearch_username,
-            settings.elasticsearch_password
-        )
-        if settings.elasticsearch_username
-        else None
-    )
     await es_connector.connect()
     yield
     await redis_connector.disconnect()
-    elastic.es.close()
-    es_connector.disconnect()
+    await es_connector.disconnect()
 
 app = FastAPI(
     title=settings.project_name,

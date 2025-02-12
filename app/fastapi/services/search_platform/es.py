@@ -1,8 +1,7 @@
-from  typing import Any
+from typing import Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
-from models.movies_models import MovieDetailResponse, MovieShortListResponse
 from services.search_platform.base import AbstractSearchPlatfrom
 
 

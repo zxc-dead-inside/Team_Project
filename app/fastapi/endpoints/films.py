@@ -50,7 +50,7 @@ async def films_popular_by_genre(
     summary="Get list of films",
     description=(
             "Return list of films, "
-            "sorted by popularity, "
+            "sorted by rating, "
             "can be filtered by genre"
     )
 )

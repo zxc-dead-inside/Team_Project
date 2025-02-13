@@ -8,7 +8,12 @@ from services.genre import GenreService, get_genre_service
 router = APIRouter()
 
 
-@router.get('/', response_model=list[Genre])
+@router.get(
+    '/',
+    response_model=list[Genre],
+    summary="Get list of genres",
+    description="Return list of  all genres"
+)
 async def genre_list(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -36,7 +41,12 @@ async def genre_list(
     ]
 
 
-@router.get('/{genre_id}', response_model=Genre)
+@router.get(
+    '/{genre_id}',
+    response_model=Genre,
+    summary="Get genre by id",
+    description="Return genre full data by id"
+)
 async def get_by_id(
     genre_id: str,
     genre_service: GenreService = Depends(get_genre_service)

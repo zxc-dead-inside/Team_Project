@@ -13,7 +13,15 @@ from services.person import PersonService, get_person_service
 router = APIRouter()
 
 
-@router.get('/', response_model=list[PersonBase])
+@router.get(
+    '/',
+    response_model=list[PersonBase],
+    summary="Get list of persons",
+    description=(
+            "Return list of persons, "
+            "ids and names"
+    )
+)
 async def persons_list(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -41,7 +49,12 @@ async def persons_list(
     ]
 
 
-@router.get('/search', response_model=list[Person])
+@router.get(
+    '/search',
+    response_model=list[Person],
+    summary="Search persons",
+    description="Return list of persons by search query"
+)
 async def persons_search(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -73,7 +86,12 @@ async def persons_search(
     ]
 
 
-@router.get('/{person_id}', response_model=Person)
+@router.get(
+    '/{person_id}',
+    response_model=Person,
+    summary="Get person's roles by id",
+    description="Return persons roles in films by person id"
+)
 async def get_by_id(
     person_id: str,
     person_service: PersonService = Depends(get_person_service)
@@ -94,7 +112,12 @@ async def get_by_id(
     )
 
 
-@router.get('/{person_id}/film', response_model=list[MovieShort])
+@router.get(
+    '/{person_id}/film',
+    response_model=list[MovieShort],
+    summary="Get person's films by id",
+    description="Return list of films by person id"
+)
 async def get_films_by_person_id(
     person_id: str,
     person_service: PersonService = Depends(get_person_service),

@@ -38,10 +38,10 @@ class FilmService(AbstractService):
             )
         return film
 
-    async def search_by_query(
+    async def search_query(
             self, page_number: int, page_size: int, search_query: str = None
             ) -> list[MovieShortListResponse] | None:
-        """Returns the lif of movies by query."""
+        """Returns the list of movies by query."""
 
         films = await self.cache_service.get_films_from_cache(search_query)
         if not films:

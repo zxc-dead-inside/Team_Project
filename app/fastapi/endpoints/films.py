@@ -11,7 +11,12 @@ from services.film import FilmService, get_film_service
 router = APIRouter()
 
 
-@router.get('/popular', response_model=list[MovieShort])
+@router.get(
+    '/popular',
+    response_model=list[MovieShort],
+    summary="Get popular films by genre",
+    description="Return list of popular films by genre"
+)
 async def films_popular_by_genre(
     genre: str,
     page_number: Annotated[
@@ -26,19 +31,10 @@ async def films_popular_by_genre(
         page_size=page_size
     )
     if not popular_films:
-        # Если фильм не найден, отдаём 404 статус.
-        # Желательно пользоваться уже определёнными HTTP-статусами,
-        # которые cодержат enum. Такой код будет более поддерживаемым.
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Popular films not found'
         )
-    # Перекладываем данные из models.Film в Film.
-    # Обратите внимание, что у модели бизнес-логики есть поле description,
-    # которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и
-    # формирования ответов API, вы бы предоставляли клиентам данные,
-    # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return [
         MovieShort(
             uuid=film.id,
@@ -48,7 +44,16 @@ async def films_popular_by_genre(
     ]
 
 
-@router.get('/', response_model=list[MovieShort])
+@router.get(
+    '/',
+    response_model=list[MovieShort],
+    summary="Get list of films",
+    description=(
+            "Return list of films, "
+            "sorted by rating, "
+            "can be filtered by genre"
+    )
+)
 async def film_general(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -79,7 +84,12 @@ async def film_general(
     ]
 
 
-@router.get('/search', response_model=list[MovieShort])
+@router.get(
+    '/search',
+    response_model=list[MovieShort],
+    summary="Get films by query",
+    description="Return list of films by search query"
+)
 async def film_search(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -108,27 +118,22 @@ async def film_search(
     ]
 
 
-# Внедряем FilmService с помощью Depends(get_film_service)
-@router.get('/{film_id}', response_model=MovieFull)
+@router.get(
+    '/{film_id}',
+    response_model=MovieFull,
+    summary="Get film data",
+    description="Return full film information by id"
+)
 async def film_details(
     film_id: str,
     film_service: FilmService = Depends(get_film_service)
 ) -> MovieFull:
     film = await film_service.get_by_id(film_id)
     if not film:
-        # Если фильм не найден, отдаём 404 статус.
-        # Желательно пользоваться уже определёнными HTTP-статусами,
-        # которые cодержат enum. Такой код будет более поддерживаемым.
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Film not found'
         )
-    # Перекладываем данные из models.Film в Film.
-    # Обратите внимание, что у модели бизнес-логики есть поле description,
-    # которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и
-    # формирования ответов API, вы бы предоставляли клиентам данные,
-    # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return MovieFull(
         uuid=film.id,
         title=film.title,
@@ -153,7 +158,15 @@ async def film_details(
     )
 
 
-@router.get('/{film_id}/similar', response_model=list[MovieShort])
+@router.get(
+    '/{film_id}/similar',
+    response_model=list[MovieShort],
+    summary="Get similar films",
+    description=(
+            "Return list of similar films, "
+            "get similar by genre"
+    )
+)
 async def film_similar(
     film_id: str,
     page_number: Annotated[
@@ -168,19 +181,10 @@ async def film_similar(
         page_size=page_size
     )
     if not similar_films:
-        # Если фильм не найден, отдаём 404 статус.
-        # Желательно пользоваться уже определёнными HTTP-статусами,
-        # которые cодержат enum. Такой код будет более поддерживаемым.
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Similar films not found'
         )
-    # Перекладываем данные из models.Film в Film.
-    # Обратите внимание, что у модели бизнес-логики есть поле description,
-    # которое отсутствует в модели ответа API.
-    # Если бы использовалась общая модель для бизнес-логики и
-    # формирования ответов API, вы бы предоставляли клиентам данные,
-    # которые им не нужны, и, возможно, данные, которые опасно возвращать
     return [
         MovieShort(
             uuid=film.id,

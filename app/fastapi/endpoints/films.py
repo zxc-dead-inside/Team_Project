@@ -5,7 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Genre, MovieFull, MovieShort, Person
-from services.film import FilmService, get_film_service
+from services.film import FilmService
+from services.di import get_film_service
 
 
 router = APIRouter()

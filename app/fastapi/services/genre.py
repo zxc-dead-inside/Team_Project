@@ -1,14 +1,11 @@
-from functools import lru_cache
-
-from fastapi import Depends
 from models.genre import Genre
-from services.cache.di import get_genre_cache_service
+from services.base import AbstractService
+
 from services.cache.genre_cache import GenreCacheService
-from services.search_platform.di import get_genre_search_platform_service
 from services.search_platform.genre_search_platform import GenreSearchSerivce
 
 
-class GenreService:
+class GenreService(AbstractService):
     def __init__(
             self, cache_service: GenreCacheService,
             search_platform: GenreSearchSerivce):
@@ -43,11 +40,3 @@ class GenreService:
                 return None
         await self.cache_service.put_genre_to_cache(genre)
         return genre
-
-
-@lru_cache()
-def get_genre_service(
-    cache_service: GenreCacheService = Depends(get_genre_cache_service),
-    elastic: GenreSearchSerivce = Depends(get_genre_search_platform_service)
-) -> GenreService:
-    return GenreService(cache_service, elastic)

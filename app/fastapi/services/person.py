@@ -1,14 +1,10 @@
-from functools import lru_cache
-
-from fastapi import Depends
 from models.person import Person
-from services.cache.di import get_person_cache_service
+from services.base import AbstractService
 from services.cache.person_cache import PersonCacheService
-from services.search_platform.di import get_person_search_platform_service
 from services.search_platform.person_search_platform import PersonSearchService
 
 
-class PersonService:
+class PersonService(AbstractService):
     def __init__(
             self, cache_service: PersonCacheService,
             search_platform: PersonSearchService):
@@ -67,12 +63,3 @@ class PersonService:
                 return None
             await self.cache_service.put_person_to_cache(person)
         return person
-
-
-@lru_cache()
-def get_person_service(
-        cache_service: PersonCacheService = Depends(get_person_cache_service),
-        elastic: PersonSearchService = Depends(
-            get_person_search_platform_service)
-) -> PersonService:
-    return PersonService(cache_service, elastic)

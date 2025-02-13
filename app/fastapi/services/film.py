@@ -6,13 +6,12 @@ from fastapi import Depends
 
 from models.movies_models import (
     MovieDetailResponse, MovieShortListResponse)
-from services.cache.di import get_film_cache_service
+from services.base import AbstractService
 from services.cache.film_cache import FilmCacheService
-from services.search_platform.di import get_film_search_platform_service
 from services.search_platform.film_search_platform import FilmSearchService
 
 
-class FilmService:
+class FilmService(AbstractService):
     """The main logic of working with films."""
 
     def __init__(
@@ -130,12 +129,3 @@ class FilmService:
                 return None
             await self.cache_service.put_films_to_cache(key, films)
         return films
-
-
-@lru_cache()
-def get_film_service(
-        cache_service: FilmCacheService = Depends(get_film_cache_service),
-        search_platform: FilmSearchService = Depends(
-            get_film_search_platform_service)
-) -> FilmService:
-    return FilmService(cache_service, search_platform)

@@ -5,8 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Person, PersonBase, MovieRole, MovieShort
-from services.film import FilmService, get_film_service
-from services.person import PersonService, get_person_service
+from services.person import PersonService
+from services.di import get_person_service
+from services.film import FilmService
+from services.di import get_film_service
 
 
 

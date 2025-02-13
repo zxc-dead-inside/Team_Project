@@ -9,7 +9,11 @@ class TestSettings(BaseSettings):
     )
     es_port: int = Field(default=9200, json_schema_extra={"env": "elasticsearch_port"})
 
+    movie_index: str = Field(default="movies")
     genre_index: str = Field(default="genres")
+
+    person_index: str = Field(default="persons")
+    person_endpoint: str = Field(default="/api/v1/persons/")
 
     # Redis settings
     redis_host: str = Field(

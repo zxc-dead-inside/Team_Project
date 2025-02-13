@@ -5,6 +5,8 @@ from services.search_platform.person_search_platform import PersonSearchService
 
 
 class PersonService(AbstractService):
+    """The main logic of working with persons."""
+
     def __init__(
             self, cache_service: PersonCacheService,
             search_platform: PersonSearchService):
@@ -15,7 +17,7 @@ class PersonService(AbstractService):
     async def get_list(
             self, page_number: int, page_size: int,
             sort: str = None) -> list[Person] | None:
-        """Getting list of people."""
+        """Getting list of persons."""
 
         search_query  = f"{page_number}:{page_size}:{sort}"
         persons = (
@@ -34,7 +36,7 @@ class PersonService(AbstractService):
     async def search_query(
             self, page_number: int, page_size: int,
             search_query: str = None) -> list[Person] | None:
-        """Search people in search platform."""
+        """Search persons in search platform."""
         
         key  = f"{page_number}:{page_size}:{search_query}"
         persons = await self.cache_service.get_person_list_from_cache(key)

@@ -6,6 +6,8 @@ from services.search_platform.genre_search_platform import GenreSearchSerivce
 
 
 class GenreService(AbstractService):
+
+    """The main logic of working with genres."""
     def __init__(
             self, cache_service: GenreCacheService,
             search_platform: GenreSearchSerivce):
@@ -15,7 +17,8 @@ class GenreService(AbstractService):
     async def get_list(
             self, page_number: int, page_size: int,
             sort: str = None) -> list[Genre] | None:
-        
+        """Getting list of genres."""
+
         search_query  = f"{page_number}:{page_size}:{sort}"
         genres = (
             await self.cache_service.get_genre_list_from_cache(search_query)
@@ -32,7 +35,8 @@ class GenreService(AbstractService):
         return genres
 
     async def get_by_id(self, genre_id: str) -> Genre | None:
-
+        """Return genre name by id."""
+        
         genre = await self.cache_service.get_genre_from_cache(genre_id)
         if not genre:
             genre = await self.search_platform.get_genre(genre_id)

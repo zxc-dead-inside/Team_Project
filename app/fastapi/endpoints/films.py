@@ -100,7 +100,7 @@ async def film_search(
         description="Search query for filtering movies")] = None,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
-    films = await film_service.search_by_query(
+    films = await film_service.search_query(
         page_number=page_number,
         page_size=page_size,
         search_query=search_query,

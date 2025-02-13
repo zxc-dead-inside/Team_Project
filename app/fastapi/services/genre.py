@@ -44,3 +44,7 @@ class GenreService(AbstractService):
                 return None
         await self.cache_service.put_genre_to_cache(genre)
         return genre
+
+    async def search_query():
+        # TODO: Смержить методы
+        pass

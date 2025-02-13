@@ -82,6 +82,7 @@ class FilmService(AbstractService):
             ) -> list[MovieShortListResponse] | None:
         """Trying to get similar movies by film'd id."""
 
+        # TODO: Вынести логику работы с хранилищем и кешом в отдельный класс
         film = await self.cache_service.get_film_from_cache(film_id)
         if not film:
             film = await self.search_platform.get_film_from_search_platform(
@@ -132,3 +133,7 @@ class FilmService(AbstractService):
                 return None
             await self.cache_service.put_films_to_cache(key, films)
         return films
+
+    async def get_list():
+        # TODO: Смержить методы
+        pass

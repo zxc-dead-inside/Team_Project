@@ -82,11 +82,14 @@ class FilmService(AbstractService):
             ) -> list[MovieShortListResponse] | None:
         """Trying to get similar movies by film'd id."""
 
-        film = (
-            await self.search_platform.get_film_from_search_platform(film_id)
-        )
+        film = await self.cache_service.get_film_from_cache(film_id)
         if not film:
-            return None
+            film = await self.search_platform.get_film_from_search_platform(
+                film_id
+            )
+            if not film:
+                return None
+            await self.cache_service.put_film_to_cache(film, film.cache_ttl)
 
         genre_id = random.choice(film.genres).id
         sort = '-imdb_rating'

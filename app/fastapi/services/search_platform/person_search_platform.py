@@ -8,21 +8,24 @@ from services.search_platform.base import AbstractSearchPlatfrom
 
 
 class PersonSearchService:
-    """Class to receive data from search platform."""
+    """"
+    A service class responsible for retrieving person data from search
+    platform.
+    """
 
     def __init__(self, search_platform: AbstractSearchPlatfrom):
-        self.sp = search_platform
+        self.search_platform = search_platform
 
-    async def get_person_from_sp(
+    async def get_person_from_search_platform(
             self, person_id: str) -> Person | None:
         """Returns person by id."""
 
-        result =  await self.sp.get(settings.person_index, person_id)
+        result =  await self.search_platform.get(settings.person_index, person_id)
         if result is None:
             return None
         return await serialize_person_detail(result)
 
-    async def get_persons_from_sp(
+    async def get_persons_from_search_platform(
             self, page_number: int, page_size: int,
             sort: str = None):
         """Returns list of people."""
@@ -39,7 +42,7 @@ class PersonSearchService:
                 }
             }]
         try:
-            results = await self.sp.search(
+            results = await self.search_platform.search(
                 index=settings.person_index,
                 body=body
             )
@@ -47,7 +50,7 @@ class PersonSearchService:
             return None
         return await serialize_person_list(results)
 
-    async def search_person_in_sp(
+    async def search_person_in_search_platform(
             self, page_number: int, page_size: int,
             search_query: str = None) -> list[Person] | None:
         """Returns list of people."""
@@ -67,7 +70,7 @@ class PersonSearchService:
                 }
             ]
         try:
-            results = await self.sp.search(
+            results = await self.search_platform.search(
                 index=settings.person_index,
                 body=body
             )

@@ -6,16 +6,19 @@ from services.search_platform.base import AbstractSearchPlatfrom
 
 
 class GenreSearchSerivce:
-    """Class to receive data from search platform."""
+    """"
+    A service class responsible for retrieving genre data from search
+    platform.
+    """
 
     def __init__(self, search_platform: AbstractSearchPlatfrom):
-        self.sp = search_platform
+        self.search_platform = search_platform
     
 
     async def get_genre(self, genre_id: str) -> Genre | None:
         """Returns genre by genre_id."""
 
-        result = await self.sp.get(settings.genre_index, genre_id)
+        result = await self.search_platform.get(settings.genre_index, genre_id)
         if result is None:
             return None
         return await serialize_genre_detail(result)
@@ -38,7 +41,7 @@ class GenreSearchSerivce:
                 }
             }]
         try:
-            results = await self.sp.search(
+            results = await self.search_platform.search(
                 index=settings.genre_index,
                 body=body
             )

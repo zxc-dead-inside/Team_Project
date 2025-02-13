@@ -4,8 +4,8 @@ from fastapi import Depends
 from models.person import Person
 from services.cache.di import get_person_cache_service
 from services.cache.person_cache import PersonCacheService
-from services.search_platform.di import get_person_sp_service
-from services.search_platform.person_sp import PersonSearchService
+from services.search_platform.di import get_person_search_platform_service
+from services.search_platform.person_search_platform import PersonSearchService
 
 
 class PersonService:
@@ -22,13 +22,17 @@ class PersonService:
         """Getting list of people."""
 
         search_query  = f"{page_number}:{page_size}:{sort}"
-        persons = await self.cache_service.get_person_list_from_cache(search_query)
+        persons = (
+            await self.cache_service.get_person_list_from_cache(search_query)
+        )
         if not persons:
-            persons = await self.search_platform.get_persons_from_sp(
+            persons = await self.search_platform.get_persons_from_search_platform(
                 page_number=page_number, page_size=page_size, sort=sort)
             if not persons:
                 return None
-            await self.cache_service.put_person_list_to_cache(search_query, persons)
+            (await self.cache_service
+             .put_person_list_to_cache(search_query, persons)
+            )
         return persons
 
     async def search_query(
@@ -39,8 +43,11 @@ class PersonService:
         key  = f"{page_number}:{page_size}:{search_query}"
         persons = await self.cache_service.get_person_list_from_cache(key)
         if not persons:
-            persons = await self.search_platform.search_person_in_sp(
-                page_number, page_size, search_query)
+            persons = (
+                await self.search_platform.search_person_in_search_platform(
+                    page_number, page_size, search_query
+                )
+            )
             if not persons:
                 return None
             await self.cache_service.put_person_list_to_cache(key, persons)
@@ -51,7 +58,10 @@ class PersonService:
         
         person = await self.cache_service.get_person_from_cache(person_id)
         if not person:
-            person = await self.search_platform.get_person_from_sp(person_id)
+            person = (
+                await self.search_platform
+                .get_person_from_search_platform(person_id)
+            )
             
             if not person:
                 return None
@@ -62,6 +72,7 @@ class PersonService:
 @lru_cache()
 def get_person_service(
         cache_service: PersonCacheService = Depends(get_person_cache_service),
-        elastic: PersonSearchService = Depends(get_person_sp_service)
+        elastic: PersonSearchService = Depends(
+            get_person_search_platform_service)
 ) -> PersonService:
     return PersonService(cache_service, elastic)

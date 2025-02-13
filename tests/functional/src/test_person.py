@@ -10,52 +10,58 @@ from settings import test_settings
 @pytest.fixture
 def person_data() -> list[dict[str, Any]]:
     """Fixture providing test person data with associated films."""
-
-    persons = [
-        {
-            "uuid": str(uuid.uuid4()),
-            "full_name": "John Doe",
-            "films": [{"id": str(uuid.uuid4()), "roles": ["actor", "director"]}],
-        },
-        {
-            "uuid": str(uuid.uuid4()),
-            "full_name": "Alice Smith",
-            "films": [{"id": str(uuid.uuid4()), "roles": ["actor"]}],
-        },
-    ]
+    person1_id = str(uuid.uuid4())
+    person2_id = str(uuid.uuid4())
+    film_id = str(uuid.uuid4())
 
     return [
         {
             "_index": test_settings.person_index,
-            "_id": person["uuid"],
+            "_id": person1_id,
             "_source": {
-                "id": person["uuid"],
-                "full_name": person["full_name"],
-                "films": person["films"],
+                "id": person1_id,
+                "full_name": "Alice Smith",
+                "films": [{"id": film_id, "roles": ["actor"]}],
             },
-        }
-        for person in persons
+        },
+        {
+            "_index": test_settings.person_index,
+            "_id": person2_id,
+            "_source": {
+                "id": person2_id,
+                "full_name": "Bob Jones",
+                "films": [{"id": film_id, "roles": ["actor"]}],
+            },
+        },
     ]
 
 
 @pytest.fixture
 def film_data(person_data) -> list[dict[str, Any]]:
     """Fixture providing test film data linked to test persons."""
-    films = []
-    for person in person_data:
-        for film in person["_source"]["films"]:
-            films.append(
-                {
-                    "_index": test_settings.movie_index,
-                    "_id": film["id"],
-                    "_source": {
-                        "id": film["id"],
-                        "title": f"Test Movie for {person['_source']['full_name']}",
-                        "imdb_rating": 8.5,
-                    },
-                }
-            )
-    return films
+    film_id = person_data[0]["_source"]["films"][0]["id"]
+
+    return [
+        {
+            "_index": test_settings.movie_index,
+            "_id": film_id,
+            "_source": {
+                "id": film_id,
+                "title": "Test Movie",
+                "imdb_rating": 8.5,
+                "genres": [],
+                "actors_names": [p["_source"]["full_name"] for p in person_data],
+                "directors_names": [],
+                "writers_names": [],
+                "actors": [
+                    {"id": p["_id"], "name": p["_source"]["full_name"]}
+                    for p in person_data
+                ],
+                "directors": [],
+                "writers": [],
+            },
+        }
+    ]
 
 
 @pytest.mark.asyncio
@@ -145,8 +151,6 @@ class TestPersonAPI:
 
         data = await response.json()
         assert len(data) == 1
-
-        # Use the film document _id for comparison.
         first_film = next(
             f
             for f in film_data

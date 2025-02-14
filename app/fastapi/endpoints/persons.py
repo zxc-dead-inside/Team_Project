@@ -35,7 +35,7 @@ async def persons_list(
 ) -> list[PersonBase]:
     """Return list of persons."""
 
-    persons = await person_service.get_list(
+    persons = await person_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort
@@ -103,7 +103,7 @@ async def get_by_id(
     person_service: PersonService = Depends(get_person_service)
 ) -> Person:
     """Retrun person by Person_id."""
-    
+
     person = await person_service.get_by_id(person_id=person_id)
     if not person:
         raise HTTPException(

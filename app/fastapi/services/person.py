@@ -19,26 +19,15 @@ class PersonService(AbstractService):
             sort: str = None) -> list[Person] | None:
         """Getting list of persons."""
 
-        search_query  = f"{page_number}:{page_size}:{sort}"
-        persons = (
-            await self.cache_service.get_person_list_from_cache(search_query)
-        )
-        if not persons:
-            persons = await self.search_platform.get_persons_from_search_platform(
-                page_number=page_number, page_size=page_size, sort=sort)
-            if not persons:
-                return None
-            (await self.cache_service
-             .put_person_list_to_cache(search_query, persons)
-            )
-        return persons
+        pass
 
     async def search_query(
             self, page_number: int, page_size: int,
-            search_query: str = None) -> list[Person] | None:
+            search_query: str = None,
+            sort: str = None ) -> list[Person] | None:
         """Search persons in search platform."""
         
-        key  = f"{page_number}:{page_size}:{search_query}"
+        key  = f"{page_number}:{page_size}:{sort}:{search_query}"
         persons = await self.cache_service.get_person_list_from_cache(key)
         if not persons:
             persons = (

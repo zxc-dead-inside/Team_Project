@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import aiohttp
 import pytest
@@ -11,15 +11,20 @@ from settings import test_settings
 
 
 @pytest_asyncio.fixture
-async def make_get_request():
+async def session() -> AsyncGenerator[aiohttp.ClientSession, None]:
+    """Fixture to manage aiohttp client session."""
+    session = aiohttp.ClientSession()
+    yield session
+    await session.close()
+
+
+@pytest_asyncio.fixture
+async def make_get_request(session):
+    """Fixture to use managed session."""
+
     async def inner(url: str) -> aiohttp.ClientResponse:
-        session = aiohttp.ClientSession()
-        try:
-            response = await session.get(f"http://{test_settings.service_url}{url}")
-            return response
-        except Exception as e:
-            await session.close()
-            raise e
+        response = await session.get(f"http://{test_settings.service_url}{url}")
+        return response
 
     return inner
 

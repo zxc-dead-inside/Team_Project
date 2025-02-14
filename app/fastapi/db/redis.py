@@ -17,11 +17,9 @@ class RedisConnector:
             f"{settings.redis_cache_db}"
         )
 
-    @exponential_backoff(
-        max_retries=3,
-        base_delay=0.5,
-        max_delay=5.0,
-        exceptions=(aioredis.RedisError,)
+    @exponential_backoff.network_errors(
+        additional_exceptions=(aioredis.RedisError, aioredis.ConnectionError),
+        base=0.5,
     )
     async def connect(self):
         if self._redis is None:

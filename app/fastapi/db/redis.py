@@ -1,6 +1,7 @@
 import redis.asyncio as aioredis
 from redis.asyncio import Redis
 from core.config import settings
+from core.decorators.retry import exponential_backoff
 
 
 class RedisConnector:
@@ -16,6 +17,12 @@ class RedisConnector:
             f"{settings.redis_cache_db}"
         )
 
+    @exponential_backoff(
+        max_retries=3,
+        base_delay=0.5,
+        max_delay=5.0,
+        exceptions=(aioredis.RedisError,)
+    )
     async def connect(self):
         if self._redis is None:
             self._redis = await aioredis.from_url(

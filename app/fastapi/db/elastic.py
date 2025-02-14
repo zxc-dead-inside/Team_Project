@@ -1,6 +1,14 @@
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import (
+    AsyncElasticsearch,
+    ConnectionError,
+    ConnectionTimeout,
+    TransportError,
+)
 
 from core.config import settings
+from core.decorators.retry import exponential_backoff
+
+
 
 es: AsyncElasticsearch | None = None
 
@@ -21,6 +29,12 @@ class EsConnector:
             f"{settings.elasticsearch_port}"
         )
 
+    @exponential_backoff(
+        max_retries=3,
+        base_delay=1.0,
+        max_delay=5.0,
+        exceptions=(ConnectionError, ConnectionTimeout, TransportError)
+    )
     async def connect(self):
         if self._es is None:
             self._es = AsyncElasticsearch(

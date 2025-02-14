@@ -33,6 +33,8 @@ async def persons_list(
         description="Sorting criteria, optional")] = None,
     person_service: PersonService = Depends(get_person_service)
 ) -> list[PersonBase]:
+    """Return list of persons."""
+
     persons = await person_service.get_list(
         page_number=page_number,
         page_size=page_size,
@@ -66,6 +68,8 @@ async def persons_search(
         str | None, Query(description="Search query, optional")] = None,
     person_service: PersonService = Depends(get_person_service)
 ) -> list[Person]:
+    """Return searched list of persons."""
+
     persons = await person_service.search_query(
         page_number=page_number,
         page_size=page_size,
@@ -98,6 +102,8 @@ async def get_by_id(
     person_id: str,
     person_service: PersonService = Depends(get_person_service)
 ) -> Person:
+    """Retrun person by Person_id."""
+    
     person = await person_service.get_by_id(person_id=person_id)
     if not person:
         raise HTTPException(
@@ -125,6 +131,8 @@ async def get_films_by_person_id(
     person_service: PersonService = Depends(get_person_service),
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
+    """Retrun list of films with person by Person_id."""
+
     person = await person_service.get_by_id(
         person_id=person_id
     )

@@ -14,7 +14,7 @@ class GenreService(AbstractService):
         self.cache_service = cache_service
         self.search_platform = search_platform
 
-    async def get_list(
+    async def search_query(
             self, page_number: int, page_size: int,
             sort: str = None) -> list[Genre] | None:
         """Getting list of genres."""
@@ -44,7 +44,3 @@ class GenreService(AbstractService):
                 return None
         await self.cache_service.put_genre_to_cache(genre)
         return genre
-
-    async def search_query():
-        # TODO: Смержить методы
-        pass

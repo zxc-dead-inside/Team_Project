@@ -65,7 +65,7 @@ async def film_general(
     genre: UUID | None = None,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[MovieShort]:
-    films = await film_service.search_general(
+    films = await film_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort,

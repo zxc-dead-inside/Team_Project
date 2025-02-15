@@ -27,7 +27,8 @@ class FilmSearchService:
         return await serialize_movie_detail(doc)
     
     async def search_film_in_search_platform(
-            self, page_number: int, page_size: int, search_query: str = None
+            self, page_number: int, page_size: int, search_query: str = None,
+            genre: UUID = None, sort: str = '-imdb_rating'
     ) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the es."""
 
@@ -56,31 +57,6 @@ class FilmSearchService:
                     }
                 }
             ]
-        body["sort"] = [{"imdb_rating": {"order": "desc"}}]
-
-        results = await self.search_platform.search(index=settings.movie_index, body=body)
-        
-        if results is None:
-            return None
-        return await serialize_movie_short_list(results)
-
-    async def search_film_general_in_search_platform(
-            self, page_number: int, page_size: int, sort: str = None,
-            genre: UUID = None) -> list[MovieShortListResponse] | None:
-        """
-        Search for movies in Elasticsearch with pagination, sorting, and 
-        genre filtering.
-        """
-
-        query = {"bool": {"must": [{"match_all": {}}]}}
-        skip = (page_number - 1) * page_size
-        body = {
-            "query": query,
-            "from": skip,
-            "size": page_size,
-            "_source": ["id", "title", "imdb_rating"],
-        }
-
         if sort:
             body["sort"] = [{
                 sort.lstrip("-"): {
@@ -98,10 +74,10 @@ class FilmSearchService:
                     }
                 }
             }]
+
         results = await self.search_platform.search(
-            index=settings.movie_index,
-            body=body
-        )
+            index=settings.movie_index, body=body)
+        
         if results is None:
             return None
         return await serialize_movie_short_list(results)

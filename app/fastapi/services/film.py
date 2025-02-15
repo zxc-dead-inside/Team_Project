@@ -39,41 +39,26 @@ class FilmService(AbstractService):
         return film
 
     async def search_query(
-            self, page_number: int, page_size: int, search_query: str = None
-            ) -> list[MovieShortListResponse] | None:
-        """Returns the list of movies by query."""
+            self, page_number: int, page_size: int,
+            sort: str = None, search_query: str = None,
+            genre: UUID = None) -> list[MovieShortListResponse] | None:
+        """Returns the list of movies.
+        
+        Optional:
+            1. Can be filtered by Genre
+            2. Can process a search string
+        """
 
-        films = await self.cache_service.get_films_from_cache(search_query)
+        key = f"{page_number}:{page_size}:{sort}:{genre}:{search_query}"
+        films = await self.cache_service.get_films_from_cache(key)
         if not films:
             films = await self.search_platform.search_film_in_search_platform(
-                page_number,
-                page_size,
-                search_query
+                page_number=page_number, page_size=page_size,
+                search_query=search_query, genre=genre, sort=sort
             )
             if not films:
                 return None
     
-            await self.cache_service.put_films_to_cache(search_query, films)
-        return films
-
-    async def search_general(
-            self, page_number: int, page_size: int, sort: str = None,
-            genre: UUID = None) -> list[MovieShortListResponse] | None:
-        """Trying to get the date for main page."""
-
-        key = f"{page_number}:{page_size}{sort}:{genre}"
-        films = await self.cache_service.get_films_from_cache(key)
-        if not films:
-            films = (
-                await self.search_platform
-                .search_film_general_in_search_platform(
-                    page_number, page_size, sort,genre
-                )
-            )
-            if not films:
-                # Если он отсутствует в search platform, значит,
-                # фильма вообще нет в базе.
-                return None
             await self.cache_service.put_films_to_cache(key, films)
         return films
 
@@ -101,7 +86,7 @@ class FilmService(AbstractService):
             # Searching movie on search platform
             similar_films = (
                 await self.search_platform
-                .search_film_general_in_search_platform(
+                .search_film_in_search_platform(
                     page_number=page_number, page_size=page_size,
                     sort=sort, genre=genre_id
                 )
@@ -123,8 +108,7 @@ class FilmService(AbstractService):
         films = await self.cache_service.get_films_from_cache(key)
         if not films:
             films = (
-                await self.search_platform
-                .search_film_general_in_search_platform(
+                await self.search_platform.search_film_in_search_platform(
                     page_number=page_number, page_size=page_size,
                     sort=sort, genre=genre_id
                 )
@@ -133,7 +117,3 @@ class FilmService(AbstractService):
                 return None
             await self.cache_service.put_films_to_cache(key, films)
         return films
-
-    async def get_list():
-        # TODO: Смержить методы
-        pass

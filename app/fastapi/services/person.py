@@ -14,13 +14,6 @@ class PersonService(AbstractService):
         self.cache_service = cache_service
         self.search_platform = search_platform
 
-    async def get_list(
-            self, page_number: int, page_size: int,
-            sort: str = None) -> list[Person] | None:
-        """Getting list of persons."""
-
-        pass
-
     async def search_query(
             self, page_number: int, page_size: int,
             search_query: str = None,

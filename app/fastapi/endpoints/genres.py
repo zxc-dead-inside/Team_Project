@@ -25,7 +25,7 @@ async def genre_list(
         description="Sorting criteria, optional")] = None,
     genre_service: GenreService = Depends(get_genre_service)
 ) -> list[Genre]:
-    genres = await genre_service.get_list(
+    genres = await genre_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort

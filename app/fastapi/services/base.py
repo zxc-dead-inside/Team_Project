@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from uuid import UUID
 
 from services.cache.base import AbstractCacheStorage
 from services.search_platform.base import AbstractSearchPlatfrom
@@ -22,9 +23,9 @@ class AbstractService(ABC):
         pass
 
     @abstractmethod
-    async def get_list():
-        pass
-
-    @abstractmethod
-    async def search_query():
+    async def search_query(
+        self, page_number: int, page_size: int,
+        sort: str = None, search_query: str = None,
+        genre: UUID = None
+    ):
         pass

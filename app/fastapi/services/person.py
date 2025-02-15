@@ -1,171 +1,48 @@
-import json
-from datetime import timedelta
-from functools import lru_cache
-
-from core.config import settings
-from db.elastic import get_elastic
-from db.redis import get_redis
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
 from models.person import Person
-from redis.asyncio import Redis
+from services.base import AbstractService
+from services.cache_services.base import AbstractPersonCacheService
+from services.search_services.base import AbstractPersonSearchService
 
+class PersonService(AbstractService):
+    """The main logic of working with persons."""
 
-class PersonService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
-        self.elastic = elastic
+    def __init__(
+            self, cache_service: AbstractPersonCacheService,
+            search_platform: AbstractPersonSearchService):
 
-    async def get_list(
-            self, page_number: int, page_size: int,
-            sort: str = None) -> list[Person] | None:
-        
-        search_query  = f"{page_number}:{page_size}:{sort}"
-        persons = await self._get_list_from_cache(search_query)
-        if not persons:
-            persons = await self._get_list(
-                page_number=page_number, page_size=page_size, sort=sort)
-            if not persons:
-                return None
-            await self._put_list_to_cache(search_query, persons)
-        return persons
-
-    async def _get_list(
-            self, page_number: int, page_size: int,
-            sort: str = None) -> list[Person] | None:
-        try:
-            skip = (page_number - 1) * page_size
-            body = {
-                "from": skip,
-                "size": page_size
-            }
-            if sort:
-                body["sort"] = [{
-                    sort.lstrip("-"): {
-                        "order": "desc" if sort.startswith("-") else "asc"
-                    }
-                }]
-            doc = await self.elastic.search(
-                index=settings.person_index,
-                body=body
-            )
-        except NotFoundError:
-            return None
-        return [Person(**person['_source']) for person in doc['hits']['hits']]
-
-    async def _get_list_from_cache(self, search_query: str) -> list[Person] | None:
-        """Trying to get the data from cache."""
-
-        key = (f"{settings.person_index}:person_list:{search_query}")
-        data = await self.redis.get(key)
-        if not data:
-             return None
-        return [Person.model_validate_json(item) for item in json.loads(data)]
-    
-    async def _put_list_to_cache(
-            self, search_query: str, data: list[Person],
-            ttl: timedelta = settings.default_ttl):
-        """Saves the data to the cache."""
-
-        key = (f"{settings.person_index}:"
-               f"{data[0].__class__.__name__.lower()}_list:{search_query}")
-
-        items = json.dumps([item.model_dump_json() for item in data])
-        await self.redis.set(key, items, ttl)
+        self.cache_service = cache_service
+        self.search_platform = search_platform
 
     async def search_query(
             self, page_number: int, page_size: int,
-            search_query: str = None) -> list[Person] | None:
+            search_query: str = None,
+            sort: str = None ) -> list[Person] | None:
+        """Search persons in search platform."""
         
-        key  = f"{page_number}:{page_size}:{search_query}"
-        persons = await self._get_list_from_cache(key)
+        key  = f"{page_number}:{page_size}:{sort}:{search_query}"
+        persons = await self.cache_service.get_person_list_from_cache(key)
         if not persons:
-            persons = await self._search_query(
-                page_number, page_size, search_query)
+            persons = (
+                await self.search_platform.search_person_in_search_platform(
+                    page_number, page_size, search_query
+                )
+            )
             if not persons:
                 return None
-            await self._put_list_to_cache(key, persons)
+            await self.cache_service.put_person_list_to_cache(key, persons)
         return persons
 
-    async def _search_query(
-        self,
-        page_number: int,
-        page_size: int,
-        search_query: str = None
-            ) -> list[Person] | None:
-        try:
-            query = {"bool": {"must": [{"match_all": {}}]}}
-            skip = (page_number - 1) * page_size
-            body = {
-                "query": query,
-                "from": skip,
-                "size": page_size,
-                "_source": ["id", "full_name", "films"]
-            }
-            if search_query:
-                query["bool"]["must"] = [
-                    {
-                        "match": {"full_name": search_query}
-                    }
-                ]
-            doc = await self.elastic.search(
-                index=settings.person_index,
-                body=body
-            )
-        except NotFoundError:
-            return None
-        return [
-            Person(**person['_source']) for person in doc['hits']['hits']
-        ]
-
     async def get_by_id(self, person_id: str) -> Person | None:
+        """Return detail person by person_id."""
         
-        person = await self._get_person_from_cache(person_id)
+        person = await self.cache_service.get_person_from_cache(person_id)
         if not person:
-            person = await self._get_person_from_elastic(person_id)
+            person = (
+                await self.search_platform
+                .get_person_from_search_platform(person_id)
+            )
             
             if not person:
                 return None
-            await self._put_person_to_cache(person)
+            await self.cache_service.put_person_to_cache(person)
         return person
-
-    async def _get_person_from_cache(
-            self, person_id: str) -> Person | None:
-        """Trying to get the data from the cache."""
-
-        key = f"{settings.movie_index}:person:{person_id}"
-
-        data = await self.redis.get(key)
-        if not data:
-            return None
-        person = Person.model_validate_json(data)
-        return person
-
-    async def _put_person_to_cache(
-            self, person: Person,
-            ttl: timedelta = settings.default_ttl):
-        """Saves the data to the cache."""
-
-        key = (f"{settings.movie_index}:{person.cache_key}")
-        await self.redis.set(key, person.model_dump_json(), ttl)
-
-    async def _get_person_from_elastic(
-            self,
-            person_id: str
-            ) -> Person | None:
-        try:
-            doc = await self.elastic.get(
-                index=settings.person_index,
-                id=person_id
-            )
-        except NotFoundError:
-            return None
-        return Person(**doc['_source'])
-
-
-@lru_cache()
-def get_person_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic)
-) -> PersonService:
-    return PersonService(redis, elastic)

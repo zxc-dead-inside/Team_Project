@@ -5,15 +5,24 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Person, PersonBase, MovieRole, MovieShort
-from services.film import FilmService, get_film_service
-from services.person import PersonService, get_person_service
+from services.base import AbstractService
+from services.di import get_person_service
+from services.di import get_film_service
 
 
 
 router = APIRouter()
 
 
-@router.get('/', response_model=list[PersonBase])
+@router.get(
+    '/',
+    response_model=list[PersonBase],
+    summary="Get list of persons",
+    description=(
+            "Return list of persons, "
+            "ids and names"
+    )
+)
 async def persons_list(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -21,9 +30,11 @@ async def persons_list(
         description="Number of items per page, must be between 1 and 100")] = 10,
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> list[PersonBase]:
-    persons = await person_service.get_list(
+    """Return list of persons."""
+
+    persons = await person_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort
@@ -41,7 +52,12 @@ async def persons_list(
     ]
 
 
-@router.get('/search', response_model=list[Person])
+@router.get(
+    '/search',
+    response_model=list[Person],
+    summary="Search persons",
+    description="Return list of persons by search query"
+)
 async def persons_search(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -49,8 +65,10 @@ async def persons_search(
         description="Number of items per page, must be between 1 and 100")] = 10,
     query: Annotated[
         str | None, Query(description="Search query, optional")] = None,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> list[Person]:
+    """Return searched list of persons."""
+
     persons = await person_service.search_query(
         page_number=page_number,
         page_size=page_size,
@@ -73,11 +91,18 @@ async def persons_search(
     ]
 
 
-@router.get('/{person_id}', response_model=Person)
+@router.get(
+    '/{person_id}',
+    response_model=Person,
+    summary="Get person's roles by id",
+    description="Return persons roles in films by person id"
+)
 async def get_by_id(
     person_id: str,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> Person:
+    """Retrun person by Person_id."""
+
     person = await person_service.get_by_id(person_id=person_id)
     if not person:
         raise HTTPException(
@@ -94,12 +119,19 @@ async def get_by_id(
     )
 
 
-@router.get('/{person_id}/film', response_model=list[MovieShort])
+@router.get(
+    '/{person_id}/film',
+    response_model=list[MovieShort],
+    summary="Get person's films by id",
+    description="Return list of films by person id"
+)
 async def get_films_by_person_id(
     person_id: str,
-    person_service: PersonService = Depends(get_person_service),
-    film_service: FilmService = Depends(get_film_service)
+    person_service: AbstractService = Depends(get_person_service),
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
+    """Retrun list of films with person by Person_id."""
+
     person = await person_service.get_by_id(
         person_id=person_id
     )

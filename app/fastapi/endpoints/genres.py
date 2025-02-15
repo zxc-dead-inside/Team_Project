@@ -2,13 +2,20 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from models.models import Genre
-from services.genre import GenreService, get_genre_service
+from services.base import AbstractService
+from services.di import get_genre_service
 
 router = APIRouter()
 
 
-@router.get('/', response_model=list[Genre])
+@router.get(
+    '/',
+    response_model=list[Genre],
+    summary="Get list of genres",
+    description="Return list of  all genres"
+)
 async def genre_list(
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
@@ -16,9 +23,9 @@ async def genre_list(
         description="Number of items per page, must be between 1 and 100")] = 10,
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
-    genre_service: GenreService = Depends(get_genre_service)
+    genre_service: AbstractService = Depends(get_genre_service)
 ) -> list[Genre]:
-    genres = await genre_service.get_list(
+    genres = await genre_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort
@@ -36,10 +43,15 @@ async def genre_list(
     ]
 
 
-@router.get('/{genre_id}', response_model=Genre)
+@router.get(
+    '/{genre_id}',
+    response_model=Genre,
+    summary="Get genre by id",
+    description="Return genre full data by id"
+)
 async def get_by_id(
     genre_id: str,
-    genre_service: GenreService = Depends(get_genre_service)
+    genre_service: AbstractService = Depends(get_genre_service)
 ) -> Genre:
     genre = await genre_service.get_by_id(
         genre_id=genre_id

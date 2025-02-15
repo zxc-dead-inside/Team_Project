@@ -1,3 +1,4 @@
+from string import Template
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -27,6 +28,19 @@ class TestSettings(BaseSettings):
     # FastAPI service settings
     api_host: str = Field(default="fastapi")
     api_port: int = Field(default=9000)
+
+    # Seraching film settings
+    film_count: int = 50
+    film_not_found_len: int  = 1
+    film_search_endpoint: Template = Template(
+        '/api/v1/films/search?query=${search}&page_number=1&page_size=50')
+    
+
+    # Seraching person settings
+    person_count: int = 50
+    person_not_found_len: int  = 1
+    person_search_endpoint: Template = Template(
+        '/api/v1/persons/search?query=${search}&page_number=1&page_size=50')
 
     @property
     def es_url(self) -> str:

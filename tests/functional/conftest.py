@@ -154,7 +154,6 @@ def clean_elasticsearch(es_client):
 @pytest_asyncio.fixture(name="es_create_index")
 def es_create_index():
     async def inner(
-            
             index: str, settings: dict[str, Any], mappings: dict[str, Any]
     ):
         """Generic fixture to create an elasticsearch index."""

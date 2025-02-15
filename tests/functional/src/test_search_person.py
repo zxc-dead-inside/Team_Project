@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from testdata.es_mapping import es_indecies
+from testdata.es_mapping import es_indices_settings
 from settings import test_settings
 
 def person_data() -> list[dict[str, Any]]:
@@ -13,26 +13,22 @@ def person_data() -> list[dict[str, Any]]:
 
     film_id = str(uuid.uuid4())
     person_id = str(uuid.uuid4())
-    first_names = ['Bob', 'Anne', 'Alice', 'Jhon']
-    second_names = ['Wick', 'Marley', 'Cooper', 'Hathaway']
 
     return {
-        {
-                "id": person_id,
-                "full_name": "Anne Hathaway",
-                "films": [{"id": film_id, "roles": ["actor"]}],
-        },
+        "id": person_id,
+        "full_name": "Anne Hathaway",
+        "films": [{"id": film_id, "roles": ["actor"]}],
     }
 
-class TestPersonSearchhAPI:
+class TestPersonSearchAPI:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, es_create_index, es_write_data):
         """Setup test data."""
 
         await es_create_index(
             test_settings.person_index,
-            es_indecies.persons_index_settings,
-            es_indecies.persons_mappings
+            es_indices_settings.persons_settings,
+            es_indices_settings.persons_mapping
         )
         
         es_data = [person_data() for _ in range(60)]
@@ -66,10 +62,12 @@ class TestPersonSearchhAPI:
     @pytest.mark.asyncio
     async def test_person_search(
         self, make_get_request, query_data, expected_answer):
-        url = (
-            f'/api/v1/persons/search?query={query_data["search"]}'
-            '&page_number=1&page_size=50'
-        )
+        # url = (
+        #     f'/api/v1/persons/search?query={query_data["search"]}'
+        #     '&page_number=1&page_size=50'
+        # )
+        url = test_settings.person_search_endpoint.substitute(
+            search=query_data['search'])
         response = await make_get_request(url)
         body = await response.json()
 

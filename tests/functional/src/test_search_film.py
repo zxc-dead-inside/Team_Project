@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from testdata.es_mapping import es_indecies
+from testdata.es_mapping import es_indices_settings
 from settings import test_settings
 
 def movie_data() -> list[dict[str, Any]]:
@@ -37,15 +37,15 @@ def movie_data() -> list[dict[str, Any]]:
         ],
     }
 
-class TestFilmSearchhAPI:
+class TestFilmSearchAPI:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, es_create_index, es_write_data):
         """Setup test data."""
 
         await es_create_index(
             test_settings.movie_index,
-            es_indecies.movies_index_settings,
-            es_indecies.movies_mappings
+            es_indices_settings.movies_settings,
+            es_indices_settings.movies_mappings
         )
         
         es_data = [movie_data() for _ in range(60)]
@@ -79,10 +79,9 @@ class TestFilmSearchhAPI:
     @pytest.mark.asyncio
     async def test_film_search(
         self, make_get_request, query_data, expected_answer):
-        url = (
-            f'/api/v1/films/search?query={query_data["search"]}'
-            '&page_number=1&page_size=50'
-        )
+        url = test_settings.film_search_endpoint.substitute(
+            search=query_data['search'])
+
         response = await make_get_request(url)
         body = await response.json()
 

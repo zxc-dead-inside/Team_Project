@@ -15,7 +15,8 @@ class GenreSearchSerivce:
         self.search_platform = search_platform
     
 
-    async def get_genre(self, genre_id: str) -> Genre | None:
+    async def get_genre_from_search_platform(
+            self, genre_id: str) -> Genre | None:
         """Returns genre by genre_id."""
 
         result = await self.search_platform.get(settings.genre_index, genre_id)
@@ -23,7 +24,7 @@ class GenreSearchSerivce:
             return None
         return await serialize_genre_detail(result)
 
-    async def get_genres(
+    async def get_genres_in_search_platform(
             self, page_number: int, page_size: int,
             sort: str = None) -> list[Genre] | None:
         """Returns list of genres."""

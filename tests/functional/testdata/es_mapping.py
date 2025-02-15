@@ -65,3 +65,17 @@ MOVIES_MAPPING = {
         },
     },
 }
+
+
+GENRE_MAPPING = {
+    "mappings": {
+        "properties": {
+            "id": {
+                "type": "keyword"
+            },
+            "name": {
+                "type": "keyword"
+            }
+        }
+    }
+}

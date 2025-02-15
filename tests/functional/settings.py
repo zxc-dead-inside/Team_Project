@@ -13,6 +13,7 @@ class TestSettings(BaseSettings):
     movie_endpoint: str = Field(default="/api/v1/films")
 
     genre_index: str = Field(default="genres")
+    genre_endpoint: str = Field(default="/api/v1/genres/")
 
     person_index: str = Field(default="persons")
     person_endpoint: str = Field(default="/api/v1/persons/")

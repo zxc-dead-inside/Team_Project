@@ -5,11 +5,10 @@ import aiohttp
 import pytest
 import pytest_asyncio
 import redis
-from elasticsearch import AsyncElasticsearch, Elasticsearch, NotFoundError
+from elasticsearch import AsyncElasticsearch, Elasticsearch
 from elasticsearch.helpers import async_bulk
 
 from settings import test_settings
-from testdata.es_mapping import MOVIES_MAPPING
 
 
 @pytest_asyncio.fixture
@@ -53,19 +52,38 @@ async def es_write_data():
 
 
 @pytest_asyncio.fixture
-async def create_index():
-    """Фикстура для создания индекса в Elasticsearch перед тестами."""
+async def create_index_factory():
+    """Fixture factory for creating Elasticsearch indices with specified mappings."""
 
-    async def inner():
-        es_client = AsyncElasticsearch(hosts=test_settings.es_url, verify_certs=False)
-        try:
-            exists = await es_client.indices.exists(index=test_settings.movie_index)
+    async def create_index(
+        index_name: str, mapping: dict[str, Any], *, recreate: bool = False
+    ) -> None:
+        """
+        Create an Elasticsearch index with the specified mapping.
+
+        Args:
+            index_name: Name of the index to create
+            mapping: Index mapping configuration
+            recreate: If True, delete existing index before creation
+        """
+        async with AsyncElasticsearch(
+            hosts=test_settings.es_url, verify_certs=False
+        ) as es_client:
+            exists = await es_client.indices.exists(index=index_name)
+
+            if exists and recreate:
+                await es_client.indices.delete(index=index_name)
+                exists = False
+
             if not exists:
-                await es_client.indices.create(index=test_settings.movie_index, body=MOVIES_MAPPING)
-        finally:
-            await es_client.close()
+                # Using unpacked mapping instead of deprecated 'body' parameter
+                await es_client.indices.create(
+                    index=index_name,
+                    mappings=mapping.get("mappings", {}),
+                    settings=mapping.get("settings", {}),
+                )
 
-    return inner
+    return create_index
 
 
 @pytest.fixture(scope="session")

@@ -1,10 +1,23 @@
 import uuid
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Callable
 
 import pytest
 import pytest_asyncio
 from settings import test_settings
+from testdata.es_mapping import MOVIES_MAPPING
+
+
+@pytest_asyncio.fixture
+async def create_movie_index(create_index_factory: Callable):
+    """Fixture to create movies index."""
+    async def inner():
+        await create_index_factory(
+            test_settings.movie_index,
+            MOVIES_MAPPING,
+            recreate=True
+        )
+    return inner
 
 
 @pytest.fixture
@@ -107,9 +120,9 @@ def movies_data() -> list[dict[str, Any]]:
 @pytest.mark.asyncio
 class TestFilmAPI:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, es_write_data, create_index, movies_data):
+    async def setup(self, es_write_data, create_movie_index, movies_data):
         """Setup test data"""
-        await create_index()
+        await create_movie_index()
         await es_write_data(movies_data)
 
     async def test_films_popular_by_genre(self, make_get_request, movies_data):

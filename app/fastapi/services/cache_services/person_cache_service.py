@@ -4,9 +4,10 @@ from datetime import timedelta
 from core.config import settings
 from models.person import Person
 from services.cache.base import AbstractCacheStorage
+from services.cache_services.base import AbstractPersonCacheService
 
 
-class PersonCacheService:
+class PersonCacheService(AbstractPersonCacheService):
 
     def __init__(self, cache: AbstractCacheStorage):
         self.cache = cache

@@ -5,7 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Genre, MovieFull, MovieShort, Person
-from services.film import FilmService, get_film_service
+from services.base import AbstractService
+from services.di import get_film_service
 
 
 router = APIRouter()
@@ -23,7 +24,7 @@ async def films_popular_by_genre(
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100,
         description="Number of items per page, must be between 1 and 100")] = 10,
-    film_service: FilmService = Depends(get_film_service)
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
     popular_films = await film_service.get_popular_by_genre_id(
         genre,
@@ -62,9 +63,9 @@ async def film_general(
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
     genre: UUID | None = None,
-    film_service: FilmService = Depends(get_film_service)
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
-    films = await film_service.search_general(
+    films = await film_service.search_query(
         page_number=page_number,
         page_size=page_size,
         sort=sort,
@@ -97,9 +98,9 @@ async def film_search(
         description="Number of items per page, must be between 1 and 100")] = 10,
     search_query: Annotated[str | None, Query(alias="query",
         description="Search query for filtering movies")] = None,
-    film_service: FilmService = Depends(get_film_service)
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
-    films = await film_service.search_by_query(
+    films = await film_service.search_query(
         page_number=page_number,
         page_size=page_size,
         search_query=search_query,
@@ -126,7 +127,7 @@ async def film_search(
 )
 async def film_details(
     film_id: str,
-    film_service: FilmService = Depends(get_film_service)
+    film_service: AbstractService = Depends(get_film_service)
 ) -> MovieFull:
     film = await film_service.get_by_id(film_id)
     if not film:
@@ -173,7 +174,7 @@ async def film_similar(
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100,
         description="Number of items per page, must be between 1 and 100")] = 10,
-    film_service: FilmService = Depends(get_film_service)
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
     similar_films = await film_service.get_similar_by_id(
         film_id,

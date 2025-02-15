@@ -5,9 +5,10 @@ from core.config import settings
 from models.genre import Genre
 from services.utils import UUIDEncoder
 from services.cache.base import AbstractCacheStorage
+from services.cache_services.base import AbstractGenreCacheService
 
 
-class GenreCacheService:
+class GenreCacheService(AbstractGenreCacheService):
 
     def __init__(self, cache: AbstractCacheStorage):
         self.cache = cache

@@ -114,6 +114,20 @@ PERSONS_MAPPINGS = {
     }
 }
 
+GENRE_MAPPING = {
+    "mappings": {
+        "properties": {
+            "id": {
+                "type": "keyword"
+            },
+            "name": {
+                "type": "keyword"
+            }
+        }
+    }
+}
+
+
 class ESIndicesSettings(BaseSettings):
     movies_settings:  dict[str, Any] = {
         "refresh_interval": "1s",

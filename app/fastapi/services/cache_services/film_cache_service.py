@@ -4,11 +4,11 @@ from datetime import timedelta
 from core.config import settings
 from models.movies_models import MovieDetailResponse, MovieShortListResponse
 from services.cache.base import AbstractCacheStorage
+from services.cache_services.base import AbstractFilmCacheService
 from services.utils import UUIDEncoder
 
 
-
-class FilmCacheService:
+class FilmCacheService(AbstractFilmCacheService):
 
     def __init__(self, cache: AbstractCacheStorage):
         self.cache = cache

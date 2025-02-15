@@ -1,15 +1,14 @@
 from models.person import Person
 from services.base import AbstractService
-from services.cache.person_cache import PersonCacheService
-from services.search_platform.person_search_platform import PersonSearchService
-
+from services.cache_services.base import AbstractPersonCacheService
+from services.search_services.base import AbstractPersonSearchService
 
 class PersonService(AbstractService):
     """The main logic of working with persons."""
 
     def __init__(
-            self, cache_service: PersonCacheService,
-            search_platform: PersonSearchService):
+            self, cache_service: AbstractPersonCacheService,
+            search_platform: AbstractPersonSearchService):
 
         self.cache_service = cache_service
         self.search_platform = search_platform

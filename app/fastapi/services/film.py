@@ -1,22 +1,19 @@
 import random
-from functools import lru_cache
 from uuid import UUID
-
-from fastapi import Depends
 
 from models.movies_models import (
     MovieDetailResponse, MovieShortListResponse)
 from services.base import AbstractService
-from services.cache.film_cache import FilmCacheService
-from services.search_platform.film_search_platform import FilmSearchService
+from services.cache_services.base import AbstractFilmCacheService
+from services.search_services.base import AbstractFilmSearchService
 
 
 class FilmService(AbstractService):
     """The main logic of working with films."""
 
     def __init__(
-            self, cache_service: FilmCacheService,
-            search_platform: FilmSearchService):
+            self, cache_service: AbstractFilmCacheService,
+            search_platform: AbstractFilmSearchService):
 
         self.cache_service = cache_service
         self.search_platform = search_platform
@@ -67,7 +64,6 @@ class FilmService(AbstractService):
             ) -> list[MovieShortListResponse] | None:
         """Trying to get similar movies by film'd id."""
 
-        # TODO: Вынести логику работы с хранилищем и кешом в отдельный класс
         film = await self.cache_service.get_film_from_cache(film_id)
         if not film:
             film = await self.search_platform.get_film_from_search_platform(

@@ -5,21 +5,21 @@ from services.person import PersonService
 from services.genre import GenreService
 from services.film import FilmService
 
-from services.cache.di import get_person_cache_service
-from services.cache.di import get_genre_cache_service
-from services.cache.di import get_film_cache_service
+from services.cache_services.di import get_person_cache_service
+from services.cache_services.di import get_genre_cache_service
+from services.cache_services.di import get_film_cache_service
 
-from services.cache.person_cache import PersonCacheService
-from services.cache.genre_cache import GenreCacheService
-from services.cache.film_cache import FilmCacheService
+from services.cache_services.person_cache_service import PersonCacheService
+from services.cache_services.genre_cache_service import GenreCacheService
+from services.cache_services.film_cache_service import FilmCacheService
 
-from services.search_platform.di import get_person_search_platform_service
-from services.search_platform.di import get_genre_search_platform_service
-from services.search_platform.di import get_film_search_platform_service
+from services.search_services.di import get_person_search_platform_service
+from services.search_services.di import get_genre_search_platform_service
+from services.search_services.di import get_film_search_platform_service
 
-from services.search_platform.person_search_platform import PersonSearchService
-from services.search_platform.genre_search_platform import GenreSearchSerivce
-from services.search_platform.film_search_platform import FilmSearchService
+from services.search_services.person_search_service import PersonSearchService
+from services.search_services.genre_search_service import GenreSearchSerivce
+from services.search_services.film_search_service import FilmSearchService
 
 
 @lru_cache()

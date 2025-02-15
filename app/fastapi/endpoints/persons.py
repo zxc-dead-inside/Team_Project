@@ -5,9 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Person, PersonBase, MovieRole, MovieShort
-from services.person import PersonService
+from services.base import AbstractService
 from services.di import get_person_service
-from services.film import FilmService
 from services.di import get_film_service
 
 
@@ -31,7 +30,7 @@ async def persons_list(
         description="Number of items per page, must be between 1 and 100")] = 10,
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> list[PersonBase]:
     """Return list of persons."""
 
@@ -66,7 +65,7 @@ async def persons_search(
         description="Number of items per page, must be between 1 and 100")] = 10,
     query: Annotated[
         str | None, Query(description="Search query, optional")] = None,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> list[Person]:
     """Return searched list of persons."""
 
@@ -100,7 +99,7 @@ async def persons_search(
 )
 async def get_by_id(
     person_id: str,
-    person_service: PersonService = Depends(get_person_service)
+    person_service: AbstractService = Depends(get_person_service)
 ) -> Person:
     """Retrun person by Person_id."""
 
@@ -128,8 +127,8 @@ async def get_by_id(
 )
 async def get_films_by_person_id(
     person_id: str,
-    person_service: PersonService = Depends(get_person_service),
-    film_service: FilmService = Depends(get_film_service)
+    person_service: AbstractService = Depends(get_person_service),
+    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
     """Retrun list of films with person by Person_id."""
 

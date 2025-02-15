@@ -6,8 +6,9 @@ from  models.movies_models import (
     MovieDetailResponse, MovieShortListResponse, serialize_movie_detail,
     serialize_movie_short_list)
 from services.search_platform.base import AbstractSearchPlatfrom
+from services.search_services.base import AbstractFilmSearchService
 
-class FilmSearchService:
+class FilmSearchService(AbstractFilmSearchService):
     """"
     A service class responsible for retrieving movies data from search
     platform.

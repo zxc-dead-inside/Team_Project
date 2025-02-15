@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import Genre
-from services.genre import GenreService
+from services.base import AbstractService
 from services.di import get_genre_service
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def genre_list(
         description="Number of items per page, must be between 1 and 100")] = 10,
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
-    genre_service: GenreService = Depends(get_genre_service)
+    genre_service: AbstractService = Depends(get_genre_service)
 ) -> list[Genre]:
     genres = await genre_service.search_query(
         page_number=page_number,
@@ -51,7 +51,7 @@ async def genre_list(
 )
 async def get_by_id(
     genre_id: str,
-    genre_service: GenreService = Depends(get_genre_service)
+    genre_service: AbstractService = Depends(get_genre_service)
 ) -> Genre:
     genre = await genre_service.get_by_id(
         genre_id=genre_id

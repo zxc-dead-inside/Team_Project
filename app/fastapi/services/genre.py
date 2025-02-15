@@ -1,16 +1,15 @@
 from models.genre import Genre
 from services.base import AbstractService
-
-from services.cache.genre_cache import GenreCacheService
-from services.search_platform.genre_search_platform import GenreSearchSerivce
+from services.cache_services.base import AbstractGenreCacheService
+from services.search_services.base import AbstractGenreSearchService
 
 
 class GenreService(AbstractService):
 
     """The main logic of working with genres."""
     def __init__(
-            self, cache_service: GenreCacheService,
-            search_platform: GenreSearchSerivce):
+            self, cache_service: AbstractGenreCacheService,
+            search_platform: AbstractGenreSearchService):
         self.cache_service = cache_service
         self.search_platform = search_platform
 
@@ -24,7 +23,7 @@ class GenreService(AbstractService):
             await self.cache_service.get_genre_list_from_cache(search_query)
         )
         if not genres:
-            genres = await self.search_platform.get_genres(
+            genres = await self.search_platform.get_genres_in_search_platform(
                 page_number=page_number, page_size=page_size, sort=sort)
             if not genres:
                 return None
@@ -39,7 +38,8 @@ class GenreService(AbstractService):
         
         genre = await self.cache_service.get_genre_from_cache(genre_id)
         if not genre:
-            genre = await self.search_platform.get_genre(genre_id)
+            genre = await self.search_platform.get_genre_from_search_platform(
+                genre_id)
             if not genre:
                 return None
         await self.cache_service.put_genre_to_cache(genre)

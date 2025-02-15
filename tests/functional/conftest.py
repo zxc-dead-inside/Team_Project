@@ -5,9 +5,11 @@ import aiohttp
 import pytest
 import pytest_asyncio
 import redis
-from elasticsearch import AsyncElasticsearch, Elasticsearch
+from elasticsearch import AsyncElasticsearch, Elasticsearch, NotFoundError
 from elasticsearch.helpers import async_bulk
+
 from settings import test_settings
+from testdata.es_mapping import MOVIES_MAPPING
 
 
 @pytest_asyncio.fixture
@@ -51,6 +53,22 @@ async def es_write_data():
     return inner
 
 
+@pytest_asyncio.fixture
+async def create_index():
+    """Фикстура для создания индекса в Elasticsearch перед тестами."""
+
+    async def inner():
+        es_client = AsyncElasticsearch(hosts=test_settings.es_url, verify_certs=False)
+        try:
+            exists = await es_client.indices.exists(index=test_settings.movie_index)
+            if not exists:
+                await es_client.indices.create(index=test_settings.movie_index, body=MOVIES_MAPPING)
+        finally:
+            await es_client.close()
+
+    return inner
+
+
 @pytest.fixture(scope="session")
 def es_client():
     """Create Elasticsearch client fixture."""
@@ -64,7 +82,7 @@ def es_client():
     # Cleanup after tests
     indices_to_clean = [
         test_settings.genre_index,
-        # Add other indices as they are added to TestSettings
+        test_settings.movie_index,
     ]
 
     for index in indices_to_clean:

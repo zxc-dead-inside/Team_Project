@@ -25,6 +25,14 @@ class TestSettings(BaseSettings):
     api_host: str = Field(default="fastapi")
     api_port: int = Field(default=9000)
 
+    # Seraching film settings
+    film_count: int = 50
+    film_not_found_len: int  = 1
+
+    # Seraching person settings
+    person_count: int = 50
+    person_not_found_len: int  = 1
+
     @property
     def es_url(self) -> str:
         return f"http://{self.es_host}:{self.es_port}"

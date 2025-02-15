@@ -13,6 +13,7 @@ from settings import test_settings
 @pytest_asyncio.fixture
 async def session() -> AsyncGenerator[aiohttp.ClientSession, None]:
     """Fixture to manage aiohttp client session."""
+
     session = aiohttp.ClientSession()
     yield session
     await session.close()
@@ -53,6 +54,7 @@ async def es_write_data():
 @pytest.fixture(scope="session")
 def es_client():
     """Create Elasticsearch client fixture."""
+
     client = Elasticsearch(
         hosts=test_settings.es_url, verify_certs=False, ssl_show_warn=False
     )
@@ -72,6 +74,7 @@ def es_client():
 @pytest.fixture(scope="session")
 def redis_client():
     """Create Redis client fixture."""
+
     client = redis.Redis(
         host=test_settings.redis_host, port=6379, decode_responses=True
     )
@@ -85,6 +88,7 @@ def redis_client():
 @pytest.fixture(scope="session", autouse=True)
 def wait_for_services(es_client, redis_client):
     """Wait for all required services to be ready."""
+
     # Check Elasticsearch
     max_retries = 30
     retries = 0
@@ -114,6 +118,7 @@ def wait_for_services(es_client, redis_client):
 @pytest.fixture
 def clean_redis(redis_client):
     """Ensure Redis is clean before each test."""
+
     yield redis_client
     redis_client.flushdb()
 
@@ -121,8 +126,31 @@ def clean_redis(redis_client):
 @pytest.fixture
 def clean_elasticsearch(es_client):
     """Ensure Elasticsearch is clean before each test."""
+
     yield es_client
     # Delete all documents but keep the index and mapping
     es_client.delete_by_query(
         index=test_settings.es_index, body={"query": {"match_all": {}}}, refresh=True
     )
+
+@pytest_asyncio.fixture(name="es_create_index")
+def es_create_index():
+    async def inner(
+            
+            index: str, settings: dict[str, Any], mappings: dict[str, Any]
+    ):
+        """Generic fixture to create an elasticsearch index."""
+
+        es_client = AsyncElasticsearch(
+            hosts=test_settings.es_url, verify_certs=False)
+        try:
+            if await es_client.indices.exists(index=index):
+                await es_client.indices.delete(index=index)
+            await es_client.indices.create(
+                index=index, settings=settings, mappings=mappings
+            )
+        except Exception as e:
+            raise (f"Index creation error: {e}")
+        finally:
+            await es_client.close()
+    return inner

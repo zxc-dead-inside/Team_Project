@@ -10,6 +10,8 @@ class TestSettings(BaseSettings):
     es_port: int = Field(default=9200, json_schema_extra={"env": "elasticsearch_port"})
 
     movie_index: str = Field(default="movies")
+    movie_endpoint: str = Field(default="/api/v1/films")
+
     genre_index: str = Field(default="genres")
 
     person_index: str = Field(default="persons")

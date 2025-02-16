@@ -11,11 +11,10 @@ from testdata.es_mapping import MOVIES_MAPPING
 @pytest_asyncio.fixture
 async def create_movie_index(create_index_factory: Callable):
     """Fixture to create movies index."""
+
     async def inner():
         await create_index_factory(
-            test_settings.movie_index,
-            MOVIES_MAPPING,
-            recreate=True
+            test_settings.movie_index, MOVIES_MAPPING,recreate=True
         )
     return inner
 
@@ -23,6 +22,7 @@ async def create_movie_index(create_index_factory: Callable):
 @pytest.fixture
 def movies_data() -> list[dict[str, Any]]:
     """Fixture providing test movie data with associated genres, directors, actors, and writers."""
+
     movie1_id = str(uuid.uuid4())
     movie2_id = str(uuid.uuid4())
     movie3_id = str(uuid.uuid4())
@@ -122,16 +122,19 @@ class TestFilmAPI:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, es_write_data, create_movie_index, movies_data):
         """Setup test data"""
+
         await create_movie_index()
         await es_write_data(movies_data)
 
     async def test_films_popular_by_genre(self, make_get_request, movies_data):
         genre = movies_data[0]["_source"]["genres"][0]["id"]
+
         response = await make_get_request(
             f"{test_settings.movie_endpoint}/popular?genre={genre}&page_number=1&page_size=10"
         )
-        assert response.status == HTTPStatus.OK
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) > 0
         assert "uuid" in data[0] and "title" in data[0]
 
@@ -139,15 +142,18 @@ class TestFilmAPI:
         response = await make_get_request(
             f"{test_settings.movie_endpoint}/?page_number=1&page_size=10"
         )
-        assert response.status == HTTPStatus.OK
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) > 0
 
     async def test_film_details(self, make_get_request, movies_data):
         film_id = movies_data[0]["_id"]
+
         response = await make_get_request(f"{test_settings.movie_endpoint}/{film_id}")
-        assert response.status == HTTPStatus.OK
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert data["uuid"] == film_id
 
     async def test_film_details_not_found(self, make_get_request):
@@ -156,17 +162,20 @@ class TestFilmAPI:
 
     async def test_film_similar(self, make_get_request, movies_data):
         film_id = movies_data[0]["_id"]
+        
         response = await make_get_request(f"{test_settings.movie_endpoint}/{film_id}/similar")
-        assert response.status == HTTPStatus.OK
         data = await response.json()
+        
+        assert response.status == HTTPStatus.OK
         assert isinstance(data, list) and len(data) > 0
 
     async def test_film_sorting(self, make_get_request):
         response = await make_get_request(
             f"{test_settings.movie_endpoint}/?sort=-imdb_rating&page_number=1&page_size=10"
         )
+        data = await response.json()        
+        
         assert response.status == HTTPStatus.OK
-        data = await response.json()
         assert len(data) > 1
         assert all(data[i]["imdb_rating"] >= data[i + 1]["imdb_rating"] for i in range(len(data) - 1))
 
@@ -174,7 +183,8 @@ class TestFilmAPI:
         response = await make_get_request(
             f"{test_settings.movie_endpoint}/search?query=Тёмный рыцарь&page_number=1&page_size=10"
         )
-        assert response.status == HTTPStatus.OK
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) > 0
         assert any("Тёмный рыцарь" in film["title"] for film in data)

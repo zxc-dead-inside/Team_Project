@@ -10,6 +10,7 @@ from settings import test_settings
 @pytest.fixture
 def person_data() -> list[dict[str, Any]]:
     """Fixture providing test person data with associated films."""
+
     person1_id = str(uuid.uuid4())
     person2_id = str(uuid.uuid4())
     film_id = str(uuid.uuid4())
@@ -39,6 +40,7 @@ def person_data() -> list[dict[str, Any]]:
 @pytest.fixture
 def film_data(person_data) -> list[dict[str, Any]]:
     """Fixture providing test film data linked to test persons."""
+
     film_id = person_data[0]["_source"]["films"][0]["id"]
 
     return [
@@ -50,7 +52,9 @@ def film_data(person_data) -> list[dict[str, Any]]:
                 "title": "Test Movie",
                 "imdb_rating": 8.5,
                 "genres": [],
-                "actors_names": [p["_source"]["full_name"] for p in person_data],
+                "actors_names": [
+                    p["_source"]["full_name"] for p in person_data
+                ],
                 "directors_names": [],
                 "writers_names": [],
                 "actors": [
@@ -69,15 +73,17 @@ class TestPersonAPI:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, es_write_data, person_data, film_data):
         """Setup test data"""
+
         await es_write_data(person_data)
         await es_write_data(film_data)
 
     async def test_persons_list(self, make_get_request):
         """Test default list endpoint."""
-        response = await make_get_request(test_settings.person_endpoint)
-        assert response.status == HTTPStatus.OK
 
+        response = await make_get_request(test_settings.person_endpoint)
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) == 2
         assert all(isinstance(person["uuid"], str) for person in data)
         assert all(isinstance(person["full_name"], str) for person in data)
@@ -94,29 +100,32 @@ class TestPersonAPI:
         self, make_get_request, page_size, page_number, expected_count
     ):
         response = await make_get_request(
-            f"{test_settings.person_endpoint}?page_size={page_size}&page_number={page_number}"
+            f"{test_settings.person_endpoint}?page_size={page_size}"
+            f"&page_number={page_number}"
         )
-        assert response.status == HTTPStatus.OK
-
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) == expected_count
 
     async def test_persons_list_without_sort(self, make_get_request):
         """Test list endpoint without sort parameter."""
-        response = await make_get_request(test_settings.person_endpoint)
-        assert response.status == HTTPStatus.OK
 
+        response = await make_get_request(test_settings.person_endpoint)
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert len(data) > 0
         assert all(isinstance(person["uuid"], str) for person in data)
         assert all(isinstance(person["full_name"], str) for person in data)
 
     async def test_get_person_by_id(self, make_get_request, person_data):
         person_id = person_data[0]["_id"]
-        response = await make_get_request(f"{test_settings.person_endpoint}{person_id}")
-        assert response.status == HTTPStatus.OK
-
+        response = await make_get_request(
+            f"{test_settings.person_endpoint}{person_id}")
         data = await response.json()
+
+        assert response.status == HTTPStatus.OK
         assert data["uuid"] == person_id
         assert data["full_name"] == person_data[0]["_source"]["full_name"]
         assert len(data["films"]) == len(person_data[0]["_source"]["films"])
@@ -127,6 +136,7 @@ class TestPersonAPI:
 
     async def test_get_person_by_id_not_found(self, make_get_request):
         """Test getting a non-existent person."""
+
         non_existent_id = str(uuid.uuid4())
         response = await make_get_request(
             f"{test_settings.person_endpoint}{non_existent_id}"
@@ -143,19 +153,21 @@ class TestPersonAPI:
         self, make_get_request, person_data, film_data
     ):
         """Test getting films for a person."""
+
         person_id = person_data[0]["_id"]
+
         response = await make_get_request(
             f"{test_settings.person_endpoint}{person_id}/film"
         )
-        assert response.status == HTTPStatus.OK
-
         data = await response.json()
-        assert len(data) == 1
         first_film = next(
             f
             for f in film_data
             if f["_id"] == person_data[0]["_source"]["films"][0]["id"]
         )
+
+        assert response.status == HTTPStatus.OK
+        assert len(data) == 1
         assert data[0]["uuid"] == first_film["_id"]
         assert data[0]["title"] == first_film["_source"]["title"]
         assert data[0]["imdb_rating"] == first_film["_source"]["imdb_rating"]
@@ -164,6 +176,7 @@ class TestPersonAPI:
         self, make_get_request, es_write_data
     ):
         """Test getting films for a person who has no films."""
+
         person_id = str(uuid.uuid4())
         person_without_films = {
             "_index": test_settings.person_index,
@@ -179,4 +192,5 @@ class TestPersonAPI:
         response = await make_get_request(
             f"{test_settings.person_endpoint}{person_id}/film"
         )
+
         assert response.status == HTTPStatus.NOT_FOUND

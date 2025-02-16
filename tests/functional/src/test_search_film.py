@@ -49,12 +49,12 @@ class TestFilmSearchAPI:
         )
         
         es_data = [movie_data() for _ in range(60)]
-        
         bulk_query: list[dict] = []
         for row in es_data:
             data = {'_index': 'movies', '_id': row['id']}
             data.update({'_source': row})
             bulk_query.append(data)
+
         await es_write_data(bulk_query)
 
 
@@ -79,6 +79,8 @@ class TestFilmSearchAPI:
     @pytest.mark.asyncio
     async def test_film_search(
         self, make_get_request, query_data, expected_answer):
+        """Test searching films."""
+        
         url = test_settings.film_search_endpoint.substitute(
             search=query_data['search'])
 

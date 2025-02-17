@@ -1,7 +1,11 @@
 import asyncio
 import pytest
 
-pytest_plugins = ("fixtures.elasticsearch_fixtures","fixtures.redis_fixtures")
+pytest_plugins = (
+    "fixtures.elasticsearch_fixtures","fixtures.redis_fixtures",
+    "fixtures.app_fastapi_fixture"
+    
+)
 
 @pytest.fixture(scope="session", autouse=True)
 def wait_for_services(es_client, redis_client):

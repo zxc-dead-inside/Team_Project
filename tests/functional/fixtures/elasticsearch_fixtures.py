@@ -17,18 +17,6 @@ async def session() -> AsyncGenerator[aiohttp.ClientSession, None]:
     yield session
     await session.close()
 
-
-@pytest_asyncio.fixture
-async def make_get_request(session):
-    """Fixture to use managed session."""
-
-    async def inner(url: str) -> aiohttp.ClientResponse:
-        response = await session.get(f"http://{test_settings.service_url}{url}")
-        return response
-
-    return inner
-
-
 @pytest_asyncio.fixture
 async def es_write_data():
     """Generic fixture to write data to Elasticsearch."""

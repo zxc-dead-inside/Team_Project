@@ -3,7 +3,7 @@ import pytest
 
 pytest_plugins = (
     "fixtures.elasticsearch_fixtures","fixtures.redis_fixtures",
-    "fixtures.app_fastapi_fixture"
+    "fixtures.app_fastapi_fixtures"
     
 )
 

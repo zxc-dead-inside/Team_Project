@@ -61,6 +61,8 @@ class TestPersonSearchAPI:
     @pytest.mark.asyncio
     async def test_person_search(
         self, make_get_request, query_data, expected_answer):
+        """Testing searching people."""
+
         url = test_settings.person_search_endpoint.substitute(
             search=query_data['search'])
         response = await make_get_request(url)

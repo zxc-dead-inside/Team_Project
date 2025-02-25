@@ -1,0 +1,91 @@
+"""Configuration settings for the application."""
+
+from functools import lru_cache
+from typing import List, Optional, Union
+
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings."""
+
+    # Application settings
+    environment: str = "development"
+    log_level: str = "INFO"
+
+    # Authentication
+    secret_key: str
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+
+    # PostgreSQL
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+    postgres_host: str = "db"
+    postgres_port: str = "5432"
+    database_url: Optional[PostgresDsn] = None
+
+    @field_validator("database_url", mode="before")
+    def assemble_db_url(cls, v: Optional[str], values) -> str:
+        """Assemble database URL if not provided."""
+        if v:
+            return v
+
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=values.data.get("postgres_user"),
+            password=values.data.get("postgres_password"),
+            host=values.data.get("postgres_host"),
+            port=int(values.data.get("postgres_port")),
+            path=f"{values.data.get('postgres_db') or ''}",
+        )
+
+    # Redis
+    redis_host: str = "redis"
+    redis_port: int = 6379
+    redis_password: Optional[str] = None
+    redis_url: Optional[RedisDsn] = None
+
+    @field_validator("redis_url", mode="before")
+    def assemble_redis_url(cls, v: Optional[str], values) -> str:
+        """Assemble Redis URL if not provided."""
+        if v:
+            return v
+
+        password_part = ""
+        if values.data.get("redis_password"):
+            password_part = f":{values.data.get('redis_password')}@"
+
+        return f"redis://{password_part}{values.data.get('redis_host')}:{values.data.get('redis_port')}/0"
+
+    # CORS
+    cors_origins: Union[List[AnyHttpUrl], List[str]] = []
+
+    @field_validator("cors_origins", mode="before")
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse string CORS origins into list of URLs."""
+        if isinstance(v, str) and not v.startswith("["):
+            # Return as strings to avoid validation issues
+            origins = [url.strip() for url in v.split(",")]
+            # Ensure each URL has a scheme
+            for i, origin in enumerate(origins):
+                if not origin.startswith(("http://", "https://")):
+                    origins[i] = f"http://{origin}"
+            return origins
+        elif isinstance(v, list):
+            return v
+        raise ValueError("CORS_ORIGINS should be a comma-separated string of URLs")
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        # case_sensitive=True,
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Return cached settings instance."""
+    return Settings()

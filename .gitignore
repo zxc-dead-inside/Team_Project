@@ -17,3 +17,5 @@ notebooks/*
 
 app/data
 app/state
+
+*.log

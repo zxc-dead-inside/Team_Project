@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
 from src.db.repositories.user_repository import UserRepository
-from src.models.user import User
+from src.db.models.user import User
 
 
 class AuthService:

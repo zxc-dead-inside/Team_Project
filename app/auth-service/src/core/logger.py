@@ -29,7 +29,10 @@ class InterceptHandler(logging.Handler):
 
 def setup_logging(log_level: str = "INFO"):
     """Configure logging for the application."""
-    # Remove default handlers
+    # Set log level for root logger
+    logging.root.setLevel(log_level)
+    
+    # Remove default handlers and add InterceptHandler
     logging.root.handlers = [InterceptHandler()]
 
     # Set log levels for libraries

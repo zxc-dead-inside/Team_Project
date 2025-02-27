@@ -83,6 +83,8 @@ class Database:
             except Exception:
                 await session.rollback()
                 raise
+            finally:
+                await session.close()
 
     async def check_connection(self) -> bool:
         """
@@ -93,8 +95,8 @@ class Database:
         """
         try:
             async with self._engine.connect() as conn:
-                await conn.execute(sa.text("SELECT 1"))
-            return True
+                result = await conn.execute(sa.text("SELECT 1"))
+                return result.scalar() == 1
         except Exception as e:
             import logging
 

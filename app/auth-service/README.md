@@ -36,3 +36,77 @@ docker-compose down
 - `POST /api/auth/login`: Login with username/email and password
 - `POST /api/auth/refresh`: Refresh access token
 - `GET /api/users/me`: Get current user profile
+
+# Setup Commands
+
+Follow these commands in order to set up and test authentication service.
+
+## 1. Initialize Migrations Structure
+
+First, initialize the Alembic migrations structure:
+
+```bash
+docker-compose exec api python scripts/init_migrations.py
+```
+
+This will create the necessary Alembic files if they don't exist.
+
+## 2. Create Initial Migration
+
+Generate the initial migration based on the models:
+
+```bash
+docker-compose exec api python scripts/create_migration.py "Initial migration"
+```
+
+## 3. Apply Migrations
+
+Apply the migrations to create the database tables:
+
+```bash
+docker-compose exec api python scripts/apply_migrations.py
+```
+
+## 4. Seed Initial Data
+
+Populate the database with initial roles, permissions, and restrictions:
+
+```bash
+docker-compose exec api python scripts/seed_data.py
+```
+
+## 5. Create Superuser
+
+Create an admin superuser:
+
+```bash
+docker-compose exec api python scripts/create_superuser.py
+```
+
+## Verifying Setup
+
+To verify that everything is working, use these commands:
+
+### Check Database Tables
+
+```bash
+docker-compose exec db psql -U postgres -d auth_db -c "\dt"
+```
+
+### Check Users Table
+
+```bash
+docker-compose exec db psql -U postgres -d auth_db -c "SELECT * FROM users;"
+```
+
+### Check Roles
+
+```bash
+docker-compose exec db psql -U postgres -d auth_db -c "SELECT * FROM roles;"
+```
+
+### Check User-Role Associations
+
+```bash
+docker-compose exec db psql -U postgres -d auth_db -c "SELECT u.username, r.name FROM users u JOIN user_role ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id;"
+```

@@ -10,14 +10,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import AsyncAdaptedQueuePool
-
-
-class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models."""
-
-    pass
+from src.db.base_models import Base
 
 
 class Database:
@@ -83,6 +77,8 @@ class Database:
             except Exception:
                 await session.rollback()
                 raise
+            finally:
+                await session.close()
 
     async def check_connection(self) -> bool:
         """
@@ -93,8 +89,8 @@ class Database:
         """
         try:
             async with self._engine.connect() as conn:
-                await conn.execute(sa.text("SELECT 1"))
-            return True
+                result = await conn.execute(sa.text("SELECT 1"))
+                return result.scalar() == 1
         except Exception as e:
             import logging
 

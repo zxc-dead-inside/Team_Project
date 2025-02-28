@@ -1,9 +1,8 @@
 """Configuration settings for the application."""
 
 from functools import lru_cache
-from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,7 +10,9 @@ class Settings(BaseSettings):
     """Application settings."""
 
     # Application settings
-    environment: str = "development"
+    project_name: str = "Auth Service"
+    api_v1_prefix: str = "/api/v1"
+    environment: str = Field(default="development")
     log_level: str = "INFO"
 
     # Authentication
@@ -25,10 +26,10 @@ class Settings(BaseSettings):
     postgres_db: str
     postgres_host: str = "db"
     postgres_port: str = "5432"
-    database_url: Optional[PostgresDsn] = None
+    database_url: PostgresDsn | None = None
 
     @field_validator("database_url", mode="before")
-    def assemble_db_url(cls, v: Optional[str], values) -> str:
+    def assemble_db_url(cls, v: str | None, values) -> str:
         """Assemble database URL if not provided."""
         if v:
             return v
@@ -45,11 +46,11 @@ class Settings(BaseSettings):
     # Redis
     redis_host: str = "redis"
     redis_port: int = 6379
-    redis_password: Optional[str] = None
-    redis_url: Optional[RedisDsn] = None
+    redis_password: str | None = None
+    redis_url: RedisDsn | None = None
 
     @field_validator("redis_url", mode="before")
-    def assemble_redis_url(cls, v: Optional[str], values) -> str:
+    def assemble_redis_url(cls, v: str | None, values) -> str:
         """Assemble Redis URL if not provided."""
         if v:
             return v
@@ -61,10 +62,10 @@ class Settings(BaseSettings):
         return f"redis://{password_part}{values.data.get('redis_host')}:{values.data.get('redis_port')}/0"
 
     # CORS
-    cors_origins: Union[List[AnyHttpUrl], List[str]] = []
+    cors_origins: list[AnyHttpUrl] | list[str] = []
 
     @field_validator("cors_origins", mode="before")
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
         """Parse string CORS origins into list of URLs."""
         if isinstance(v, str) and not v.startswith("["):
             # Return as strings to avoid validation issues

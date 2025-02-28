@@ -24,12 +24,12 @@ async def lifespan(app: FastAPI):
     app.container = container
 
     # Start services
-    logging.info("Starting up authentication service")
+    logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
 
     yield
 
     # Teardown
-    logging.info("Shutting down authentication service")
+    logging.info(f"Shutting down {settings.project_name}")
 
 
 def create_application() -> FastAPI:

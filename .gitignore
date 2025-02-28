@@ -1,7 +1,7 @@
 # Environments
 .venv
 venv
-.devcontainer
+# .devcontainer
 .devcontainer_
 _films.py
 _movies.py

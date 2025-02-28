@@ -1,11 +1,10 @@
 """User model for the database."""
 
 from datetime import UTC, datetime
-from uuid import uuid4
 
 from sqlalchemy import UUID, Boolean, Column, DateTime, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
-from src.db.database import Base
+from src.db.base_models import Base, PreBase
 
 
 # Association table for User-Role relationship
@@ -18,21 +17,16 @@ user_role = Table(
 )
 
 
-class User(Base):
+class User(PreBase, Base):
     """User model for authentication."""
 
     __tablename__ = "users"
 
-    id = Column(UUID, primary_key=True, default=uuid4)
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.now(UTC), onupdate=datetime.now(UTC)
-    )
 
     # Relationships
     roles = relationship("Role", secondary=user_role, back_populates="users")

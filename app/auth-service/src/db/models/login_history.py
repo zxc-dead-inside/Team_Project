@@ -1,17 +1,15 @@
 from datetime import UTC, datetime
-from uuid import uuid4
 
 from sqlalchemy import UUID, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
-from src.db.database import Base
+from src.db.base_models import IdMixin, Base
 
 
-class LoginHistory(Base):
+class LoginHistory(IdMixin, Base):
     """Model for tracking user login history."""
 
     __tablename__ = "login_history"
 
-    id = Column(UUID, primary_key=True, default=uuid4)
     user_id = Column(UUID, ForeignKey("users.id"), nullable=False, index=True)
     user_agent = Column(String(255), nullable=True)
     ip_address = Column(

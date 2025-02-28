@@ -10,14 +10,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import AsyncAdaptedQueuePool
-
-
-class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models."""
-
-    pass
+from src.db.base_models import Base
 
 
 class Database:

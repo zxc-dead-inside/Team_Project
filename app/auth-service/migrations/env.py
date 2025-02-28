@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import models package to register all models with SQLAlchemy metadata
+import src.db.models  # noqa: F401
 from src.core.config import get_settings
-from src.db.database import Base
-from src.db.models import *
+from src.db.base_models import Base
 
 
 # this is the Alembic Config object, which provides

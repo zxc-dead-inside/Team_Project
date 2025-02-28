@@ -1,16 +1,14 @@
 from datetime import UTC, datetime
-from uuid import uuid4
 
 from sqlalchemy import UUID, Column, DateTime, ForeignKey, Index, String
-from src.db.database import Base
+from src.db.base_models import Base, IdMixin
 
 
-class TokenBlacklist(Base):
+class TokenBlacklist(IdMixin, Base):
     """Model for storing invalidated tokens."""
 
     __tablename__ = "token_blacklist"
 
-    id = Column(UUID, primary_key=True, default=uuid4)
     token = Column(String(255), nullable=False, index=True)
     user_id = Column(UUID, ForeignKey("users.id"), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)

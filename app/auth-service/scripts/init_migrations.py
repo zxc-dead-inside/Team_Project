@@ -7,10 +7,6 @@ import sys
 from pathlib import Path
 
 
-# Add the project root to the Python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-
 def init_migrations() -> None:
     """Initialize Alembic migrations structure."""
     print("Initializing Alembic migrations structure...")
@@ -45,42 +41,7 @@ def init_migrations() -> None:
     else:
         print(f"alembic.ini already exists at {alembic_ini}")
 
-    # Update env.py to include models
-    env_py = migrations_dir / "env.py"
-    if env_py.exists():
-        update_env_py(env_py)
-
     print("Alembic structure initialized successfully!")
-
-
-def update_env_py(env_py_path: Path) -> None:
-    """Update env.py to include our models."""
-    with open(env_py_path, "r") as f:
-        content = f.read()
-
-    # Check if our imports are already in there
-    if "from src.db.database import Base" not in content:
-        # Add imports
-        import_section = """
-        # Import the models so that Base has them
-        from src.db.database import Base
-        from src.db.models import *
-        from src.core.config import settings
-
-        # Set the database URL in the alembic config
-        config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
-        """
-        # Find the target_metadata line
-        target_line = "target_metadata = None"
-        new_content = content.replace(
-            target_line, f"{import_section}\ntarget_metadata = Base.metadata"
-        )
-
-        # Write updated content
-        with open(env_py_path, "w") as f:
-            f.write(new_content)
-
-        print("Updated env.py with model imports")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
-from uuid import uuid4
 
 from sqlalchemy import UUID, Column, DateTime, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
-from src.db.database import Base
+from src.db.base_models import Base, PreBase
 
 
 # Association table for Role-Permission relationship
@@ -16,19 +15,13 @@ role_permission = Table(
 )
 
 
-class Role(Base):
+class Role(PreBase, Base):
     """Role model for access control."""
 
     __tablename__ = "roles"
 
-    id = Column(UUID, primary_key=True, default=uuid4)
     name = Column(String(50), unique=True, nullable=False, index=True)
     description = Column(String(255), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
-    updated_at = Column(
-        DateTime(timezone=True), default=datetime.now(UTC), onupdate=datetime.now(UTC)
-    )
-
     # Relationships
     users = relationship("User", secondary="user_role", back_populates="roles")
     permissions = relationship(

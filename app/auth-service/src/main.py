@@ -3,13 +3,17 @@
 import logging
 from contextlib import asynccontextmanager
 
-from src.api.health import router as health_router
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.api import api_router
+from src.api.auth import auth_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
+from src.db.database import get_database
+from src.db.redis import get_redis
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -25,8 +29,11 @@ async def lifespan(app: FastAPI):
 
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
-
+    db_connector = get_database(str(settings.database_url))
+    redis_connector = get_redis(str(settings.redis_url)).connect()
     yield
+    await db_connector.dispose()
+    redis_connector.close()
 
     # Teardown
     logging.info(f"Shutting down {settings.project_name}")
@@ -55,8 +62,8 @@ def create_application() -> FastAPI:
     )
 
     # Include routers
-    app.include_router(health_router, prefix="/api/health", tags=["Health"])
-
+    app.include_router(api_router)
+    app.include_router(auth_router)
     return app
 
 

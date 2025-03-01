@@ -17,5 +17,5 @@ notebooks/*
 
 app/data
 app/state
-
+app/auth-service/migrations/versions
 *.log

@@ -8,6 +8,7 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.api.auth import router as auth_router
+from src.db.database import get_database
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +24,9 @@ async def lifespan(app: FastAPI):
 
     Container.init_config_from_settings(container, settings)
     app.container = container
+
+    db = get_database(str(settings.database_url))
+    container.db.override(db)
 
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")

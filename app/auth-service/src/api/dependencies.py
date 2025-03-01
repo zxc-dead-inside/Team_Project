@@ -9,13 +9,21 @@ from src.services.auth_service import AuthService
 from src.services.email_verification import EmailVerifier
 from src.services.redis_service import RedisService
 from src.core.config import get_settings, Settings
-from src.db.database import get_db_session
+from src.db.database import get_database, Database
+from src.db.repositories.user_repository import UserRepository
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+
+
+async def get_user_repository(
+    db: Database = Depends(get_database)
+) -> UserRepository:
+    """Dependency provider for UserRepository."""
+    return UserRepository(db.session)
 
 
 def get_auth_service() -> AuthService:
@@ -77,9 +85,3 @@ async def get_email_verifier(
         settings: Settings = Depends(get_settings)
 ) -> EmailVerifier:
     return EmailVerifier(redis_service, settings)
-
-
-async def db_session_dependency() -> AsyncSession:
-    async with get_db_session() as session:
-        yield session
-

@@ -2,6 +2,7 @@
 
 from contextlib import AbstractAsyncContextManager
 from typing import Callable
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,13 +28,13 @@ class UserRepository:
         Returns:
             User: Created user with ID
         """
-        async with self.session_factory() as session:
+        async with self.session_factory as session:
             session.add(user)
             await session.flush()
             await session.refresh(user)
             return user
 
-    async def get_by_id(self, user_id: int) -> User | None:
+    async def get_by_id(self, user_id: UUID) -> User | None: # В модели User этот атрибут задан как UUID
         """
         Get a user by ID.
 

@@ -7,6 +7,7 @@ from src.api.health import router as health_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
+from src.api.auth import router as auth_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +62,7 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
+app.include_router(auth_router)
 
 
 @app.get("/")

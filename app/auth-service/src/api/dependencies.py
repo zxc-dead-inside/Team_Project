@@ -3,8 +3,13 @@
 from typing import Annotated
 
 from jose import JWTError
-from src.models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.db.models.user import User
 from src.services.auth_service import AuthService
+from src.services.email_verification import EmailVerifier
+from src.services.redis_service import RedisService
+from src.core.config import get_settings, Settings
+from src.db.database import get_db_session
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -55,3 +60,26 @@ async def get_current_user(
         return user
     except JWTError as err:
         raise credentials_exception from err
+
+
+async def get_redis_service(
+        settings: Settings = Depends(get_settings)
+) -> RedisService:
+    redis_service = RedisService(str(settings.redis_url))
+    try:
+        yield redis_service
+    finally:
+        await redis_service.close()
+
+
+async def get_email_verifier(
+        redis_service: RedisService = Depends(get_redis_service),
+        settings: Settings = Depends(get_settings)
+) -> EmailVerifier:
+    return EmailVerifier(redis_service, settings)
+
+
+async def db_session_dependency() -> AsyncSession:
+    async with get_db_session() as session:
+        yield session
+

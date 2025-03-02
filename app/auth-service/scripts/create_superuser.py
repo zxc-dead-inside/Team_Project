@@ -75,7 +75,7 @@ async def create_superuser(username, email, password) -> None:
             user = User(
                 username=username,
                 email=email,
-                password=hashed_password,
+                hashed_password=hashed_password,
                 is_active=True,
                 is_superuser=True,
             )

@@ -76,16 +76,18 @@ class AuthService:
         """
         return self.password_context.hash(password)
     
-    def create_access_token(self, user_id: int) -> str:
+    def create_access_token(self, user_id: int, token_version: datetime) -> str:
         """
         Create an access token for a user.
         
         Args:
             user_id: User ID
+            user_token_version: User token version
             
         Returns:
             str: JWT access token
         """
+
         expires_delta = timedelta(minutes=self.access_token_expire_minutes)
         expire = datetime.now(UTC) + expires_delta
         
@@ -93,16 +95,18 @@ class AuthService:
             "sub": str(user_id),
             "exp": expire,
             "type": "access",
+            "token_version": str(token_version)
         }
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
     
-    def create_refresh_token(self, user_id: int) -> str:
+    def create_refresh_token(self, user_id: int, token_version: datetime) -> str:
         """
         Create a refresh token for a user.
         
         Args:
             user_id: User ID
+            user_token_version: User token version
             
         Returns:
             str: JWT refresh token
@@ -114,6 +118,7 @@ class AuthService:
             "sub": str(user_id),
             "exp": expire,
             "type": "refresh",
+            "token_version": str(token_version)
         }
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")

@@ -10,8 +10,9 @@ from src.services.auth_service import AuthService
 class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
 
+    wiring_config = containers.WiringConfiguration(packages=["..services"])
     config = providers.Configuration()
-
+    
     @classmethod
     def init_config_from_settings(cls, container, settings: Settings):
         """Initialize configuration from settings."""

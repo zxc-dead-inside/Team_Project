@@ -1,16 +1,15 @@
+from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
 from functools import lru_cache
 
-
+from src.core.container import Container
 from src.services.login import LoginService
-
-from src.db.redis import get_redis_session
-from src.db.database import get_db_session
+from src.services.auth_service import AuthService
 
 
 @lru_cache()
+@inject
 def get_login_service(
-        db_session = Depends(get_db_session),
-        redis = Depends(get_redis_session)
+        auth_service: AuthService = Depends(Provide[Container.auth_service])
 ) -> LoginService:
-    return LoginService(db_session=db_session, redis=redis)
+    return LoginService(auth_service=auth_service)

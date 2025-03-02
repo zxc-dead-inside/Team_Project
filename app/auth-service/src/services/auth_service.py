@@ -25,6 +25,7 @@ class AuthService:
         self.secret_key = secret_key
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
+        self.public_routes = set()
     
     async def authenticate_user(self, username: str, password: str) -> User | None:
         """

@@ -5,6 +5,7 @@ from src.core.config import Settings
 from src.db.database import Database
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
+from src.services.middleware.authentication import AuthenticationMiddleware
 
 
 class Container(containers.DeclarativeContainer):
@@ -48,3 +49,5 @@ class Container(containers.DeclarativeContainer):
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
     )
+
+    # authentication_middleware = providers.Factory(AuthenticationMiddleware)

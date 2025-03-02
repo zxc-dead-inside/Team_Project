@@ -2,6 +2,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException
 from http import HTTPStatus
 
+from src.core.decorators.public_pass import public_endpoint
 from src.models.login import LoginRequest, LoginResponse
 from src.services.di import get_login_service
 from src.services.login import LoginService
@@ -9,6 +10,7 @@ from src.services.login import LoginService
 
 router = APIRouter()
 
+@public_endpoint
 @router.post(
     "/login",
     response_model=LoginResponse,

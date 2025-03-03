@@ -3,6 +3,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from src.api.auth import router as auth_router
 from src.api.health import router as health_router
 from src.core.config import get_settings
 from src.core.container import Container
@@ -56,6 +57,7 @@ def create_application() -> FastAPI:
 
     # Include routers
     app.include_router(health_router, prefix="/api/health", tags=["Health"])
+    app.include_router(auth_router)
 
     return app
 

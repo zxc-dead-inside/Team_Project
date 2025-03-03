@@ -4,14 +4,16 @@ from datetime import UTC, datetime, timedelta
 
 from jose import jwt
 from passlib.context import CryptContext
-from src.db.repositories.user_repository import UserRepository
 from src.db.models.user import User
+from src.db.repositories.user_repository import UserRepository
+from src.services.email_service import EmailService
 
 
 class AuthService:
     """Service for authentication operations."""
     
-    password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    # Update to use Argon2id
+    password_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
     
     def __init__(
         self,
@@ -19,12 +21,14 @@ class AuthService:
         secret_key: str,
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
+        email_service: EmailService | None = None,
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
         self.secret_key = secret_key
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
+        self.email_service = email_service
     
     async def authenticate_user(self, username: str, password: str) -> User | None:
         """
@@ -46,7 +50,7 @@ class AuthService:
         if not user:
             return None
         
-        if not self.verify_password(password, user.hashed_password):
+        if not self.verify_password(password, user.password):
             return None
         
         return user
@@ -66,7 +70,7 @@ class AuthService:
     
     def hash_password(self, password: str) -> str:
         """
-        Hash a password.
+        Hash a password using Argon2id.
         
         Args:
             password: Plain password
@@ -76,7 +80,7 @@ class AuthService:
         """
         return self.password_context.hash(password)
     
-    def create_access_token(self, user_id: int) -> str:
+    def create_access_token(self, user_id: str) -> str:
         """
         Create an access token for a user.
         
@@ -97,7 +101,7 @@ class AuthService:
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
     
-    def create_refresh_token(self, user_id: int) -> str:
+    def create_refresh_token(self, user_id: str) -> str:
         """
         Create a refresh token for a user.
         
@@ -128,7 +132,92 @@ class AuthService:
         Returns:
             Optional[User]: User if the token is valid, None otherwise
         """
-        payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-        user_id = int(payload.get("sub"))
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            user_id = payload.get("sub")
+            
+            return await self.user_repository.get_by_id(user_id)
+        except Exception:
+            return None
+    
+    async def register_user(
+        self, username: str, email: str, password: str
+    ) -> tuple[bool, str, User | None]:
+        """
+        Register a new user.
         
-        return await self.user_repository.get_by_id(user_id)
+        Args:
+            username: Username
+            email: Email address
+            password: Password
+            
+        Returns:
+            Tuple[bool, str, Optional[User]]: (success, message, user)
+        """
+        # Check if username already exists
+        existing_user = await self.user_repository.get_by_username(username)
+        if existing_user:
+            return False, "Username already exists", None
+        
+        # Check if email already exists
+        existing_user = await self.user_repository.get_by_email(email)
+        if existing_user:
+            return False, "Email already exists", None
+        
+        # Hash password with Argon2id
+        hashed_password = self.hash_password(password)
+        
+        # Create user (inactive until email confirmation)
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_password,
+            is_active=False,  # Will be activated after email confirmation
+        )
+        
+        # Save user to database
+        created_user = await self.user_repository.create(user)
+        
+        return True, "User registered successfully", created_user
+    
+    async def confirm_email(self, token: str) -> tuple[bool, str]:
+        """
+        Confirm a user's email address.
+        
+        Args:
+            token: Email confirmation token
+            
+        Returns:
+            Tuple[bool, str]: (success, message)
+        """
+        if not self.email_service:
+            return False, "Email service not configured"
+            
+        # Validate token
+        is_valid, payload = self.email_service.validate_confirmation_token(token)
+        
+        if not is_valid or not payload:
+            return False, "Invalid or expired token"
+        
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        
+        # Get user
+        user = await self.user_repository.get_by_id(user_id)
+        
+        if not user:
+            return False, "User not found"
+        
+        # Check if email matches
+        if user.email != email:
+            return False, "Email mismatch"
+        
+        # Check if user is already active
+        if user.is_active:
+            return True, "Email already confirmed"
+        
+        # Activate user
+        user.is_active = True
+        await self.user_repository.update(user)
+        
+        return True, "Email confirmed successfully"

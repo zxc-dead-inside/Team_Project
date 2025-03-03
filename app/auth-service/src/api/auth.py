@@ -24,7 +24,7 @@ class ConfirmEmailSchema(BaseModel):
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def user_register(
         user_data: UserRegisterSchema = Body(...),
-        user_repo: UserRepository = Depends(get_user_repository),
+        user_repo: UserRepository = Depends(lambda app: get_user_repository(app)),
         email_verifier: EmailVerifier = Depends(get_email_verifier)
 ):
     existing_user = await user_repo.get_by_username(user_data.username)

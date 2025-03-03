@@ -3,13 +3,11 @@
 from typing import Annotated
 
 from jose import JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification import EmailVerifier
 from src.services.redis_service import RedisService
 from src.core.config import get_settings, Settings
-from src.db.database import get_database, Database
 from src.db.repositories.user_repository import UserRepository
 
 from fastapi import Depends, HTTPException, status
@@ -19,11 +17,9 @@ from fastapi.security import OAuth2PasswordBearer
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 
-async def get_user_repository(
-    db: Database = Depends(get_database)
-) -> UserRepository:
-    """Dependency provider for UserRepository."""
-    return UserRepository(db.session)
+def get_user_repository() -> UserRepository:
+    from src.main import app
+    return app.container.user_repository()
 
 
 def get_auth_service() -> AuthService:

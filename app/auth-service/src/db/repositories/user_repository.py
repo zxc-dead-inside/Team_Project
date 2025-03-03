@@ -28,7 +28,7 @@ class UserRepository:
         Returns:
             User: Created user with ID
         """
-        async with self.session_factory as session:
+        async with self.session_factory() as session:
             session.add(user)
             await session.flush()
             await session.refresh(user)

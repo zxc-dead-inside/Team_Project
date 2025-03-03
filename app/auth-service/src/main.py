@@ -25,9 +25,6 @@ async def lifespan(app: FastAPI):
     Container.init_config_from_settings(container, settings)
     app.container = container
 
-    db = get_database(str(settings.database_url))
-    container.db.override(db)
-
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
 

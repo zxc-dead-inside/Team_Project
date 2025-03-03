@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import AsyncAdaptedQueuePool
 from src.db.base_models import Base
+from src.core.config import get_settings
 
 
 class Database:
@@ -116,19 +117,17 @@ class Database:
 _db_instance: Database | None = None
 
 
-def get_database(db_url: str) -> Database:
+def get_database() -> Database:
     """
     Get or create a database instance.
-
-    Args:
-        db_url: Database URL to connect to
 
     Returns:
         Database: Database instance
     """
     global _db_instance
     if _db_instance is None:
-        _db_instance = Database(db_url)
+        settings = get_settings()
+        _db_instance = Database(str(settings.database_url))
     return _db_instance
 
 

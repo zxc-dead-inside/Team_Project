@@ -1,5 +1,5 @@
 from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel, EmailStr
 from src.api.dependencies import get_email_verifier
 from src.db.models.user import User
@@ -23,7 +23,7 @@ class ConfirmEmailSchema(BaseModel):
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def user_register(
-        user_data: UserRegisterSchema,
+        user_data: UserRegisterSchema = Body(...),
         user_repo: UserRepository = Depends(get_user_repository),
         email_verifier: EmailVerifier = Depends(get_email_verifier)
 ):

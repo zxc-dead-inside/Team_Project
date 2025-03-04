@@ -9,7 +9,7 @@ from pydantic import EmailStr
 logger = logging.getLogger(__name__)
 
 
-class EmailVerifier:
+class EmailService:
     """Email verification service with secure HMAC-SHA-256 token storage."""
 
     def __init__(self, secret_key: str, email_token_ttl_seconds: int):

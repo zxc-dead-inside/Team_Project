@@ -6,7 +6,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 
 
 class AuthService:

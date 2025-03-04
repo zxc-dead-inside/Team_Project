@@ -2,7 +2,7 @@ import logging
 
 from src.api.schemas.auth import EmailConfirmation, UserCreate
 from src.services.auth_service import AuthService
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 

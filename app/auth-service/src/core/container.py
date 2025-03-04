@@ -5,7 +5,7 @@ from src.core.config import Settings
 from src.db.database import Database
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 
 
 class Container(containers.DeclarativeContainer):

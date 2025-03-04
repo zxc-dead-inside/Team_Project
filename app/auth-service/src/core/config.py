@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     secret_key: str
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
-    email_token_ttl_seconds: int = 600
+    email_token_ttl_seconds: int = 600  # 10 minutes
 
     # PostgreSQL
     postgres_user: str

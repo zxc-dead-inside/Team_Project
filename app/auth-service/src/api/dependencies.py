@@ -3,12 +3,8 @@
 from typing import Annotated
 
 from jose import JWTError
-from src.db.models.user import User
+from src.models.user import User
 from src.services.auth_service import AuthService
-from src.services.email_verification import EmailVerifier
-from src.services.redis_service import RedisService
-from src.core.config import get_settings, Settings
-from src.db.repositories.user_repository import UserRepository
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -17,20 +13,15 @@ from fastapi.security import OAuth2PasswordBearer
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 
-def get_user_repository() -> UserRepository:
-    from src.main import app
-    return app.container.user_repository()
-
-
 def get_auth_service() -> AuthService:
     """
     Get the authentication service from the container.
-    
+
     Returns:
         AuthService: Authentication service
     """
     from src.main import app
-    
+
     return app.container.auth_service()
 
 
@@ -40,14 +31,14 @@ async def get_current_user(
 ) -> User:
     """
     Get the current authenticated user from the JWT token.
-    
+
     Args:
         token: JWT token
         auth_service: Authentication service
-        
+
     Returns:
         User: Current authenticated user
-        
+
     Raises:
         HTTPException: If the token is invalid or the user is not found
     """
@@ -56,7 +47,7 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         user = await auth_service.validate_token(token)
         if user is None:
@@ -64,20 +55,3 @@ async def get_current_user(
         return user
     except JWTError as err:
         raise credentials_exception from err
-
-
-async def get_redis_service(
-        settings: Settings = Depends(get_settings)
-) -> RedisService:
-    redis_service = RedisService(str(settings.redis_url))
-    try:
-        yield redis_service
-    finally:
-        await redis_service.close()
-
-
-async def get_email_verifier(
-        redis_service: RedisService = Depends(get_redis_service),
-        settings: Settings = Depends(get_settings)
-) -> EmailVerifier:
-    return EmailVerifier(redis_service, settings)

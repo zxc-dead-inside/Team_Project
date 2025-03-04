@@ -1,45 +1,61 @@
-import uuid
-import hmac
-import hashlib
-from src.services.redis_service import RedisService
-from src.core.config import Settings
+import logging
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+from jose import JWTError, jwt
+from pydantic import EmailStr
 
 
-async def send_msg(email, token):
-    pass
+logger = logging.getLogger(__name__)
 
 
 class EmailVerifier:
     """Email verification service with secure HMAC-SHA-256 token storage."""
 
-    def __init__(self, redis_service: RedisService, settings: Settings):
-        self.redis = redis_service
-        self.secret_key = settings.secret_key.encode()
-        self.email_token_ttl = settings.email_token_ttl_seconds
+    def __init__(self, secret_key: str, email_token_ttl_seconds: int):
+        self.secret_key = secret_key
+        self.email_token_ttl_seconds = email_token_ttl_seconds
 
-    def hash_token(self, token: str) -> str:
-        return hmac.new(
-            self.secret_key, token.encode(), hashlib.sha256
-        ).hexdigest()
+    def create_confirmation_token(self, user_id: str, email: str) -> str:
+        """
+        Create a confirmation token for an email address.
+        """
+        expires_delta = timedelta(seconds=self.email_token_ttl_seconds)
+        expire = datetime.now(UTC) + expires_delta
 
-    async def send_verification_email(self, email: str) -> str:
-        token = str(uuid.uuid4())
-        hashed_token = self.hash_token(token)
-        await send_msg(email, token)
-        await self.redis.set(
-            f"email_verif:{hashed_token}",
-            email,
-            expire=self.email_token_ttl
+        to_encode = {
+            "sub": str(user_id),
+            "email": email,
+            "exp": expire,
+            "type": "email_confirmation",
+        }
+
+        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+
+    def validate_confirmation_token(
+            self, token: str
+    ) -> tuple[bool, dict[str, Any] | None]:
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+
+            if payload["type"] != "email_confirmation":
+                return False, None
+
+            return True, payload
+
+        except JWTError as e:
+            logger.error(f"Token validation failed: {e}")
+            return False, None
+
+    async def send_confirmation_email(
+            self, email: EmailStr, token: str
+    ) -> bool:
+        """Send a confirmation email (mock implementation)."""
+        confirmation_url = f"/api/v1/auth/confirm-email?token={token}"
+        logger.info(f"[MOCK EMAIL] To: {email}, Subject: Confirm your account")
+        logger.info(
+            f"[MOCK EMAIL] Body: Please confirm your account by clicking: {confirmation_url}"
         )
 
-        return token
-
-    async def verify_token(self, token: str) -> str | None:
-        hashed_token = self.hash_token(token)
-        email = await self.redis.get(f"email_verif:{hashed_token}")
-
-        if email:
-            await self.redis.delete(f"email_verif:{hashed_token}")
-            return email
-
-        return None
+        # Return True to simulate successful sending
+        return True

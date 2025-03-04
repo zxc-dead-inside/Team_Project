@@ -1,84 +1,85 @@
-from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from pydantic import BaseModel, EmailStr
-from src.api.dependencies import get_email_verifier
-from src.db.models.user import User
-from src.api.dependencies import get_user_repository
-from src.db.repositories.user_repository import UserRepository
-from src.services.email_verification import EmailVerifier
+import logging
 
-router = APIRouter(prefix="/auth", tags=["auth"])
-ph = PasswordHasher()
+from src.api.schemas.auth import EmailConfirmation, UserCreate
+from src.services.auth_service import AuthService
+from src.services.email_service import EmailService
 
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-class UserRegisterSchema(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
-class ConfirmEmailSchema(BaseModel):
-    token: str
+def get_auth_service(request: Request) -> AuthService:
+    """Get auth service from the container."""
+    return request.app.container.auth_service()
+
+
+def get_email_service(request: Request) -> EmailService:
+    """Get email service from the container."""
+    return request.app.container.email_service()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def user_register(
-        user_data: UserRegisterSchema = Body(...),
-        user_repo: UserRepository = Depends(lambda app: get_user_repository(app)),
-        email_verifier: EmailVerifier = Depends(get_email_verifier)
+async def register(
+        user_data: UserCreate,
+        auth_service: AuthService = Depends(get_auth_service),
+        email_service: EmailService = Depends(get_email_service),
 ):
-    existing_user = await user_repo.get_by_username(user_data.username)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already exists",
-        )
-
-    existing_email = await user_repo.get_by_email(user_data.email)
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already exists",
-        )
-
-    hashed_password = ph.hash(user_data.password)
-
-    user = User(
+    """Register a new user with email verification."""
+    success, message, user = await auth_service.register_user(
         username=user_data.username,
         email=user_data.email,
-        password=hashed_password,
-        is_active=False,
+        password=user_data.password,
     )
 
-    await user_repo.create(user)
-    await email_verifier.send_verification_email(user.email)
-
-    return {"message": "User registered successfully"}
-
-
-@router.post("/confirm-email")
-async def confirm_email(
-        data: ConfirmEmailSchema,
-        user_repo: UserRepository = Depends(get_user_repository),
-        email_verifier: EmailVerifier = Depends(get_email_verifier),
-):
-    email = await email_verifier.verify_token(data.token)
-
-    if not email:
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired token",
+            detail=message,
         )
 
-    user = await user_repo.get_by_email(email)
+    token = email_service.create_confirmation_token(user.id, user.email)
 
-    if not user:
+    await email_service.send_confirmation_email(user.email, token)
+
+    return {
+        "message": "User registered successfully. "
+                   "Please confirm your email address.",
+        "username": user.username,
+        "email": user.email,
+    }
+
+
+@router.get("/confirm-email", status_code=status.HTTP_200_OK)
+async def confirm_email_get(
+    token: str,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Confirm user email via GET request (for email link)."""
+    success, message = await auth_service.confirm_email(token)
+
+    if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message,
         )
 
-    user.is_active = True
-    await user_repo.update(user)
+    return {"message": message}
 
-    return {"message": "Email confirmed successfully"}
+
+@router.post("/confirm-email", status_code=status.HTTP_200_OK)
+async def confirm_email_post(
+    confirmation_data: EmailConfirmation,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Confirm user email via POST request (for API calls)."""
+    success, message = await auth_service.confirm_email(confirmation_data.token)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message,
+        )
+
+    return {"message": message}

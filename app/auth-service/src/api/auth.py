@@ -1,20 +1,16 @@
 """Authentication endpoints."""
 
-import logging
-
 from src.api.schemas.auth import EmailConfirmation, UserCreate
 from src.services.auth_service import AuthService
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
-# Define dependencies to get services from container
 def get_auth_service(request: Request) -> AuthService:
     """Get auth service from the container."""
     return request.app.container.auth_service()
@@ -44,14 +40,13 @@ async def register(
             detail=message,
         )
 
-    # Create confirmation token
     token = email_service.create_confirmation_token(user.id, user.email)
 
-    # Send confirmation email
     await email_service.send_confirmation_email(user.email, token)
 
     return {
-        "message": "User registered successfully. Please check your email to confirm your account.",
+        "message": "User registered successfully. "
+                   "Please confirm your email address.",
         "username": user.username,
         "email": user.email,
     }
@@ -98,13 +93,10 @@ async def login_for_access_token(
 ):
     """
     Authenticate user and return access token.
-
     Args:
         form_data: OAuth2 form with username and password
-
     Returns:
         Dict with access token and token type
-
     Raises:
         HTTPException: If authentication fails
     """

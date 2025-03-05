@@ -6,7 +6,7 @@ from src.db.database import Database
 from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 from src.services.user_service import UserService
 
 
@@ -26,6 +26,9 @@ class Container(containers.DeclarativeContainer):
         )
         container.config.set(
             "refresh_token_expire_days", settings.refresh_token_expire_days
+        )
+        container.config.set(
+            "email_token_ttl_seconds", settings.email_token_ttl_seconds
         )
         container.config.set(
             "email_token_ttl_seconds", settings.email_token_ttl_seconds
@@ -51,6 +54,12 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Services
+    email_service = providers.Factory(
+        EmailService,
+        secret_key=config.secret_key,
+        email_token_ttl_seconds=config.email_token_ttl_seconds,
+    )
+
     email_service = providers.Factory(
         EmailService,
         secret_key=config.secret_key,

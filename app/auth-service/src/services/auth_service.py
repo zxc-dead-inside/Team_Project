@@ -6,15 +6,14 @@ from jose import jwt
 from passlib.context import CryptContext
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
-from src.services.email_service import EmailService
+from src.services.email_verification_service import EmailService
 
 
 class AuthService:
     """Service for authentication operations."""
     
-    # Update to use Argon2id
     password_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
-    
+
     def __init__(
         self,
         user_repository: UserRepository,
@@ -49,7 +48,7 @@ class AuthService:
         
         if not user:
             return None
-        
+
         if not self.verify_password(password, user.password):
             return None
         
@@ -70,7 +69,7 @@ class AuthService:
     
     def hash_password(self, password: str) -> str:
         """
-        Hash a password using Argon2id.
+        Hash a password.
         
         Args:
             password: Plain password
@@ -100,48 +99,48 @@ class AuthService:
         }
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
-    
+
     def create_refresh_token(self, user_id: str) -> str:
         """
         Create a refresh token for a user.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             str: JWT refresh token
         """
         expires_delta = timedelta(days=self.refresh_token_expire_days)
         expire = datetime.now(UTC) + expires_delta
-        
+
         to_encode = {
             "sub": str(user_id),
             "exp": expire,
             "type": "refresh",
         }
-        
+
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
-    
+
     async def validate_token(self, token: str) -> User | None:
         """
         Validate a JWT token and return the associated user.
-        
+
         Args:
             token: JWT token
-            
+
         Returns:
             Optional[User]: User if the token is valid, None otherwise
         """
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
             user_id = payload.get("sub")
-            
+
             return await self.user_repository.get_by_id(user_id)
         except Exception:
             return None
-    
+
     async def register_user(
-        self, username: str, email: str, password: str
+            self, username: str, email: str, password: str
     ) -> tuple[bool, str, User | None]:
         """
         Register a new user.
@@ -152,34 +151,29 @@ class AuthService:
             password: Password
             
         Returns:
-            Tuple[bool, str, Optional[User]]: (success, message, user)
+            tuple[bool, str, Optional[User]]: (success, message, user)
         """
-        # Check if username already exists
         existing_user = await self.user_repository.get_by_username(username)
         if existing_user:
             return False, "Username already exists", None
-        
-        # Check if email already exists
+
         existing_user = await self.user_repository.get_by_email(email)
         if existing_user:
             return False, "Email already exists", None
-        
-        # Hash password with Argon2id
+
         hashed_password = self.hash_password(password)
-        
-        # Create user (inactive until email confirmation)
+
         user = User(
             username=username,
             email=email,
             password=hashed_password,
-            is_active=False,  # Will be activated after email confirmation
+            is_active=False,
         )
-        
-        # Save user to database
+
         created_user = await self.user_repository.create(user)
-        
-        return True, "User registered successfully", created_user
-    
+
+        return True, "User created successfully", created_user
+
     async def confirm_email(self, token: str) -> tuple[bool, str]:
         """
         Confirm a user's email address.
@@ -192,32 +186,27 @@ class AuthService:
         """
         if not self.email_service:
             return False, "Email service not configured"
-            
-        # Validate token
+
         is_valid, payload = self.email_service.validate_confirmation_token(token)
-        
+
         if not is_valid or not payload:
             return False, "Invalid or expired token"
-        
+
         user_id = payload.get("sub")
         email = payload.get("email")
-        
-        # Get user
+
         user = await self.user_repository.get_by_id(user_id)
-        
+
         if not user:
             return False, "User not found"
-        
-        # Check if email matches
+
         if user.email != email:
             return False, "Email mismatch"
-        
-        # Check if user is already active
+
         if user.is_active:
             return True, "Email already confirmed"
-        
-        # Activate user
+
         user.is_active = True
         await self.user_repository.update(user)
-        
+
         return True, "Email confirmed successfully"

@@ -1,6 +1,3 @@
-# src/api/schemas/auth.py
-"""Schemas for authentication endpoints."""
-
 import re
 from datetime import datetime
 from uuid import UUID
@@ -40,7 +37,7 @@ class UserCreate(UserBase):
         if not re.search(r'[^A-Za-z0-9]', v):
             raise ValueError('Password must contain at least one special character')
         return v
-    
+
 class UserRead(UserBase):
     """Schema for reading User information."""
     id: UUID
@@ -65,7 +62,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     is_active: bool
-    
+
     class Config:
         """Pydantic config."""
         from_attributes = True

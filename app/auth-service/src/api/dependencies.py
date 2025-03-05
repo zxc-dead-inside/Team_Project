@@ -31,12 +31,15 @@ async def get_current_user(
     """
     Get the current authenticated user from the JWT token.
 
+
     Args:
         token: JWT token
         auth_service: Authentication service
 
+
     Returns:
         User: Current authenticated user
+
 
     Raises:
         HTTPException: If the token is invalid or the user is not found
@@ -46,6 +49,7 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
 
     try:
         user = await auth_service.validate_token(token)

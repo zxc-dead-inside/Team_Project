@@ -3,9 +3,11 @@
 from dependency_injector import containers, providers
 from src.core.config import Settings
 from src.db.database import Database
+from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.email_service import EmailService
+from src.services.user_service import UserService
 
 
 class Container(containers.DeclarativeContainer):
@@ -43,6 +45,11 @@ class Container(containers.DeclarativeContainer):
         session_factory=db.provided.session,
     )
 
+    login_history_repository = providers.Factory(
+        LoginHistoryRepository,
+        session_factory=db.provided.session,
+    )
+
     # Services
     email_service = providers.Factory(
         EmailService,
@@ -57,4 +64,11 @@ class Container(containers.DeclarativeContainer):
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
         email_service=email_service,
+    )
+
+    user_service = providers.Factory(
+        UserService,
+        user_repository=user_repository,
+        login_history_repository=login_history_repository,
+        auth_service=auth_service,
     )

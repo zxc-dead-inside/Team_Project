@@ -27,7 +27,7 @@ async def register(
     auth_service: AuthService = Depends(get_auth_service),
     email_service: EmailService = Depends(get_email_service),
 ):
-    """Register a new user with email confirmation."""
+    """Register a new user with email verification."""
     success, message, user = await auth_service.register_user(
         username=user_data.username,
         email=user_data.email,

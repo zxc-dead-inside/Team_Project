@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
 
 def get_auth_service(request: Request) -> AuthService:
-    """Get auth service from the container."""
+    """Get the authentication service from the container."""
     return request.app.container.auth_service()
 
 
@@ -49,7 +49,6 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
 
     try:
         user = await auth_service.validate_token(token)

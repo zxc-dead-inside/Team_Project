@@ -5,6 +5,7 @@ from src.core.config import Settings
 from src.db.database import Database
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
+from src.services.email_verification_service import EmailService
 
 
 class Container(containers.DeclarativeContainer):
@@ -24,6 +25,9 @@ class Container(containers.DeclarativeContainer):
         container.config.set(
             "refresh_token_expire_days", settings.refresh_token_expire_days
         )
+        container.config.set(
+            "email_token_ttl_seconds", settings.email_token_ttl_seconds
+        )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
 
@@ -40,10 +44,17 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Services
+    email_service = providers.Factory(
+        EmailService,
+        secret_key=config.secret_key,
+        email_token_ttl_seconds=config.email_token_ttl_seconds,
+    )
+
     auth_service = providers.Factory(
         AuthService,
         user_repository=user_repository,
         secret_key=config.secret_key,
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
+        email_service=email_service,
     )

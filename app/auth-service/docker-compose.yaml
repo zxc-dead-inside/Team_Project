@@ -11,7 +11,7 @@ services:
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-auth_db}
-      - REDIS_URL=redis://${REDIS_PASSWORD:+:${REDIS_PASSWORD}@}redis:6379/0
+      - REDIS_URL=redis://$${REDIS_PASSWORD:+:$${REDIS_PASSWORD}@}redis:6379/0
     depends_on:
       - db
       - redis
@@ -43,7 +43,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: auth_service_redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis}
+    command: redis-server --requirepass $${REDIS_PASSWORD:-redis}
     ports:
       - ${REDIS_PORT:-6379}:6379
     volumes:

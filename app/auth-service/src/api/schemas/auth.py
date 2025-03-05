@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -8,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 class UserBase(BaseModel):
     """Base schema for User information."""
 
-    username: str = Field(..., min_length=3, max_length=50)
+    username: Annotated[str, Field(min_length=3, max_length=50)]
     email: EmailStr
     is_active: bool = True
     is_superuser: bool = False
@@ -18,7 +19,7 @@ class UserBase(BaseModel):
         """Username must be alphanumeric characters and underscores"""
         if not re.match(r"^[a-zA-Z0-9_]+$", v):
             raise ValueError(
-                "Username must contain only letters, numbers, and underscores"
+                "Username must be alphanumeric characters and underscores"
             )
         return v
 
@@ -26,7 +27,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a User."""
 
-    password: str = Field(..., min_length=8)
+    password: Annotated[str, Field(min_length=8)]
     role_ids: list[UUID] | None = []
 
     @field_validator("password")

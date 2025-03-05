@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 class UserBase(BaseModel):
     """Base schema for user data."""
 
-    username: str = Field(..., min_length=3, max_length=50)
+    username: Annotated[str, Field(min_length=3, max_length=50)]
     email: EmailStr
 
 

@@ -1,6 +1,5 @@
 """User profile and history endpoints."""
 
-import logging
 from datetime import datetime
 
 from src.api.dependencies import get_current_active_user, get_user_service
@@ -17,7 +16,6 @@ from src.services.user_service import UserService
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
 

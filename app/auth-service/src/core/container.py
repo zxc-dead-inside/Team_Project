@@ -30,9 +30,6 @@ class Container(containers.DeclarativeContainer):
         container.config.set(
             "email_token_ttl_seconds", settings.email_token_ttl_seconds
         )
-        container.config.set(
-            "email_token_ttl_seconds", settings.email_token_ttl_seconds
-        )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
 
@@ -54,12 +51,6 @@ class Container(containers.DeclarativeContainer):
     )
 
     # Services
-    email_service = providers.Factory(
-        EmailService,
-        secret_key=config.secret_key,
-        email_token_ttl_seconds=config.email_token_ttl_seconds,
-    )
-
     email_service = providers.Factory(
         EmailService,
         secret_key=config.secret_key,

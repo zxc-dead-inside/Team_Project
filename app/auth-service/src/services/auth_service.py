@@ -1,6 +1,7 @@
 """Authentication service for user authentication and authorization."""
 
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -79,7 +80,7 @@ class AuthService:
         """
         return self.password_context.hash(password)
     
-    def create_access_token(self, user_id: str) -> str:
+    def create_access_token(self, user_id: UUID) -> str:
         """
         Create an access token for a user.
         
@@ -100,7 +101,7 @@ class AuthService:
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
 
-    def create_refresh_token(self, user_id: str) -> str:
+    def create_refresh_token(self, user_id: UUID) -> str:
         """
         Create a refresh token for a user.
 

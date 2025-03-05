@@ -15,7 +15,7 @@ class UserBase(BaseModel):
 
     @field_validator("username")
     def username_alphanumeric(cls, v):
-        """Validate username contains only alphanumeric characters and underscores."""
+        """Username must be alphanumeric characters and underscores"""
         if not re.match(r"^[a-zA-Z0-9_]+$", v):
             raise ValueError(
                 "Username must contain only letters, numbers, and underscores"
@@ -70,12 +70,10 @@ class TokenResponse(BaseModel):
 class UserResponse(BaseModel):
     """User response schema."""
 
-    id: str
+    id: UUID
     username: str
     email: EmailStr
     is_active: bool
 
-    class Config:
-        """Pydantic config."""
+    model_config = ConfigDict(from_attributes=True)
 
-        from_attributes = True

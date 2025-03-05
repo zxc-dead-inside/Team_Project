@@ -32,7 +32,7 @@ class UserService:
             user_id: User ID
 
         Returns:
-            Optional[User]: User if found, None otherwise
+            User | None: User if found, None otherwise
         """
         return await self.user_repository.get_by_id(user_id)
 
@@ -47,7 +47,7 @@ class UserService:
             new_username: New username
 
         Returns:
-            Tuple[bool, str, Optional[User]]: (success, message, updated user)
+            tuple[bool, str, User | None]: (success, message, updated user)
         """
         # Check if user exists
         user = await self.user_repository.get_by_id(user_id)
@@ -77,7 +77,7 @@ class UserService:
             new_password: New password
 
         Returns:
-            Tuple[bool, str]: (success, message)
+            tuple[bool, str]: (success, message)
         """
         # Check if user exists
         user = await self.user_repository.get_by_id(user_id)
@@ -118,7 +118,7 @@ class UserService:
             successful_only: Optional filter for successful logins
 
         Returns:
-            Tuple[List[LoginHistory], int]: List of login history entries and total count
+            tuple[list[LoginHistory], int]: List of login history entries and total count
         """
         return await self.login_history_repository.get_by_user_id(
             user_id=user_id,

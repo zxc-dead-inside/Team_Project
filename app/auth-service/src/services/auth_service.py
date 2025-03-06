@@ -192,3 +192,41 @@ class AuthService:
         await self.user_repository.update(user)
 
         return True, "Email confirmed successfully"
+    
+    async def reset_password(
+            self, token: str, password: str
+    ) -> tuple[bool, str]:
+        """
+        Reset a password if token is valid, user exists, email is correct and
+        password was validated.
+
+        Args:
+            token: user token
+            password: new user password
+
+        Returns: tuple(bool, str)
+            bool: True if password was changed or Fals if was not
+            str: Message with details
+
+        """
+
+        is_valid, payload = self.email_service.validate_confirmation_token(token)
+        
+        if not is_valid:
+            return False, "Invalid or expired token"
+        
+        user_id = payload.get("sub")
+        email = payload.get("email")
+
+        user = await self.user_repository.get_by_id(user_id)
+
+        if not user:
+            return False, "User not found"
+
+        if user.email != email:
+            return False, "Email mismatch"
+        
+        user.password = self.hash_password(password)
+        await self.user_repository.update(user)
+        
+        return True, "Your password has been changed."

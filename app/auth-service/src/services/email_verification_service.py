@@ -59,3 +59,27 @@ class EmailService:
 
         # Return True to simulate successful sending
         return True
+
+    async def send_reset_password_email(
+        self, email: EmailStr, token: str
+    ) -> bool:
+        """
+        Send an email with reset password link.
+        
+        Args:
+            email: user email
+            token: jwt token
+        """
+
+        logger.info(f"[MOCK EMAIL] To: {email}, Subject: Reset your password")
+        logger.info(
+            "[MOCK EMAIL] Body: Someone has requested a password reset for "
+            f"your account. Use this token {token} to reset your password.\n"
+            "You can use this jwt token set new password via sendig json:\n "
+            "{\n"
+            f"    \"token\": \"{token}\",\n"
+            "    \"password\": \"new_P@ssw0rd\"\n"
+            "}\n"
+        )
+
+        return True

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from src.api.auth import router as auth_router
 from src.api.health import router as health_router
+from src.api.roles import router as roles_router
 from src.api.users import router as users_router
 from src.core.config import get_settings
 from src.core.container import Container
@@ -60,6 +61,7 @@ def create_application() -> FastAPI:
     app.include_router(health_router, prefix="/api/health", tags=["Health"])
     app.include_router(auth_router)
     app.include_router(users_router)
+    app.include_router(roles_router)
 
     return app
 

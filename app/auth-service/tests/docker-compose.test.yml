@@ -1,0 +1,51 @@
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth_service_test
+    volumes:
+      - ./:/app
+    environment:
+      - ENVIRONMENT=test
+      - DATABASE_URL=postgresql://postgres:postgres@test-db:5432/test_db
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - test-db
+      - test-redis
+    networks:
+      - test_network
+    command: pytest tests/api/test_auth_register.py -v
+
+  test-db:
+    image: postgres:15-alpine
+    container_name: auth_service_test_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=test_db
+    ports:
+      - "5433:5432"  # Different port to avoid conflict
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test-redis:
+    image: redis:7-alpine
+    container_name: auth_service_test_redis
+    command: redis-server
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  test_network:
+    driver: bridge

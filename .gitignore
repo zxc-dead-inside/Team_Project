@@ -19,3 +19,6 @@ app/data
 app/state
 
 *.log
+
+# Migrations
+app/auth-service/migrations/versions/*

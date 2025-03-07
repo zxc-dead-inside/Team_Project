@@ -1,6 +1,7 @@
 """Authentication service for user authentication and authorization."""
 
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -79,7 +80,7 @@ class AuthService:
         """
         return self.password_context.hash(password)
     
-    def create_access_token(self, user_id: int) -> str:
+    def create_access_token(self, user_id: UUID) -> str:
         """
         Create an access token for a user.
         
@@ -100,7 +101,7 @@ class AuthService:
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
 
-    def create_refresh_token(self, user_id: int) -> str:
+    def create_refresh_token(self, user_id: UUID) -> str:
         """
         Create a refresh token for a user.
 
@@ -142,7 +143,17 @@ class AuthService:
     async def register_user(
             self, username: str, email: str, password: str
     ) -> tuple[bool, str, User | None]:
-        """Register a new user"""
+        """
+        Register a new user.
+        
+        Args:
+            username: Username
+            email: Email address
+            password: Password
+            
+        Returns:
+            tuple[bool, str, Optional[User]]: (success, message, user)
+        """
         existing_user = await self.user_repository.get_by_username(username)
         if existing_user:
             return False, "Username already exists", None
@@ -165,13 +176,21 @@ class AuthService:
         return True, "User created successfully", created_user
 
     async def confirm_email(self, token: str) -> tuple[bool, str]:
-        """Confirm email"""
+        """
+        Confirm a user's email address.
+        
+        Args:
+            token: Email confirmation token
+            
+        Returns:
+            Tuple[bool, str]: (success, message)
+        """
         if not self.email_service:
             return False, "Email service not configured"
 
         is_valid, payload = self.email_service.validate_confirmation_token(token)
 
-        if not is_valid:
+        if not is_valid or not payload:
             return False, "Invalid or expired token"
 
         user_id = payload.get("sub")

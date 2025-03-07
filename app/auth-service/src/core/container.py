@@ -7,7 +7,13 @@ from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.redis_service import RedisService
+from src.services.reset_password_service import ResetPasswordService
 
+from fastapi import Depends, Request
+
+
+def get_cache_service(request: Request) -> RedisService:
+    """Get cache service from the container."""
 
 class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
@@ -31,6 +37,10 @@ class Container(containers.DeclarativeContainer):
         )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
+        container.config.set(
+            "max_requests_per_ttl", int(settings.max_requests_per_ttl)
+        )
+        container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
 
     # Database
     db = providers.Singleton(
@@ -43,12 +53,28 @@ class Container(containers.DeclarativeContainer):
         UserRepository,
         session_factory=db.provided.session,
     )
+    
+    # Cache service
+
+    cache_service = providers.Singleton(
+        RedisService,
+        redis_url=config.redis_url
+    )
 
     # Services
     email_service = providers.Factory(
         EmailService,
         secret_key=config.secret_key,
         email_token_ttl_seconds=config.email_token_ttl_seconds,
+    )
+
+    reset_password_service = providers.Factory(
+        ResetPasswordService,
+        user_repository = user_repository,
+        reset_token_ttl = config.reset_token_ttl,
+        max_requests_per_ttl = config.max_requests_per_ttl,
+        secret_key = config.secret_key,
+        cache_service = cache_service
     )
 
     auth_service = providers.Factory(
@@ -58,9 +84,4 @@ class Container(containers.DeclarativeContainer):
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
         email_service=email_service,
-    )
-
-    cache_service = providers.Singleton(
-        RedisService,
-        redis_url=config.redis_url
     )

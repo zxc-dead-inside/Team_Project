@@ -7,9 +7,10 @@ from uuid import UUID
 
 import redis.asyncio as redis
 from pydantic import BaseModel
+from src.core.logger import setup_logging
 
 
-logger = logging.getLogger(__name__)
+setup_logging()
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -63,7 +64,7 @@ class RedisService:
         try:
             return await self.redis_client.get(key)
         except Exception as e:
-            logger.error(f"Error getting key {key} from Redis: {e}")
+            logging.error(f"Error getting key {key} from Redis: {e}")
             return None
 
     async def set(self, key: str, value: str, ttl: int | None = None) -> bool:
@@ -75,7 +76,7 @@ class RedisService:
             )
             return True
         except Exception as e:
-            logger.error(f"Error setting key {key} in Redis: {e}")
+            logging.error(f"Error setting key {key} in Redis: {e}")
             return False
 
     async def delete(self, *keys: str) -> int:
@@ -83,7 +84,7 @@ class RedisService:
         try:
             return await self.redis_client.delete(*keys)
         except Exception as e:
-            logger.error(f"Error deleting keys {keys} from Redis: {e}")
+            logging.error(f"Error deleting keys {keys} from Redis: {e}")
             return 0
 
     async def get_model(self, key: str, model_class: type[T]) -> T | None:
@@ -96,7 +97,7 @@ class RedisService:
             json_data = json.loads(data)
             return model_class.model_validate(json_data)
         except Exception as e:
-            logger.error(f"Error getting model for key {key} from Redis: {e}")
+            logging.error(f"Error getting model for key {key} from Redis: {e}")
             return None
 
     async def set_model(
@@ -108,7 +109,7 @@ class RedisService:
             serialized = json.dumps(json_data, cls=UUIDEncoder)
             return await self.set(key, serialized, ttl)
         except Exception as e:
-            logger.error(f"Error setting model for key {key} in Redis: {e}")
+            logging.error(f"Error setting model for key {key} in Redis: {e}")
             return False
 
     async def get_list(self, key: str, model_class: type[T]) -> list[T]:
@@ -121,7 +122,7 @@ class RedisService:
             json_data = json.loads(data)
             return [model_class.model_validate(item) for item in json_data]
         except Exception as e:
-            logger.error(f"Error getting list for key {key} from Redis: {e}")
+            logging.error(f"Error getting list for key {key} from Redis: {e}")
             return []
 
     async def set_list(
@@ -135,5 +136,5 @@ class RedisService:
                 key, serialized, ttl if ttl is not None else self.default_ttl
             )
         except Exception as e:
-            logger.error(f"Error setting list for key {key} in Redis: {e}")
+            logging.error(f"Error setting list for key {key} in Redis: {e}")
             return False

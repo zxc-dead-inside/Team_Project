@@ -1,13 +1,15 @@
 """Main application entry point for the Authentication Service."""
-
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from src.api import api_router
 from src.api.auth import auth_router
+from src.api.auth import router as auth_router
+from src.api.health import router as health_router
+from src.api.roles import router as roles_router
+from src.api.users import router as users_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
@@ -55,10 +57,13 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-
     # Include routers
-    app.include_router(api_router)
+    app.include_router(health_router, prefix="/api/health", tags=["Health"])
     app.include_router(auth_router)
+    app.include_router(users_router)
+    app.include_router(roles_router)
+    app.include_router(api_router)
+
     return app
 
 

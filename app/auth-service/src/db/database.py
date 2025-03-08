@@ -142,5 +142,5 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     Yields:
         AsyncSession: Database session
     """
-    async with _db_instance.session() as session:
+    async with db.session() as session:
         yield session

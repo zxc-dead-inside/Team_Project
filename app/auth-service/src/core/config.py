@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     secret_key: str
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    email_token_ttl_seconds: int = 600  # 10 minutes
 
     # PostgreSQL
     postgres_user: str
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     postgres_host: str = "db"
     postgres_port: str = "5432"
     database_url: PostgresDsn | None = None
+
+    # Redis
+    cache_ttl: int = 3600
 
     @field_validator("database_url", mode="before")
     def assemble_db_url(cls, v: str | None, values) -> str:

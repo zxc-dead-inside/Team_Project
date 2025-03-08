@@ -1,98 +1,50 @@
-"""User repository for database operations."""
-
-from contextlib import AbstractAsyncContextManager
-from typing import Callable
+"""Repository for User model operations."""
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+from src.db.models import Role
 from src.db.models.user import User
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.login_history import LoginHistory
 
 
 class UserRepository:
-    """Repository for user operations."""
+    """Repository for User model operations."""
 
-    def __init__(
-        self, session_factory: Callable[[], AbstractAsyncContextManager[AsyncSession]]
-    ):
-        """Initialize with the session factory."""
+    def __init__(self, session_factory):
+        """Initialize the repository."""
         self.session_factory = session_factory
 
-    async def create(self, user: User) -> User:
-        """
-        Create a new user.
-
-        Args:
-            user: User to create
-
-        Returns:
-            User: Created user with ID
-        """
-        async with self.session_factory() as session:
-            session.add(user)
-            await session.flush()
-            await session.refresh(user)
-            return user
-
     async def get_by_id(self, user_id: int) -> User | None:
-        """
-        Get a user by ID.
-
-        Args:
-            user_id: User ID
-
-        Returns:
-            Optional[User]: User if found, None otherwise
-        """
+        """Get a user by ID with roles and permissions."""
         async with self.session_factory() as session:
-            result = await session.execute(select(User).filter(User.id == user_id))
-            return result.scalars().first()
-
-    async def get_by_email(self, email: str) -> User | None:
-        """
-        Get a user by email.
-
-        Args:
-            email: User email
-
-        Returns:
-            Optional[User]: User if found, None otherwise
-        """
-        async with self.session_factory() as session:
-            result = await session.execute(select(User).filter(User.email == email))
+            result = await session.execute(
+                select(User)
+                .options(joinedload(User.roles).joinedload(Role.permissions))
+                .where(User.id == user_id)
+            )
             return result.scalars().first()
 
     async def get_by_username(self, username: str) -> User | None:
-        """
-        Get a user by username.
-
-        Args:
-            username: Username
-
-        Returns:
-            Optional[User]: User if found, None otherwise
-        """
+        """Get a user by username."""
         async with self.session_factory() as session:
             result = await session.execute(
-                select(User).filter(User.username == username)
+                select(User).where(User.username == username)
             )
 
             return result.scalars().first()
 
-    async def update(self, user: User) -> User:
-        """
-        Update a user.
+    async def get_by_email(self, email: str) -> User | None:
+        """Get a user by email."""
+        async with self.session_factory() as session:
+            result = await session.execute(select(User).where(User.email == email))
+            return result.scalars().first()
 
-        Args:
-            user: User to update
-
-        Returns:
-            User: Updated user
-        """
+    async def create(self, user: User) -> User:
+        """Create a new user."""
         async with self.session_factory() as session:
             session.add(user)
-            await session.flush()
+            await session.commit()
             await session.refresh(user)
             return user
 
@@ -111,7 +63,7 @@ class UserRepository:
             await session.flush()
             await session.refresh(login_history)
             return None
-    
+
     async def update_token_blacklist(self, token_blacklist):
         """
         Add refresh_token to blacklist.
@@ -142,3 +94,11 @@ class UserRepository:
             result = await session.execute(
                 select(TokenBlacklist).filter(TokenBlacklist.jti == token_jti))
             return result.scalars().first()
+
+    async def update(self, user: User) -> User:
+        """Update an existing user."""
+        async with self.session_factory() as session:
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+            return user

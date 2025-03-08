@@ -1,6 +1,8 @@
 """Repository for User model operations."""
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+from src.db.models import Role
 from src.db.models.user import User
 
 
@@ -12,9 +14,13 @@ class UserRepository:
         self.session_factory = session_factory
 
     async def get_by_id(self, user_id: int) -> User | None:
-        """Get a user by ID."""
+        """Get a user by ID with roles and permissions."""
         async with self.session_factory() as session:
-            result = await session.execute(select(User).where(User.id == user_id))
+            result = await session.execute(
+                select(User)
+                .options(joinedload(User.roles).joinedload(Role.permissions))
+                .where(User.id == user_id)
+            )
             return result.scalars().first()
 
     async def get_by_username(self, username: str) -> User | None:

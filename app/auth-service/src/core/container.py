@@ -4,9 +4,12 @@ from dependency_injector import containers, providers
 from src.core.config import Settings
 from src.db.database import Database
 from src.db.repositories.login_history_repository import LoginHistoryRepository
+from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
+from src.services.redis_service import RedisService
+from src.services.role_service import RoleService
 from src.services.user_service import UserService
 
 
@@ -32,6 +35,8 @@ class Container(containers.DeclarativeContainer):
         )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
+        container.config.set("redis_url", str(settings.redis_url))
+        container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
 
     # Database
     db = providers.Singleton(
@@ -50,7 +55,18 @@ class Container(containers.DeclarativeContainer):
         session_factory=db.provided.session,
     )
 
+    role_repository = providers.Factory(
+        RoleRepository,
+        session_factory=db.provided.session,
+    )
+
     # Services
+    redis_service = providers.Singleton(
+        RedisService,
+        redis_url=config.redis_url,
+        default_ttl=config.cache_ttl,
+    )
+
     email_service = providers.Factory(
         EmailService,
         secret_key=config.secret_key,
@@ -71,4 +87,10 @@ class Container(containers.DeclarativeContainer):
         user_repository=user_repository,
         login_history_repository=login_history_repository,
         auth_service=auth_service,
+    )
+
+    role_service = providers.Factory(
+        RoleService,
+        role_repository=role_repository,
+        redis_service=redis_service,
     )

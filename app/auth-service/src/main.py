@@ -11,10 +11,6 @@ from src.api.auth import auth_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
-from src.db.database import get_database
-from src.db.redis import get_redis
-from src.services.middleware.authentication import AuthenticationMiddleware
-
 
 
 @asynccontextmanager
@@ -59,8 +55,6 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Adding authentication middleware
-    # app.add_middleware(AuthenticationMiddleware)
 
     # Include routers
     app.include_router(api_router)

@@ -87,12 +87,3 @@ async def get_current_active_user(
         )
 
     return current_user
-
-
-async def get_private_user_service(
-    token: str = Depends(oauth2_scheme),
-    user_service: UserService = Depends(get_user_service)
-):  
-    user_service.user = await user_service.auth_service.validate_token(
-        token=token, type='access')
-    return user_service

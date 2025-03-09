@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 from contextlib import asynccontextmanager
 
-from src.api.auth import auth_router
+from src.api.auth import router as auth_router
 from src.api.health import router as health_router
 from src.api.roles import router as roles_router
 from src.api.users import router as users_router

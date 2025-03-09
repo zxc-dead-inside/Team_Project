@@ -176,7 +176,7 @@ class AuthService:
         Returns:
             Optional[User]: User if the token is valid, None otherwise
         """
-        print(token)
+
         if not token:
             raise HTTPException(
                 status_code=401, detail="Authentication required")

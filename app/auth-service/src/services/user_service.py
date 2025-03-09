@@ -175,14 +175,16 @@ class UserService:
         return LoginResponse(
             access_token=access_jwt, refresh_token=refresh_jwt)
 
-    async def logout_from_all_device(self):
-        self.user.token_version = datetime.now(UTC)
-        await self.auth_service.user_repository.update(user=self.user)
+    async def logout_from_all_device(self, user_id):
+
+        user: User = await self.user_repository.get_by_id(user_id)
+        user.token_version = datetime.now(UTC)
+        await self.auth_service.user_repository.update(user=user)
 
         access_jwt = self.auth_service.create_access_token(
-            user_id=self.user.id, token_version=self.user.token_version)
+            user_id=user.id, token_version=user.token_version)
         refresh_jwt = self.auth_service.create_refresh_token(
-            user_id=self.user.id, token_version=self.user.token_version)
+            user_id=user.id, token_version=user.token_version)
 
         return LoginResponse(
             access_token=access_jwt, refresh_token=refresh_jwt)

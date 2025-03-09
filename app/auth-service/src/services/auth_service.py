@@ -197,7 +197,6 @@ class AuthService:
 
     async def check_refresh_token_blacklist(self, token: str) -> None:
         payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
-        print(payload)
         if await self.user_repository.get_token_from_blacklist(
             payload.get('jti')):
             raise HTTPException(status_code=401, detail="Token has expired")

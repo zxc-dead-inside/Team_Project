@@ -197,8 +197,6 @@ class UserService:
             token=refresh_token, type='refresh')
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
-        
-        print(self.user)
 
         access_jwt = self.auth_service.create_access_token(
             user_id=self.user.id, token_version=self.user.token_version)

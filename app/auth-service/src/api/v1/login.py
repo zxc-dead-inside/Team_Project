@@ -5,15 +5,15 @@ from http import HTTPStatus
 
 from src.models.login import LoginRequest, LoginResponse
 from src.services.di import get_user_service
-from src.services.di import get_protected_user_service
+from src.services.di import get_private_user_service
 from src.services.di import oauth2_scheme
 from src.services.user_service import UserService
 
 
 public_router = APIRouter()
-private_router = APIRouter(dependencies=[Depends(get_protected_user_service)])
+private_router = APIRouter(dependencies=[Depends(get_private_user_service)])
 
-
+@inject
 @public_router.post(
     "/login",
     response_model=LoginResponse,
@@ -22,7 +22,6 @@ private_router = APIRouter(dependencies=[Depends(get_protected_user_service)])
         401: {'description': 'Invalid credentials'}
     }
 )
-@inject
 async def login(
         login_request: LoginRequest,
         request: Request,

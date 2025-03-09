@@ -12,11 +12,11 @@ from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
 
-
 class AuthService:
     """Service for authentication operations."""
     
-    password_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+    password_context = CryptContext(
+        schemes=["argon2", "bcrypt"], deprecated="auto")
 
     def __init__(
         self,
@@ -31,9 +31,7 @@ class AuthService:
         self.secret_key = secret_key
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
-
         self.email_service = email_service
-        self.uuid = uuid.uuid4()
 
     async def identificate_user(self, username: str) -> User | None:
         """
@@ -56,7 +54,8 @@ class AuthService:
         
         return user
 
-    async def authenticate_user(self, user: User, password: str) -> User | None:
+    async def authenticate_user(
+            self, user: User, password: str) -> User | None:
         """
         Authenticate a user with password.
         
@@ -67,13 +66,14 @@ class AuthService:
         Returns:
             Optional[User]: User if authentication is successful, None otherwise
         """
-        if not self.verify_password(password, user.password):
+        if not self.verify_password(password, user.hashed_password):
 
             return None
         
         return user
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+    def verify_password(
+            self, plain_password: str, hashed_password: str) -> bool:
         """
         Verify a password against its hash.
         
@@ -98,7 +98,8 @@ class AuthService:
         """
         return self.password_context.hash(password)
 
-    def create_access_token(self, user_id: UUID, token_version: datetime) -> str:
+    def create_access_token(
+            self, user_id: UUID, token_version: datetime) -> str:
 
         """
         Create an access token for a user.
@@ -122,7 +123,8 @@ class AuthService:
         
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
 
-    def create_refresh_token(self, user_id: UUID, token_version: datetime) -> str:
+    def create_refresh_token(
+            self, user_id: UUID, token_version: datetime) -> str:
         """
         Create a refresh token for a user.
 
@@ -135,13 +137,12 @@ class AuthService:
         """
         expires_delta = timedelta(days=self.refresh_token_expire_days)
         expire = datetime.now(UTC) + expires_delta
-
         to_encode = {
             "sub": str(user_id),
             "exp": expire,
             "type": "refresh",
             "token_version": str(token_version),
-            "jti": str(self.uuid)
+            "jti": str(uuid.uuid4())
         }
 
         return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
@@ -192,7 +193,7 @@ class AuthService:
 
     async def check_refresh_token_blacklist(self, token: str) -> None:
         payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-
+        print(payload)
         if await self.user_repository.get_token_from_blacklist(
             payload.get('jti')):
             raise HTTPException(status_code=401, detail="Token has expired")

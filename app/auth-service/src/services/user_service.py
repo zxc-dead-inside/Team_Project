@@ -188,9 +188,9 @@ class UserService:
             access_token=access_jwt, refresh_token=refresh_jwt)
     
     async def refresh_token(self, refresh_token):
+
         self.user = await self.auth_service.validate_token(
             token=refresh_token, type='refresh')
-        
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
         

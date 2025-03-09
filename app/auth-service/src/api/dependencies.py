@@ -6,12 +6,13 @@ from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
+from src.services.email_verification_service import EmailService
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status, Header
 from fastapi.security import OAuth2PasswordBearer
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_auth_service(request: Request) -> AuthService:
@@ -22,6 +23,11 @@ def get_auth_service(request: Request) -> AuthService:
 def get_user_service(request: Request) -> UserService:
     """Get user service from the container."""
     return request.app.container.user_service()
+
+
+def get_email_service(request: Request) -> EmailService:
+    """Get email service from the container."""
+    return request.app.container.email_service()
 
 
 async def get_current_user(
@@ -51,7 +57,7 @@ async def get_current_user(
     )
 
     try:
-        user = await auth_service.validate_token(token)
+        user = await auth_service.validate_token(token=token, type='access')
         if user is None:
             raise credentials_exception
         return user
@@ -81,3 +87,12 @@ async def get_current_active_user(
         )
 
     return current_user
+
+
+async def get_private_user_service(
+    token: str = Depends(oauth2_scheme),
+    user_service: UserService = Depends(get_user_service)
+):  
+    user_service.user = await user_service.auth_service.validate_token(
+        token=token, type='access')
+    return user_service

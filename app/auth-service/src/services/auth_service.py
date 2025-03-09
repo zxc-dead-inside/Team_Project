@@ -70,14 +70,14 @@ class AuthService:
         Returns:
             Optional[User]: User if authentication is successful, None otherwise
         """
-        if not self.verify_password(password, user.hashed_password):
+        if not self.verify_password(password, user.password):
 
             return None
         
         return user
 
     def verify_password(
-            self, plain_password: str, hashed_password: str) -> bool:
+            self, plain_password: str, password: str) -> bool:
         """
         Verify a password against its hash.
         
@@ -88,7 +88,7 @@ class AuthService:
         Returns:
             bool: True if the password is correct, False otherwise
         """
-        return self.password_context.verify(plain_password, hashed_password)
+        return self.password_context.verify(plain_password, password)
 
     def hash_password(self, password: str) -> str:
         """
@@ -176,7 +176,7 @@ class AuthService:
         Returns:
             Optional[User]: User if the token is valid, None otherwise
         """
-
+        print(token)
         if not token:
             raise HTTPException(
                 status_code=401, detail="Authentication required")

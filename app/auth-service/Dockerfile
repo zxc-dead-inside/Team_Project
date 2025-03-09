@@ -22,6 +22,9 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . .
 
+# Create private and public keys
+RUN python scripts/create_rs256_keys.py
+
 # Expose port
 EXPOSE 8100
 

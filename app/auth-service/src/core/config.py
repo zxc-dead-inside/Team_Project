@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+import os
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -20,6 +21,35 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     email_token_ttl_seconds: int = 600  # 10 minutes
+    secrets_path: str = 'secrets'
+    private_key: str | None = None
+    public_key: str | None = None
+
+    @field_validator("private_key", mode="before")
+    def assemble_private_key(cls, v: str | None, values) -> str:
+        """Assemble private_key from folder"""
+        if v:
+            return v
+        try:
+            return open(
+                values.data.get("secrets_path") + "/private_key.pem",
+                'rb'
+                ).read()
+        except Exception:
+            raise ValueError("SECRETS_PATH should contains private_key.pem")
+
+    @field_validator("public_key", mode="before")
+    def assemble_public_key(cls, v: str | None, values) -> str:
+        """Assemble public_key.pem exists from folder"""
+        if v:
+            return v
+        try:
+            return open(
+                values.data.get("secrets_path") + "/public_key.pem",
+                'rb'
+                ).read()
+        except Exception:
+            raise ValueError("SECRETS_PATH should contains public_key.pem")
 
     # PostgreSQL
     postgres_user: str

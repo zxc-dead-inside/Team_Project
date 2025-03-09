@@ -25,6 +25,8 @@ class Container(containers.DeclarativeContainer):
         container.config.set("environment", settings.environment)
         container.config.set("log_level", settings.log_level)
         container.config.set("secret_key", settings.secret_key)
+        container.config.set("public_key", settings.public_key)
+        container.config.set("private_key", settings.private_key)
         container.config.set(
             "access_token_expire_minutes", settings.access_token_expire_minutes
         )
@@ -78,6 +80,8 @@ class Container(containers.DeclarativeContainer):
         AuthService,
         user_repository=user_repository,
         secret_key=config.secret_key,
+        public_key=config.public_key,
+        private_key=config.private_key,
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
         email_service=email_service,

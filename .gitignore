@@ -22,3 +22,4 @@ app/state
 
 # Migrations
 app/auth-service/migrations/versions/*
+app/auth-service/secrets/*

@@ -22,6 +22,8 @@ class AuthService:
         self,
         user_repository: UserRepository,
         secret_key: str,
+        public_key: str,
+        private_key: str,
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
@@ -29,6 +31,8 @@ class AuthService:
         """Initialize the auth service."""
         self.user_repository = user_repository
         self.secret_key = secret_key
+        self.public_key = public_key
+        self.private_key = private_key
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
         self.email_service = email_service
@@ -121,7 +125,7 @@ class AuthService:
             "token_version": str(token_version)
         }
         
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
     def create_refresh_token(
             self, user_id: UUID, token_version: datetime) -> str:
@@ -145,11 +149,11 @@ class AuthService:
             "jti": str(uuid.uuid4())
         }
 
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
     async def update_token_blacklist(self, token_blacklist) -> None:
         payload = jwt.decode(
-            token_blacklist, self.secret_key, algorithms=["HS256"])
+            token_blacklist, self.public_key, algorithms=["RS256"])
 
         await self.user_repository.update_token_blacklist(
             TokenBlacklist(
@@ -177,7 +181,7 @@ class AuthService:
             raise HTTPException(
                 status_code=401, detail="Authentication required")
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
             user_id = payload.get("sub")
             if payload.get('type') != type: raise jwt.InvalidTokenError
         except jwt.ExpiredSignatureError:
@@ -192,7 +196,7 @@ class AuthService:
         return user
 
     async def check_refresh_token_blacklist(self, token: str) -> None:
-        payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+        payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
         print(payload)
         if await self.user_repository.get_token_from_blacklist(
             payload.get('jti')):

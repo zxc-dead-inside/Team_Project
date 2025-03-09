@@ -81,3 +81,42 @@ async def get_current_active_user(
         )
 
     return current_user
+
+
+async def has_permission(user: User, permission_name: str) -> bool:
+    """
+    Check if a user has a specific permission.
+
+    Args:
+        user: User object
+        permission_name: Permission name to check
+
+    Returns:
+        bool: True if user has permission, False otherwise
+    """
+
+    if hasattr(user, "roles") and user.roles:
+        if any(role.name == "admin" for role in user.roles):
+            return True
+
+        for role in user.roles:
+            if hasattr(role, "permissions") and role.permissions:
+                for permission in role.permissions:
+                    if permission.name == permission_name:
+                        return True
+
+    return False
+
+
+def require_permission(permission_name: str):
+    """Dependency factory for permission-based access control."""
+
+    async def dependency(current_user: User = Depends(get_current_user)):
+        if not await has_permission(current_user, permission_name):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Not authorized to perform this action. Missing permission: {permission_name}",
+            )
+        return current_user
+
+    return dependency

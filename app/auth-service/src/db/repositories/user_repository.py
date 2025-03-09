@@ -1,5 +1,7 @@
 """Repository for User model operations."""
 
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from src.db.models import Role
@@ -13,7 +15,7 @@ class UserRepository:
         """Initialize the repository."""
         self.session_factory = session_factory
 
-    async def get_by_id(self, user_id: int) -> User | None:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         """Get a user by ID with roles and permissions."""
         async with self.session_factory() as session:
             result = await session.execute(
@@ -52,3 +54,145 @@ class UserRepository:
             await session.commit()
             await session.refresh(user)
             return user
+
+    async def assign_role(self, user_id: UUID, role_id: UUID) -> User | None:
+        """
+        Assign a role to a user.
+
+        Args:
+            user_id: The user ID
+            role_id: The role ID to assign
+
+        Returns:
+            User | None: Updated user or None if user or role not found
+        """
+        async with self.session_factory() as session:
+            stmt_user = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_user = await session.execute(stmt_user)
+            user = result_user.scalars().first()
+
+            if not user:
+                return None
+
+            stmt_role = select(Role).where(Role.id == role_id)
+            result_role = await session.execute(stmt_role)
+            role = result_role.scalars().first()
+
+            if not role:
+                return None
+
+            if role.id in [r.id for r in user.roles]:
+                return user
+
+            user.roles.append(role)
+            await session.commit()
+
+            stmt_updated = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_updated = await session.execute(stmt_updated)
+            return result_updated.scalars().first()
+
+    async def remove_role(self, user_id: UUID, role_id: UUID) -> User | None:
+        """
+        Remove a role from a user.
+
+        Args:
+            user_id: The user ID
+            role_id: The role ID to remove
+
+        Returns:
+            User | None: Updated user or None if user or role not found or user doesn't have the role
+        """
+        async with self.session_factory() as session:
+            stmt_user = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_user = await session.execute(stmt_user)
+            user = result_user.scalars().first()
+
+            if not user:
+                return None
+
+            stmt_role = select(Role).where(Role.id == role_id)
+            result_role = await session.execute(stmt_role)
+            role = result_role.scalars().first()
+
+            if not role:
+                return None
+
+            if role.id not in [r.id for r in user.roles]:
+                return None
+
+            user.roles = [r for r in user.roles if r.id != role.id]
+            await session.commit()
+
+            stmt_updated = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_updated = await session.execute(stmt_updated)
+            return result_updated.scalars().first()
+
+    async def bulk_assign_roles(
+        self, user_id: UUID, role_ids: list[UUID]
+    ) -> tuple[User | None, list[str]]:
+        """
+        Assign multiple roles to a user.
+
+        Args:
+            user_id: The user ID
+            role_ids: List of role IDs to assign
+
+        Returns:
+            tuple[User | None, list[str]]: Updated user and list of added role names, or None if user not found
+        """
+        async with self.session_factory() as session:
+            stmt_user = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_user = await session.execute(stmt_user)
+            user = result_user.scalars().first()
+
+            if not user:
+                return None, []
+
+            user_role_ids = [r.id for r in user.roles]
+
+            added_role_names = []
+            for role_id in role_ids:
+                if role_id not in user_role_ids:
+                    stmt_role = select(Role).where(Role.id == role_id)
+                    result_role = await session.execute(stmt_role)
+                    role = result_role.scalars().first()
+
+                    if role:
+                        user.roles.append(role)
+                        added_role_names.append(role.name)
+
+            if added_role_names:
+                await session.commit()
+
+            stmt_updated = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result_updated = await session.execute(stmt_updated)
+            return result_updated.scalars().first(), added_role_names
+
+    async def get_user_with_roles(self, user_id: UUID) -> User | None:
+        """
+        Get a user by ID with their roles.
+
+        Args:
+            user_id: The user ID
+
+        Returns:
+            User | None: User with roles or None if not found
+        """
+        async with self.session_factory() as session:
+            stmt = (
+                select(User).where(User.id == user_id).options(joinedload(User.roles))
+            )
+            result = await session.execute(stmt)
+            return result.scalars().first()

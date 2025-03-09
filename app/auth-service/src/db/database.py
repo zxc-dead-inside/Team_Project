@@ -133,7 +133,7 @@ def get_database(db_url: str) -> Database:
 
 
 @asynccontextmanager
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_db_session(db: Database) -> AsyncGenerator[AsyncSession, None]:
     """
     Get a database session from the provided Database instance.
 

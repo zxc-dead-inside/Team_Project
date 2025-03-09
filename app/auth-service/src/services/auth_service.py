@@ -190,6 +190,9 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid token")
 
         user: User = await self.user_repository.get_by_id(user_id)
+        if not user: raise HTTPException(
+            status_code=401, detail="Invalid token")
+        
         if payload.get('token_version') != str(user.token_version):
             raise HTTPException(status_code=401, detail="Invalid token")
 

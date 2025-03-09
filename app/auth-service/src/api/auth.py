@@ -1,8 +1,7 @@
 """Authentication endpoints."""
 
-from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from http import HTTPStatus
 
 from src.api.schemas.auth import EmailConfirmation, UserCreate
@@ -18,7 +17,6 @@ from src.services.user_service import UserService
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
-# private_router = APIRouter(dependencies=[Depends(get_private_user_service)])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

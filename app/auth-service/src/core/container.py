@@ -16,7 +16,6 @@ from src.services.user_service import UserService
 class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
 
-    wiring_config = containers.WiringConfiguration(packages=["..services"])
     config = providers.Configuration()
     
     @classmethod

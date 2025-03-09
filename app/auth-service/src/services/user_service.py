@@ -1,3 +1,5 @@
+"""Service for user-related operations."""
+
 from datetime import UTC, datetime
 from fastapi import Request
 import jwt
@@ -196,6 +198,8 @@ class UserService:
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
         
+        print(self.user)
+
         access_jwt = self.auth_service.create_access_token(
             user_id=self.user.id, token_version=self.user.token_version)
         refresh_jwt = self.auth_service.create_refresh_token(

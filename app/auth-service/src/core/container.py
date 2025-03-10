@@ -86,7 +86,9 @@ class Container(containers.DeclarativeContainer):
         UserService,
         user_repository=user_repository,
         login_history_repository=login_history_repository,
+        role_repository=role_repository,
         auth_service=auth_service,
+        redis_service=redis_service,
     )
 
     role_service = providers.Factory(

@@ -179,7 +179,7 @@ async def forgot_password(
     await reset_password_service.increase_requests(request.email)
 
     return {
-        "message": "We has sent an email to you. Check your mailbox please."
+        "message": "We have sent an email to you. Check your mailbox please."
     }
 
 

@@ -87,7 +87,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str = Field(..., min_length=8)
+    password: Annotated [str, Field(..., min_length=8)]
 
     @field_validator("password")
     def password_complexity(cls, v):

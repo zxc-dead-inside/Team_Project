@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -8,9 +9,9 @@ from pydantic import EmailStr
 
 from src.db.repositories.user_repository import UserRepository
 from src.services.redis_service import RedisService
+from src.core.logger import setup_logging
 
-
-logger = logging.getLogger(__name__)
+setup_logging()
 
 
 class ResetPasswordService:
@@ -101,7 +102,7 @@ class ResetPasswordService:
         
         return True, None
 
-    def create_reset_token(self, user_id: str, email: str) -> str:
+    def create_reset_token(self, user_id: UUID, email: EmailStr) -> str:
         """
         Create a reset token for an email address.
         
@@ -144,7 +145,7 @@ class ResetPasswordService:
             return True, payload
 
         except JWTError as e:
-            logger.error(f"Token validation failed: {e}")
+            logging.error(f"Token validation failed: {e}")
             return False, None
 
     def hash_password(self, password: str) -> str:
@@ -208,15 +209,13 @@ class ResetPasswordService:
             token: jwt token
         """
 
-        logger.info(f"[MOCK EMAIL] To: {email}, Subject: Reset your password")
-        logger.info(
+        confirmation_url = f"/api/v1/auth/confirm-email?token={token}"
+
+        logging.info(f"[MOCK EMAIL] To: {email}, Subject: Reset your password")
+        logging.info(
             "[MOCK EMAIL] Body: Someone has requested a password reset for "
-            f"your account. Use this token {token} to reset your password.\n"
-            "You can use this jwt token set new password via sendig json:\n "
-            "{\n"
-            f"    \"token\": \"{token}\",\n"
-            "    \"password\": \"new_P@ssw0rd\"\n"
-            "}\n"
+            f"your account. You can use this link to reset your password: "
+            f"{confirmation_url}"
         )
 
         return True    

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     postgres_port: str = "5432"
     database_url: PostgresDsn | None = None
 
+    # Redis
+    cache_ttl: int = 3600
+
     @field_validator("database_url", mode="before")
     def assemble_db_url(cls, v: str | None, values) -> str:
         """Assemble database URL if not provided."""

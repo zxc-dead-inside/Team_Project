@@ -1,13 +1,21 @@
 """Service for user-related operations."""
 
+import logging
 from datetime import datetime
 from uuid import UUID
 
+from src.api.schemas.user_roles import UserRoleResponse
+from src.core.logger import setup_logging
 from src.db.models.login_history import LoginHistory
 from src.db.models.user import User
 from src.db.repositories.login_history_repository import LoginHistoryRepository
+from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
+from src.services.redis_service import RedisService
+
+
+setup_logging()
 
 
 class UserService:
@@ -18,11 +26,31 @@ class UserService:
         user_repository: UserRepository,
         login_history_repository: LoginHistoryRepository,
         auth_service: AuthService,
+        redis_service: RedisService,
+        role_repository: RoleRepository,
     ):
         """Initialize the user service."""
         self.user_repository = user_repository
         self.login_history_repository = login_history_repository
         self.auth_service = auth_service
+        self.redis_service = redis_service
+        self.role_repository = role_repository
+
+        self.user_cache_key_prefix = "user:"
+        self.user_roles_cache_key_prefix = "user_roles:"
+
+    async def _invalidate_user_cache(self, user_id: UUID):
+        """Invalidate cache for a user and their roles."""
+        try:
+            user_key = f"{self.user_cache_key_prefix}{user_id}"
+            await self.redis_service.delete(user_key)
+
+            user_roles_key = f"{self.user_roles_cache_key_prefix}{user_id}"
+            await self.redis_service.delete(user_roles_key)
+
+            logging.debug(f"Cache invalidated for user {user_id}")
+        except Exception as e:
+            logging.error(f"Error invalidating user cache: {e}")
 
     async def get_user_profile(self, user_id: UUID) -> User | None:
         """
@@ -128,3 +156,147 @@ class UserService:
             end_date=end_date,
             successful_only=successful_only,
         )
+
+    async def assign_role_to_user(
+        self, user_id: UUID, role_id: UUID
+    ) -> tuple[bool, str, User | None]:
+        """
+        Assign a role to a user.
+
+        Args:
+            user_id: The user ID
+            role_id: The role ID to assign
+
+        Returns:
+            tuple[bool, str, User | None]: (success, message, updated user)
+        """
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            return False, f"User with ID {user_id} not found", None
+
+        role = await self.role_repository.get_by_id(role_id)
+        if not role:
+            return False, f"Role with ID {role_id} not found", None
+
+        updated_user = await self.user_repository.assign_role(user_id, role_id)
+
+        if not updated_user:
+            return False, "Failed to assign role to user", None
+
+        if role_id in [r.id for r in user.roles]:
+            return False, f"User already has role '{role.name}'", user
+
+        await self._invalidate_user_cache(user_id)
+
+        return True, f"Role '{role.name}' assigned to user", updated_user
+
+    async def remove_role_from_user(
+        self, user_id: UUID, role_id: UUID
+    ) -> tuple[bool, str, User | None]:
+        """
+        Remove a role from a user.
+
+        Args:
+            user_id: The user ID
+            role_id: The role ID to remove
+
+        Returns:
+            tuple[bool, str, User | None]: (success, message, updated user)
+        """
+        user = await self.user_repository.get_user_with_roles(user_id)
+        if not user:
+            return False, f"User with ID {user_id} not found", None
+
+        role = await self.role_repository.get_by_id(role_id)
+        if not role:
+            return False, f"Role with ID {role_id} not found", None
+
+        if role_id not in [r.id for r in user.roles]:
+            return False, f"User does not have role '{role.name}'", user
+
+        if len(user.roles) == 1:
+            return False, "Cannot remove the last role from a user", user
+
+        updated_user = await self.user_repository.remove_role(user_id, role_id)
+
+        if not updated_user:
+            return False, "Failed to remove role from user", None
+
+        await self._invalidate_user_cache(user_id)
+
+        return True, f"Role '{role.name}' removed from user", updated_user
+
+    async def bulk_assign_roles(
+        self, user_id: UUID, role_ids: list[UUID]
+    ) -> tuple[bool, str, User | None]:
+        """
+        Assign multiple roles to a user.
+
+        Args:
+            user_id: The user ID
+            role_ids: List of role IDs to assign
+
+        Returns:
+            tuple[bool, str, User | None]: (success, message, updated user)
+        """
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            return False, f"User with ID {user_id} not found", None
+
+        for role_id in role_ids:
+            role = await self.role_repository.get_by_id(role_id)
+            if not role:
+                return False, f"Role with ID {role_id} not found", None
+
+        updated_user, added_roles = await self.user_repository.bulk_assign_roles(
+            user_id, role_ids
+        )
+
+        if not updated_user:
+            return False, "Failed to assign roles to user", None
+
+        if not added_roles:
+            return False, "No new roles to assign", user
+
+        await self._invalidate_user_cache(user_id)
+
+        return (
+            True,
+            f"Roles assigned to user: {', '.join(added_roles)}",
+            updated_user,
+        )
+
+    async def get_user_roles(
+        self, user_id: UUID
+    ) -> tuple[bool, str, UserRoleResponse | None]:
+        """
+        Get all roles assigned to a user with caching.
+
+        Args:
+            user_id: The user ID
+
+        Returns:
+            tuple[bool, str, UserRoleResponse | None]: (success, message, response)
+        """
+        user_roles_key = f"{self.user_roles_cache_key_prefix}{user_id}"
+        cached_roles = await self.redis_service.get_model(
+            user_roles_key, UserRoleResponse
+        )
+        if cached_roles:
+            logging.debug(f"Returning user roles for {user_id} from cache")
+            return True, "User roles retrieved from cache", cached_roles
+
+        user = await self.user_repository.get_user_with_roles(user_id)
+        if not user:
+            return False, f"User with ID {user_id} not found", None
+
+        response = UserRoleResponse(
+            user_id=user_id,
+            role_ids=[role.id for role in user.roles],
+            role_names=[role.name for role in user.roles],
+        )
+
+        await self.redis_service.set_model(user_roles_key, response)
+        logging.debug(f"Cached user roles for {user_id}")
+
+        return True, "User roles retrieved successfully", response

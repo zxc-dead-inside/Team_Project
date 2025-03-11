@@ -13,11 +13,6 @@ from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
 from src.services.user_service import UserService
 
-from fastapi import Request
-
-
-def get_cache_service(request: Request) -> RedisService:
-    """Get cache service from the container."""
 
 class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
@@ -105,7 +100,9 @@ class Container(containers.DeclarativeContainer):
         UserService,
         user_repository=user_repository,
         login_history_repository=login_history_repository,
+        role_repository=role_repository,
         auth_service=auth_service,
+        redis_service=redis_service,
     )
 
     role_service = providers.Factory(

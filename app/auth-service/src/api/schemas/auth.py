@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from src.api.schemas.validators import password_complexity_validator
+
 
 class UserBase(BaseModel):
     """Base schema for User information."""
@@ -78,3 +80,15 @@ class UserResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: Annotated[str, Field(..., min_length=8)]
+
+    @field_validator("password")
+    def password_complexity(cls, v):
+        return password_complexity_validator(v)

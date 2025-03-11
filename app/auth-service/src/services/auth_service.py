@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
+from src.services.reset_password_service import ResetPasswordService
 
 
 class AuthService:
@@ -22,6 +23,7 @@ class AuthService:
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
+        reset_password_service: ResetPasswordService | None = None
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
@@ -29,6 +31,8 @@ class AuthService:
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
         self.email_service = email_service
+        self.reset_password_service = reset_password_service
+    
 
     async def authenticate_user(self, username: str, password: str) -> User | None:
         """

@@ -1,8 +1,11 @@
 """Authentication endpoints."""
 
-from src.api.schemas.auth import EmailConfirmation, UserCreate
+from src.api.schemas.auth import (
+    ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate
+)
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
+from src.services.reset_password_service import ResetPasswordService
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -19,6 +22,10 @@ def get_auth_service(request: Request) -> AuthService:
 def get_email_service(request: Request) -> EmailService:
     """Get email service from the container."""
     return request.app.container.email_service()
+
+def get_reset_password_service(request: Request) -> ResetPasswordService:
+    """Get reset password service from the container."""
+    return request.app.container.reset_password_service()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -123,3 +130,86 @@ async def login_for_access_token(
         "refresh_token": refresh_token,
         "token_type": "bearer",
     }
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+    reset_password_service: ResetPasswordService = Depends(get_reset_password_service)
+):
+    """
+    Checks if an email is registered and sends an email with reset token.
+
+    Args: 
+        request: Dict with an email
+    
+    Reterns:
+        Dict with information message
+
+    Raises:
+        HTTPException: If an email is not registered
+    """
+
+    state, result = await reset_password_service.check_requests(request.email)
+    if not state and result is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Reset password service unavalable. Please try again later."
+        )
+    
+    if result and not state:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=result
+        )
+
+    user = await auth_service.user_repository.get_by_email(request.email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    reset_token = reset_password_service.create_reset_token(
+        user.id, user.email
+    )
+    await reset_password_service.send_reset_password_email(
+        request.email, reset_token
+    )
+    await reset_password_service.increase_requests(request.email)
+
+    return {
+        "message": "We have sent an email to you. Check your mailbox please."
+    }
+
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(
+    request: ResetPasswordRequest,
+    reset_password_service: ResetPasswordService = Depends(get_reset_password_service)
+):
+    """
+    Change password for user if token is valid.
+
+    Args:
+        request: Dict with token and new password
+    
+    Reterns:
+        Dict with information message
+
+    Raises:
+        HTTPException: if token is invalid or password is simple
+    
+    """
+
+    success, message = await reset_password_service.reset_password(
+        request.token, request.password
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+
+    return {"message": message}

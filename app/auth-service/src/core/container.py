@@ -11,6 +11,7 @@ from src.services.email_verification_service import EmailService
 from src.services.redis_service import RedisService
 from src.services.role_service import RoleService
 from src.services.user_service import UserService
+from src.services.middleware.authentication import AuthenticationMiddlewareService
 
 
 class Container(containers.DeclarativeContainer):
@@ -39,6 +40,11 @@ class Container(containers.DeclarativeContainer):
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
+
+        container.config.set('public_paths', settings.public_paths)
+        container.config.set(
+            'private_path_prefixes', settings.private_path_prefixes
+        )
 
     # Database
     db = providers.Singleton(
@@ -97,4 +103,11 @@ class Container(containers.DeclarativeContainer):
         RoleService,
         role_repository=role_repository,
         redis_service=redis_service,
+    )
+
+    auth_middleware = providers.Factory(
+        AuthenticationMiddlewareService,
+        public_paths = config.public_paths,
+        private_path_prefixes = config.private_path_prefixes,
+        user_service=user_service
     )

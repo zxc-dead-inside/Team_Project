@@ -133,11 +133,11 @@ async def login(
         user_service: UserService = Depends(get_user_service)
     ) -> LoginResponse:
     """
-    Authenticate user and return access token.
+    Authenticate user and return jwt pair tokens.
     Args:
-        form_data: OAuth2 form with username and password
+        form_data: OAuth2PasswordRequestForm form with username and password
     Returns:
-        Dict with access token and token type
+        Dict with access token and refresh token
     Raises:
         HTTPException: If authentication fails
     """

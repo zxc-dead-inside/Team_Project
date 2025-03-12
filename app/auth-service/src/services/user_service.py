@@ -24,9 +24,9 @@ class UserService:
         auth_service: AuthService,
     ):
         """Initialize the user service."""
-        self.user_repository = user_repository
-        self.login_history_repository = login_history_repository
-        self.auth_service = auth_service
+        self.user_repository: UserRepository = user_repository
+        self.login_history_repository: LoginHistoryRepository = login_history_repository
+        self.auth_service: AuthService = auth_service
         self.user: User
 
     async def get_user_profile(self, user_id: UUID) -> User | None:

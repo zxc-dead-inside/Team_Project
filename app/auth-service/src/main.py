@@ -1,5 +1,5 @@
 """Main application entry point for the Authentication Service."""
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from contextlib import asynccontextmanager
@@ -11,6 +11,7 @@ from src.api.users import router as users_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
+from src.services.middleware.authentication import AuthenticationMiddlewareService
 
 
 @asynccontextmanager
@@ -44,6 +45,7 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url="/api/redoc" if settings.environment != "production" else None,
+        dependencies=[Depends(AuthenticationMiddlewareService)]
     )
 
     # Configure CORS

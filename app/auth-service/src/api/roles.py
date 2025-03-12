@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from src.api.dependencies import get_current_user
+from src.api.dependencies import get_current_active_user
 from src.api.schemas.roles import RoleCreate, RoleListResponse, RoleResponse, RoleUpdate
 from src.db.models.user import User
 from src.services.auth_service import AuthService
@@ -53,7 +53,7 @@ async def has_permission(user: User, permission_name: str) -> bool:
 def require_permission(permission_name: str):
     """Dependency factory for permission-based access control."""
 
-    async def dependency(current_user: User = Depends(get_current_user)):
+    async def dependency(current_user: User = Depends(get_current_active_user)):
         if not await has_permission(current_user, permission_name):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

@@ -180,12 +180,13 @@ class AuthService:
         if not token:
             raise HTTPException(
                 status_code=401, detail="Authentication required")
+
         try:
             payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
             user_id = payload.get("sub")
             if payload.get('type') != type: raise jwt.InvalidTokenError
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token has expired")
+            raise HTTPException(status_code=401, detail="Token has been expired")
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid token")
 

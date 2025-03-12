@@ -16,13 +16,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # Authentication
-    secret_key: str
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     email_token_ttl_seconds: int = 600  # 10 minutes
     secrets_path: str = 'secrets'
-    private_key: str | None = None
-    public_key: str | None = None
+    private_key: str | None = None # Value of private key
+    public_key: str | None = None # Value of public key
 
     @field_validator("private_key", mode="before")
     def assemble_private_key(cls, v: str | None, values) -> str:
@@ -30,25 +29,21 @@ class Settings(BaseSettings):
         if v:
             return v
         try:
-            return open(
-                values.data.get("secrets_path") + "/private_key.pem",
-                'rb'
-                ).read()
+            path = values.data.get("secrets_path") + "/private_key.pem"
+            return open(path, 'rb').read()
         except Exception:
-            raise ValueError("SECRETS_PATH should contains private_key.pem")
+            raise ValueError(f"Not found private_key.pem by path: {path}")
 
     @field_validator("public_key", mode="before")
     def assemble_public_key(cls, v: str | None, values) -> str:
-        """Assemble public_key.pem exists from folder"""
+        """Assemble public_key.pem from folder"""
         if v:
             return v
         try:
-            return open(
-                values.data.get("secrets_path") + "/public_key.pem",
-                'rb'
-                ).read()
+            path = values.data.get("secrets_path") + "/public_key.pem"
+            return open(path, 'rb').read()
         except Exception:
-            raise ValueError("SECRETS_PATH should contains public_key.pem")
+            raise ValueError(f"Not found public_key.pem by path: {path}")
 
     # PostgreSQL
     postgres_user: str

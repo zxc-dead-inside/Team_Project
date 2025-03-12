@@ -23,10 +23,12 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Create private and public keys
-RUN python scripts/create_rs256_keys.py
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 8100
 
 # Command to run the application
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8100"]

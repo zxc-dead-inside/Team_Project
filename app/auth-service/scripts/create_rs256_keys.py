@@ -21,9 +21,12 @@ def create_keys_pair(keys_dir: str ='secrets', key_size: int =2048, overwrite: b
         tuple: Paths to the created private and public key files
     """
 
-    keys_dir = Path(keys_dir)
-    private_key_path = Path(keys_dir / "private_key.pem")
-    public_key_path = Path(keys_dir / "public_key.pem")
+    keys_dir: Path = Path(keys_dir)
+    private_key_path = keys_dir.joinpath("private_key.pem")
+    public_key_path = keys_dir.joinpath("public_key.pem")
+
+    # Create directory if it doesn't exist
+    keys_dir.mkdir(exist_ok=True)
 
     if not overwrite and private_key_path.exists() and public_key_path.exists():
         return private_key_path, public_key_path

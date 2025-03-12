@@ -24,7 +24,6 @@ class Container(containers.DeclarativeContainer):
         """Initialize configuration from settings."""
         container.config.set("environment", settings.environment)
         container.config.set("log_level", settings.log_level)
-        container.config.set("secret_key", settings.secret_key)
         container.config.set("public_key", settings.public_key)
         container.config.set("private_key", settings.private_key)
         container.config.set(

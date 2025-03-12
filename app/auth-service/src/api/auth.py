@@ -10,7 +10,7 @@ from src.api.dependencies import get_email_service
 from src.api.dependencies import get_current_active_user
 from src.api.dependencies import get_user_service
 from src.db.models.user import User
-from src.models.login import LoginResponse
+from src.models.login import LoginRequest, LoginResponse
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.user_service import UserService
@@ -129,7 +129,7 @@ async def login_for_access_token(
 )
 async def login(
         request: Request,
-        form_data: OAuth2PasswordRequestForm = Depends(),
+        login_request: LoginRequest,
         user_service: UserService = Depends(get_user_service)
     ) -> LoginResponse:
     """
@@ -143,7 +143,7 @@ async def login(
     """
 
     jwt_pair = await user_service.login_by_credentials(
-        username=form_data.username, password=form_data.password,
+        username=login_request.username, password=login_request.password,
         request=request
     )
 

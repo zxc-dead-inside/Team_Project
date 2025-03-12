@@ -2,6 +2,7 @@
 
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from uuid import UUID
 from src.db.models import Role
 from src.db.models.user import User
 from src.db.models.token_blacklist import TokenBlacklist
@@ -15,8 +16,16 @@ class UserRepository:
         """Initialize the repository."""
         self.session_factory = session_factory
 
-    async def get_by_id(self, user_id: int) -> User | None:
-        """Get a user by ID with roles and permissions."""
+    async def get_by_id(self, user_id: UUID) -> User | None:
+        """
+        Get a user by ID with roles and permissions.
+
+        Args:
+            user_id: User`s ID to find User
+
+        Returns:
+            Optional[User]: User found by user_id, None otherwise
+        """
         async with self.session_factory() as session:
             result = await session.execute(
                 select(User)
@@ -26,7 +35,15 @@ class UserRepository:
             return result.scalars().first()
 
     async def get_by_username(self, username: str) -> User | None:
-        """Get a user by username."""
+        """
+        Get a user by username.
+
+        Args:
+            username: username to find User
+
+        Returns:
+            Optional[User]: User found by username, None otherwise
+        """
         async with self.session_factory() as session:
             result = await session.execute(
                 select(User).where(User.username == username)
@@ -35,13 +52,29 @@ class UserRepository:
             return result.scalars().first()
 
     async def get_by_email(self, email: str) -> User | None:
-        """Get a user by email."""
+        """
+        Get user by email.
+
+        Args:
+            email: email to find User
+
+        Returns:
+            Optional[User]: User found by email, None otherwise
+        """
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.email == email))
             return result.scalars().first()
 
     async def create(self, user: User) -> User:
-        """Create a new user."""
+        """
+        Create a new user.
+
+        Args:
+            user: User to update
+
+        Returns:
+            User: Created User object
+        """
         async with self.session_factory() as session:
             session.add(user)
             await session.commit()
@@ -64,7 +97,7 @@ class UserRepository:
             await session.refresh(login_history)
             return None
 
-    async def update_token_blacklist(self, token_blacklist):
+    async def update_token_blacklist(self, token: TokenBlacklist):
         """
         Add refresh_token to blacklist.
 
@@ -75,20 +108,20 @@ class UserRepository:
             None
         """
         async with self.session_factory() as session:
-            session.add(token_blacklist)
+            session.add(token)
             await session.flush()
-            await session.refresh(token_blacklist)
+            await session.refresh(token)
             return None
 
-    async def get_token_from_blacklist(self, token_jti):
+    async def get_token_from_blacklist(self, token_jti: UUID) -> UUID | None:
         """
-        Get token from blacklist.
+        Get token from blacklist by jti.
 
         Args:
-            token: Token`s jti
+            token_jti: Token`s jti
 
         Returns:
-            Optional[str(token_jti)]: Token`s jti if found, None otherwise
+            Optional[UUID(token)]: Token`s jti if found, None otherwise
         """
         async with self.session_factory() as session:
             result = await session.execute(
@@ -96,7 +129,15 @@ class UserRepository:
             return result.scalars().first()
 
     async def update(self, user: User) -> User:
-        """Update an existing user."""
+        """
+        Update an existing user.
+
+        Args:
+            user: User to update
+
+        Returns:
+            User: Updated User object
+        """
         async with self.session_factory() as session:
             session.add(user)
             await session.commit()

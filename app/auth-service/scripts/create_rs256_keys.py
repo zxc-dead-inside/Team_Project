@@ -2,23 +2,36 @@
 Script to create a public and private keys for JWT with algorithm RS256.
 """
 
-import asyncio
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 import os
+from pathlib import Path
 
 
-async def create_keys_pair():
+def create_keys_pair(keys_dir: str ='secrets', key_size: int =2048, overwrite: bool =False):
+    """
+    Create RSA key pair for JWT authentication.
+    
+    Args:
+        keys_dir (str): Directory to store the keys
+        key_size (int): Size of RSA key in bits
+        overwrite (bool): Whether to overwrite existing keys
+    
+    Returns:
+        tuple: Paths to the created private and public key files
+    """
 
-    keys_dir = 'secrets'
+    keys_dir = Path(keys_dir)
+    private_key_path = Path(keys_dir / "private_key.pem")
+    public_key_path = Path(keys_dir / "public_key.pem")
 
-    if not os.path.exists(keys_dir):
-        os.makedirs(keys_dir)
-
+    if not overwrite and private_key_path.exists() and public_key_path.exists():
+        return private_key_path, public_key_path
+    
     # Генерация закрытого ключа RSA длиной 2048 бит
     private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048
+        key_size=key_size
     )
 
     # Генерация открытого ключа
@@ -37,25 +50,17 @@ async def create_keys_pair():
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
-    # Путь для сохранения ключей
-    private_key_path = os.path.join(keys_dir, "private_key.pem")
-    public_key_path = os.path.join(keys_dir, "public_key.pem")
-
     # Сохранение ключей в файлы
     with open(private_key_path, "wb") as private_file:
         private_file.write(private_pem)
-
     with open(public_key_path, "wb") as public_file:
         public_file.write(public_pem)
-
-    return None
-
+    
+    return private_key_path, public_key_path
 
 def main():
     """Main function to run script."""
-    asyncio.run(create_keys_pair())
-
-
+    create_keys_pair()
 
 if __name__ == "__main__":
     main()

@@ -12,7 +12,7 @@ class TokenBlacklist(IdMixin, Base):
     user_id = Column(UUID, ForeignKey("users.id"), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     blacklisted_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
-    jti = Column(String(36), nullable=False, unique=True, index=True)  # JWT ID
+    jti = Column(UUID, nullable=False, unique=True, index=True)  # JWT ID
 
     # Indexes for faster queries
     __table_args__ = (Index("ix_token_blacklist_token_jti", "jti"),)

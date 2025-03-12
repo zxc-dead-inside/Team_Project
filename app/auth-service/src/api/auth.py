@@ -152,11 +152,7 @@ async def login(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail='Invalid credentials'
         )
-
-    return LoginResponse(
-        access_token=jwt_pair.access_token,
-        refresh_token=jwt_pair.refresh_token
-    )
+    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
 @router.post(
     "/logout-other-devices",
@@ -176,10 +172,7 @@ async def logout_other_devices(
     """
 
     jwt_pair = await user_service.logout_from_all_device(current_user.id)
-    return LoginResponse(
-        access_token=jwt_pair.access_token,
-        refresh_token=jwt_pair.refresh_token
-    )
+    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
 @router.post(
     "/refresh",
@@ -198,7 +191,4 @@ async def refresh(
     """
     refresh_token = Authorization.split(' ')[-1]
     jwt_pair = await user_service.refresh_token(refresh_token)
-    return LoginResponse(
-        access_token=jwt_pair.access_token,
-        refresh_token=jwt_pair.refresh_token
-    )
+    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])

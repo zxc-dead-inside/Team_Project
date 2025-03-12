@@ -2,15 +2,12 @@
 
 from datetime import UTC, datetime
 from fastapi import Request
-import jwt
 from uuid import UUID
 
 from src.db.models.login_history import LoginHistory
-from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
 from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.user_repository import UserRepository
-from src.models.login import LoginResponse
 from src.services.auth_service import AuthService
 
 
@@ -39,6 +36,7 @@ class UserService:
         Returns:
             User | None: User if found, None otherwise
         """
+        if self.user.id == user_id: return self.user
         return await self.user_repository.get_by_id(user_id)
 
     async def update_username(
@@ -135,10 +133,19 @@ class UserService:
         )
     
     async def login_by_credentials(
-            self, username, password, request: Request
-    ) -> LoginResponse:
-        """Authenticate user by credentials and return JWT pair."""
-        
+            self, username: str, password: str, request: Request
+    ) -> tuple[str, str] | None:
+        """
+        Authenticate user by credentials and return JWT pair.
+        Creates event in LoginHistory.
+
+        Args:
+            username: User`s username
+            password: User`s password
+
+        Returns:
+            tuple[str, str | None]: (access_token, refresh_jwt), None if Login failed
+        """
         user: User = await self.auth_service.identificate_user(
             username=username)
         
@@ -160,13 +167,13 @@ class UserService:
                 login_history=login_history)
             return None
 
+        # Check token_version for multi-device-logout
         if user.token_version == None:
             user.token_version = datetime.now(UTC)
-        await self.auth_service.user_repository.update(user=user)
 
-        access_jwt = self.auth_service.create_access_token(
+        access_token = self.auth_service.create_access_token(
             user_id=user.id, token_version=user.token_version)
-        refresh_jwt = self.auth_service.create_refresh_token(
+        refresh_token = self.auth_service.create_refresh_token(
             user_id=user.id, token_version=user.token_version)
 
         await self.auth_service.user_repository.update(user=user)
@@ -174,38 +181,46 @@ class UserService:
         await self.auth_service.user_repository.update_history(
             login_history=login_history)
 
-        return LoginResponse(
-            access_token=access_jwt, refresh_token=refresh_jwt)
+        return access_token, refresh_token
 
-    async def logout_from_all_device(self, user_id):
+    async def logout_from_all_device(self) -> tuple[str, str]:
+        """
+        Logout from all device and return new JWT pair with new token_version.
 
-        user: User = await self.user_repository.get_by_id(user_id)
-        user.token_version = datetime.now(UTC)
-        await self.auth_service.user_repository.update(user=user)
+        Returns:
+            tuple[str, str]: (access_token, refresh_jwt)
+        """
 
-        access_jwt = self.auth_service.create_access_token(
-            user_id=user.id, token_version=user.token_version)
-        refresh_jwt = self.auth_service.create_refresh_token(
-            user_id=user.id, token_version=user.token_version)
+        self.user.token_version = datetime.now(UTC)
+        
+        access_token = self.auth_service.create_access_token(
+            user_id=self.user.id, token_version=self.user.token_version)
+        refresh_token = self.auth_service.create_refresh_token(
+            user_id=self.user.id, token_version=self.user.token_version)
+        
+        await self.auth_service.user_repository.update(user=self.user)
 
-        return LoginResponse(
-            access_token=access_jwt, refresh_token=refresh_jwt)
+        return access_token, refresh_token
     
-    async def refresh_token(self, refresh_token):
+    async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
+        """
+        Validate refresh token and create new JWT pair.
+        Adds current refresh token to blacklist.
 
+        Returns:
+            tuple[str, str] | None: (access_token, refresh_jwt)
+        """
         self.user = await self.auth_service.validate_token(
             token=refresh_token, type='refresh')
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
 
-        access_jwt = self.auth_service.create_access_token(
+        access_token = self.auth_service.create_access_token(
             user_id=self.user.id, token_version=self.user.token_version)
-        refresh_jwt = self.auth_service.create_refresh_token(
+        refresh_token = self.auth_service.create_refresh_token(
             user_id=self.user.id, token_version=self.user.token_version)
         
         await self.auth_service.update_token_blacklist(
             refresh_token
         )
-
-        return LoginResponse(
-            access_token=access_jwt, refresh_token=refresh_jwt)
+        return access_token, refresh_token

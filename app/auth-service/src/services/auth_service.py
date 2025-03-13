@@ -11,6 +11,7 @@ from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
+from src.services.reset_password_service import ResetPasswordService
 
 class AuthService:
     """Service for authentication operations."""
@@ -27,6 +28,7 @@ class AuthService:
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
+        reset_password_service: ResetPasswordService | None = None
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
@@ -48,11 +50,11 @@ class AuthService:
             Optional[User]: User if identification is successful, None otherwise
         """
         user = await self.user_repository.get_by_username(username)
-        
+
         if not user:
             # Try with email
             user = await self.user_repository.get_by_email(username)
-        
+
         if not user:
             return None
         
@@ -73,30 +75,30 @@ class AuthService:
         if not self.verify_password(password, user.password):
 
             return None
-        
+
         return user
 
     def verify_password(
-            self, plain_password: str, password: str) -> bool:
+              self, plain_password: str, hashed_password: str) -> bool:
         """
         Verify a password against its hash.
-        
+
         Args:
             plain_password: Plain password
             hashed_password: Hashed password
-            
+
         Returns:
             bool: True if the password is correct, False otherwise
         """
-        return self.password_context.verify(plain_password, password)
+        return self.password_context.verify(plain_password, hashed_password)
 
     def hash_password(self, password: str) -> str:
         """
         Hash a password.
-        
+
         Args:
             password: Plain password
-            
+
         Returns:
             str: Hashed password
         """
@@ -107,17 +109,17 @@ class AuthService:
 
         """
         Create an access token for a user.
-        
+
         Args:
             user_id: User ID
-            user_token_version: User token version
+            token_version: User token version
             
         Returns:
             str: JWT access token
         """
         expires_delta = timedelta(minutes=self.access_token_expire_minutes)
         expire = datetime.now(UTC) + expires_delta
-        
+
         to_encode = {
             "sub": str(user_id),
             "exp": expire,
@@ -208,16 +210,16 @@ class AuthService:
         return None
 
     async def register_user(
-            self, username: str, email: str, password: str
+        self, username: str, email: str, password: str
     ) -> tuple[bool, str, User | None]:
         """
         Register a new user.
-        
+
         Args:
             username: Username
             email: Email address
             password: Password
-            
+
         Returns:
             tuple[bool, str, Optional[User]]: (success, message, user)
         """
@@ -245,10 +247,10 @@ class AuthService:
     async def confirm_email(self, token: str) -> tuple[bool, str]:
         """
         Confirm a user's email address.
-        
+
         Args:
             token: Email confirmation token
-            
+
         Returns:
             Tuple[bool, str]: (success, message)
         """
@@ -278,3 +280,38 @@ class AuthService:
         await self.user_repository.update(user)
 
         return True, "Email confirmed successfully"
+
+    async def refresh_tokens_for_user(self, user: User) -> dict:
+        """
+        Generate new access and refresh tokens for a user.
+        Used when user roles or permissions change.
+
+        Args:
+            user: The user to generate tokens for
+
+        Returns:
+            dict: The new access and refresh tokens
+        """
+        access_token_data = {
+            "sub": str(user.id),
+            "email": user.email,
+            "username": user.username,
+            "is_superuser": user.is_superuser,
+            "roles": [role.name for role in user.roles],
+            "permissions": list(
+                set(
+                    permission.name
+                    for role in user.roles
+                    for permission in role.permissions
+                )
+            ),
+        }
+
+        access_token = self.create_access_token(access_token_data)
+        refresh_token = self.create_refresh_token({"sub": str(user.id)})
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "refresh_token": refresh_token,
+        }

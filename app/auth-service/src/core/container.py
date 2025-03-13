@@ -9,6 +9,7 @@ from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.redis_service import RedisService
+from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
 from src.services.user_service import UserService
 from src.services.middleware.authentication import AuthenticationMiddlewareService
@@ -37,6 +38,10 @@ class Container(containers.DeclarativeContainer):
         )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
+        container.config.set(
+            "max_requests_per_ttl", int(settings.max_requests_per_ttl)
+        )
+        container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
 
@@ -56,7 +61,7 @@ class Container(containers.DeclarativeContainer):
         UserRepository,
         session_factory=db.provided.session,
     )
-
+    
     login_history_repository = providers.Factory(
         LoginHistoryRepository,
         session_factory=db.provided.session,
@@ -80,6 +85,15 @@ class Container(containers.DeclarativeContainer):
         email_token_ttl_seconds=config.email_token_ttl_seconds,
     )
 
+    reset_password_service = providers.Factory(
+        ResetPasswordService,
+        user_repository = user_repository,
+        reset_token_ttl = config.reset_token_ttl,
+        max_requests_per_ttl = config.max_requests_per_ttl,
+        secret_key = config.secret_key,
+        cache_service = redis_service
+    )
+
     auth_service = providers.Factory(
         AuthService,
         user_repository=user_repository,
@@ -95,7 +109,9 @@ class Container(containers.DeclarativeContainer):
         UserService,
         user_repository=user_repository,
         login_history_repository=login_history_repository,
+        role_repository=role_repository,
         auth_service=auth_service,
+        redis_service=redis_service,
     )
 
     role_service = providers.Factory(

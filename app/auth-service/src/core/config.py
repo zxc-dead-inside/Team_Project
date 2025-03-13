@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     email_token_ttl_seconds: int = 600  # 10 minutes
+
+    reset_token_ttl: int = 3600  # 1 hour
+    max_requests_per_ttl: int = 5  # 5 attempts 
+
+    # JWT
     secrets_path: str = 'secrets'
     private_key: str | None = None # Value of private key
     public_key: str | None = None # Value of public key

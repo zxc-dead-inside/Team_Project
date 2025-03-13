@@ -91,7 +91,6 @@ async def create_permission(name: str, description: str | None = None) -> bool:
 
     async with db.session() as session:
         try:
-            # Check if permission already exists
             result = await session.execute(
                 select(Permission).filter(Permission.name == validated_data.name)
             )
@@ -103,7 +102,6 @@ async def create_permission(name: str, description: str | None = None) -> bool:
                 )
                 return True
 
-            # Create permission
             permission = Permission(
                 name=validated_data.name,
                 description=validated_data.description,
@@ -139,7 +137,6 @@ async def seed_default_permissions(dry_run: bool = False) -> dict[str, int]:
             logging.info(f"  - {perm_data['name']}: {perm_data['description']}")
         return results
 
-    # Get existing permissions
     db = Database(db_url)
     existing_permissions: set[str] = set()
 

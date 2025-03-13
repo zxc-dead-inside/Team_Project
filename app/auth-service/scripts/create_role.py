@@ -2,43 +2,24 @@ import argparse
 import asyncio
 import logging
 import os
-import re
 import sys
 
-from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.api.schemas.roles import RoleCreate
 from src.core.config import get_settings
 from src.core.logger import setup_logging
 from src.db.database import Database
 from src.db.models import Permission, Role
 
 
-# Configure logging
 setup_logging()
 settings = get_settings()
 db_url = str(settings.database_url)
-
-
-# Validator schema
-class RoleCreate(BaseModel):
-    """Validation schema for role creation."""
-
-    name: str = Field(..., min_length=1, max_length=50)
-    description: str | None = Field(None, max_length=255)
-
-    @field_validator("name")
-    def name_format(cls, v):
-        """Validate role name format."""
-        if not re.match(r"^[a-zA-Z0-9_]+$", v):
-            raise ValueError(
-                "Role name must contain only letters, numbers, and underscores"
-            )
-        return v
 
 
 async def list_all_permissions() -> None:

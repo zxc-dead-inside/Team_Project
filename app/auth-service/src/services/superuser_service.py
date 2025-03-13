@@ -50,29 +50,23 @@ class SuperuserService:
         Returns:
             Tuple containing success status, message, and user object if successful
         """
-        # Get the user to grant privileges to
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             return False, f"User with ID {user_id} not found", None
 
-        # Get the user who is granting privileges
         granting_user = await self.user_repository.get_by_id(granted_by)
         if not granting_user:
             return False, f"Granting user with ID {granted_by} not found", None
 
-        # Check if the granting user is a superuser
         if not granting_user.is_superuser:
             return False, "Only superusers can grant superuser privileges", None
 
-        # Check if the user is already a superuser
         if user.is_superuser:
             return False, f"User {user.username} is already a superuser", None
 
-        # Grant superuser privileges
         user.is_superuser = True
         updated_user = await self.user_repository.update(user)
 
-        # Log the action
         await self.audit_log_repository.log_action(
             action="grant_superuser",
             actor_id=granted_by,
@@ -106,34 +100,27 @@ class SuperuserService:
         Returns:
             Tuple containing success status, message, and user object if successful
         """
-        # Get the user to revoke privileges from
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             return False, f"User with ID {user_id} not found", None
 
-        # Get the user who is revoking privileges
         revoking_user = await self.user_repository.get_by_id(revoked_by)
         if not revoking_user:
             return False, f"Revoking user with ID {revoked_by} not found", None
 
-        # Check if the revoking user is a superuser
         if not revoking_user.is_superuser:
             return False, "Only superusers can revoke superuser privileges", None
 
-        # Check if the user is a superuser
         if not user.is_superuser:
             return False, f"User {user.username} is not a superuser", None
 
-        # Prevent revoking the last superuser
         superuser_count = await self.user_repository.count_superusers()
         if superuser_count <= 1 and user.is_superuser:
             return False, "Cannot revoke privileges from the last superuser", None
 
-        # Revoke superuser privileges
         user.is_superuser = False
         updated_user = await self.user_repository.update(user)
 
-        # Log the action
         await self.audit_log_repository.log_action(
             action="revoke_superuser",
             actor_id=revoked_by,
@@ -170,7 +157,6 @@ class SuperuserService:
             page=page, size=size, include_actor=True
         )
 
-        # Format the log entries
         formatted_logs = []
         for log in logs:
             actor_username = log.actor.username if log.actor else "Unknown"

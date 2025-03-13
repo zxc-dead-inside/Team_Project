@@ -7,16 +7,15 @@ import asyncio
 import json
 import logging
 import os
-import re
 import sys
 
-from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.api.schemas.permissions import PermissionCreate
 from src.core.config import get_settings
 from src.core.logger import setup_logging
 from src.db.database import Database
@@ -27,20 +26,6 @@ setup_logging()
 
 settings = get_settings()
 db_url = str(settings.database_url)
-
-
-class PermissionCreate(BaseModel):
-    """Validation schema for permission creation."""
-
-    name: str = Field(..., min_length=1, max_length=50)
-    description: str | None = Field(None, max_length=255)
-
-    @field_validator("name")
-    def name_format(cls, v):
-        """Validate permission name format."""
-        if not re.match(r"^[a-z0-9_]+$", v):
-            raise ValueError("Permission name must be lowercase with no spaces")
-        return v
 
 
 # Default permissions that should be available in any installation

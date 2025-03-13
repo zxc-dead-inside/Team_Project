@@ -1,7 +1,6 @@
 """Authentication endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
-from fastapi.security import OAuth2PasswordRequestForm
 from http import HTTPStatus
 
 from src.api.dependencies import get_auth_service
@@ -85,44 +84,6 @@ async def confirm_email_post(
 
     return {"message": message}
 
-@router.post("/token", response_model=dict, deprecated=True)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    """
-    Authenticate user and return access token.
-    Args:
-        form_data: OAuth2 form with username and password
-    Returns:
-        Dict with access token and token type
-    Raises:
-        HTTPException: If authentication fails
-    """
-    user = await auth_service.authenticate_user(form_data.username, form_data.password)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
-
-    access_token = auth_service.create_access_token(user.id)
-    refresh_token = auth_service.create_refresh_token(user.id)
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-    }
-
 @router.post(
     "/login",
     response_model=LoginResponse,
@@ -139,7 +100,7 @@ async def login(
     """
     Authenticate user and return jwt pair tokens.
     Args:
-        form_data: OAuth2PasswordRequestForm form with username and password
+        LoginRequest(username, password): LoginRequest model of username and password
     Returns:
         Dict with access token and refresh token
     Raises:

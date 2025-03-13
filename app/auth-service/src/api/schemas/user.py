@@ -24,6 +24,18 @@ class UserProfile(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class GuestUser(UserBase):
+    """Модель гостевого пользователя."""
+
+    id: UUID = UUID("00000000-0000-0000-0000-000000000000")  # Фиктивный UUID
+    is_active: bool = False
+    is_superuser: bool = False
+    username: str = "Guest"
+    email: str = "guest@example.com"
+    created_at: datetime = datetime.utcnow()
+    updated_at: datetime = datetime.utcnow()
+
+
 class UsernameUpdate(BaseModel):
     """Schema for username update request."""
 

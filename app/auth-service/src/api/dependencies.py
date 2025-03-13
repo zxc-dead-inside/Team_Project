@@ -6,6 +6,7 @@ from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
+from src.api.schemas.user import GuestUser
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -25,8 +26,8 @@ def get_user_service(request: Request) -> UserService:
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    token: Annotated[str | None, Depends(oauth2_scheme)] = None
 ) -> User:
     """
     Get the current authenticated user from the JWT token.
@@ -44,6 +45,9 @@ async def get_current_user(
     Raises:
         HTTPException: If the token is invalid or the user is not found
     """
+    if not token:
+        return GuestUser()
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -94,6 +98,8 @@ async def has_permission(user: User, permission_name: str) -> bool:
     Returns:
         bool: True if user has permission, False otherwise
     """
+    if isinstance(user, GuestUser):
+        return False
 
     if hasattr(user, "roles") and user.roles:
         if any(role.name == "admin" for role in user.roles):

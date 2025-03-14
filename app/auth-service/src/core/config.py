@@ -112,35 +112,6 @@ class Settings(BaseSettings):
             return v
         raise ValueError("CORS_ORIGINS should be a comma-separated string of URLs")
 
-    # Public paths
-    public_paths: str | list[str] = []
-    private_path_prefixes: str | list[str] | None = []
-
-    @field_validator("public_paths", mode="before")
-    def assemble_public_paths(cls, v: str | list[str]) -> list[str]:
-        try:
-            """Parse string PUBLIC_PATHS origins into list of PUBLIC_PATHs."""
-            if isinstance(v, str) and not v.startswith("["):
-                # Return as strings to avoid validation issues
-                return [url.strip() for url in v.split(",")]
-            elif isinstance(v, list):
-                return v
-            raise ValueError("PUBLIC_PATHS should be a comma-separated string of PATHs")
-        except Exception:
-            exit(1)
-    
-    @field_validator("private_path_prefixes", mode="before")
-    def assemble_private_path_prefixes(
-        cls, v: str | list[str]) -> list[str] | None:
-        """Parse string PRIVATE_PATHS_PREFIX origins into list of PATHs."""
-        if not v: return None
-        if isinstance(v, str) and not v.startswith("["):
-            # Return as strings to avoid validation issues
-            return [url.strip() for url in v.split(",")]
-        elif isinstance(v, list):
-            return v
-        raise ValueError("PUBLIC_PATHS should be a comma-separated string of PRIVATE_PATH_PREFIXES")
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -1,6 +1,8 @@
 """Authentication endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
+from fastapi import (
+    APIRouter, Depends, HTTPException, Request, status, Header, Form
+)
 from http import HTTPStatus
 
 from src.api.dependencies import get_auth_service
@@ -9,40 +11,26 @@ from src.api.dependencies import get_current_active_user
 from src.api.dependencies import get_user_service
 from src.api.dependencies import get_reset_password_service
 from src.api.schemas.auth import (
-    ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate
+    ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate,
+    LoginRequest, LoginResponse
 )
 from src.db.models.user import User
-from src.models.login import LoginRequest, LoginResponse
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.user_service import UserService
 from src.services.reset_password_service import ResetPasswordService
 
-from fastapi.security.base import SecurityBase
-# Допустим, ваша зависимость наследуется от SecurityBase
-class CustomSecurity(SecurityBase):
-    def __init__(self):
-        self.model = None
-        self.scheme_name = self.__class__.__name__
 
-    def __call__(self):
-        # Логика для вашей безопасности
-        pass
-
-from fastapi.security import OAuth2PasswordBearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", scheme_name='scheme_name')
-
-router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+public_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+private_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED, dependencies=[])
+@public_router.post(
+        "/register", status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
     auth_service: AuthService = Depends(get_auth_service),
     email_service: EmailService = Depends(get_email_service),
-    gaga = Depends(oauth2_scheme),
-    model = None,
-    scheme_name = None
 ):
     """Register a new user with email verification."""
     success, message, user = await auth_service.register_user(
@@ -68,7 +56,7 @@ async def register(
         "email": user.email,
     }
 
-@router.get("/confirm-email", status_code=status.HTTP_200_OK)
+@public_router.get("/confirm-email", status_code=status.HTTP_200_OK)
 async def confirm_email_get(
     token: str,
     auth_service: AuthService = Depends(get_auth_service),
@@ -84,7 +72,7 @@ async def confirm_email_get(
 
     return {"message": message}
 
-@router.post("/confirm-email", status_code=status.HTTP_200_OK)
+@public_router.post("/confirm-email", status_code=status.HTTP_200_OK)
 async def confirm_email_post(
     confirmation_data: EmailConfirmation,
     auth_service: AuthService = Depends(get_auth_service),
@@ -100,7 +88,7 @@ async def confirm_email_post(
 
     return {"message": message}
 
-@router.post(
+@public_router.post(
     "/login",
     response_model=LoginResponse,
     responses={
@@ -110,21 +98,24 @@ async def confirm_email_post(
 )
 async def login(
         request: Request,
-        login_request: LoginRequest,
-        user_service: UserService = Depends(get_user_service)
+        form_data: LoginRequest = Form(),
+        user_service: UserService = Depends(get_user_service),
     ) -> LoginResponse:
     """
-    Authenticate user and return jwt pair tokens.
+    Authenticate User with credentials and return jwt pair tokens.
+
     Args:
-        LoginRequest(username, password): LoginRequest model of username and password
+        LoginRequest(username, password): Schema for User authentication with credentials
+
     Returns:
         Dict with access token and refresh token
+
     Raises:
         HTTPException: If authentication fails
     """
 
     jwt_pair = await user_service.login_by_credentials(
-        username=login_request.username, password=login_request.password,
+        username=form_data.username, password=form_data.password,
         request=request
     )
 
@@ -135,7 +126,7 @@ async def login(
         )
     return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
-@router.post(
+@private_router.post(
     "/logout-other-devices",
     response_model=None,
     responses={
@@ -155,7 +146,7 @@ async def logout_other_devices(
     jwt_pair = await user_service.logout_from_all_device(current_user.id)
     return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
-@router.post(
+@private_router.post(
     "/refresh",
     response_model=None,
     responses={
@@ -174,11 +165,12 @@ async def refresh(
     jwt_pair = await user_service.refresh_token(refresh_token)
     return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
-@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@public_router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
     request: ForgotPasswordRequest,
     auth_service: AuthService = Depends(get_auth_service),
-    reset_password_service: ResetPasswordService = Depends(get_reset_password_service)
+    reset_password_service: ResetPasswordService = Depends(
+        get_reset_password_service)
 ):
     """
     Checks if an email is registered and sends an email with reset token.
@@ -226,10 +218,11 @@ async def forgot_password(
     }
 
 
-@router.post("/reset-password", status_code=status.HTTP_200_OK)
+@private_router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
     request: ResetPasswordRequest,
-    reset_password_service: ResetPasswordService = Depends(get_reset_password_service)
+    reset_password_service: ResetPasswordService = Depends(
+        get_reset_password_service)
 ):
     """
     Change password for user if token is valid.

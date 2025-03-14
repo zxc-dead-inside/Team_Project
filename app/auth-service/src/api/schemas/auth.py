@@ -92,3 +92,16 @@ class ResetPasswordRequest(BaseModel):
     @field_validator("password")
     def password_complexity(cls, v):
         return password_complexity_validator(v)
+
+
+class LoginRequest(BaseModel):
+    """Schema for User authentication with credentials."""
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    """Login response schema."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"  # Стандартное значение для токенов JWT

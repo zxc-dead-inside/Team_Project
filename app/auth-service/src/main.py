@@ -1,5 +1,5 @@
 """Main application entry point for the Authentication Service."""
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from contextlib import asynccontextmanager
@@ -13,7 +13,8 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.services.middleware.authentication import AuthenticationMiddlewareService
-
+from src.services.middleware.authentication import AuthenticationMiddleware
+from src.services.middleware.authentication import get_authentication_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,14 +40,15 @@ def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
 
+    authentication_middleware = AuthenticationMiddleware()
+    from src.services.middleware.authentication import AuthenticationClass
     app = FastAPI(
         title="Authentication Service",
         description="API for user authentication and authorization",
         version="0.1.0",
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
-        redoc_url="/api/redoc" if settings.environment != "production" else None,
-        dependencies=[Depends(AuthenticationMiddlewareService)]
+        redoc_url="/api/redoc" if settings.environment != "production" else None
     )
 
     # Configure CORS
@@ -58,12 +60,24 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
+    public_router = APIRouter()
+    public_router.include_router(health_router, prefix="/api/health", tags=["Health"])
+    
+    private_router = APIRouter(dependencies=[Depends(AuthenticationMiddleware())])
+    private_router.include_router(auth_router)
+    private_router.include_router(users_router)
+    private_router.include_router(roles_router)
+    private_router.include_router(user_roles_router)
+
+    app.include_router(public_router)
+    app.include_router(private_router)
+
     # Include routers
-    app.include_router(health_router, prefix="/api/health", tags=["Health"])
-    app.include_router(auth_router)
+    """app.include_router(health_router, prefix="/api/health", tags=["Health"])
+    app.include_router(auth_router, dependencies=[])
     app.include_router(users_router)
     app.include_router(roles_router)
-    app.include_router(user_roles_router)
+    app.include_router(user_roles_router)"""
 
     return app
 

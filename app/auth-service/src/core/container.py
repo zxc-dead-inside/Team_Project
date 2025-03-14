@@ -120,9 +120,9 @@ class Container(containers.DeclarativeContainer):
         redis_service=redis_service,
     )
 
-    auth_middleware = providers.Factory(
+    """auth_middleware = providers.Factory(
         AuthenticationMiddlewareService,
         public_paths = config.public_paths,
         private_path_prefixes = config.private_path_prefixes,
         user_service=user_service
-    )
+    )"""

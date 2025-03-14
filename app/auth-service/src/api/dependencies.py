@@ -2,13 +2,17 @@
 
 from fastapi import Depends, HTTPException, Request, status
 
+from fastapi.security.utils import get_authorization_scheme_param
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
+from fastapi.security import HTTPBearer
+
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.user_service import UserService
 
-
+secur = HTTPBearer()
 
 
 def get_auth_service(request: Request) -> AuthService:

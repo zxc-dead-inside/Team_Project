@@ -28,7 +28,7 @@ class AuthService:
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
-        reset_password_service: ResetPasswordService | None = None
+        reset_password_service: ResetPasswordService | None = None,
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
@@ -38,6 +38,7 @@ class AuthService:
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
         self.email_service = email_service
+        
 
     async def identificate_user(self, username: str) -> User | None:
         """

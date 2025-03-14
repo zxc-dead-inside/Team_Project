@@ -18,15 +18,31 @@ from src.services.email_verification_service import EmailService
 from src.services.user_service import UserService
 from src.services.reset_password_service import ResetPasswordService
 
+from fastapi.security.base import SecurityBase
+# Допустим, ваша зависимость наследуется от SecurityBase
+class CustomSecurity(SecurityBase):
+    def __init__(self):
+        self.model = None
+        self.scheme_name = self.__class__.__name__
+
+    def __call__(self):
+        # Логика для вашей безопасности
+        pass
+
+from fastapi.security import OAuth2PasswordBearer
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", scheme_name='scheme_name')
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, dependencies=[])
 async def register(
     user_data: UserCreate,
     auth_service: AuthService = Depends(get_auth_service),
     email_service: EmailService = Depends(get_email_service),
+    gaga = Depends(oauth2_scheme),
+    model = None,
+    scheme_name = None
 ):
     """Register a new user with email verification."""
     success, message, user = await auth_service.register_user(

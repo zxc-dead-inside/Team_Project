@@ -4,7 +4,9 @@ import logging
 from contextlib import asynccontextmanager
 
 from src.api.auth import router as auth_router
+from src.api.decorators import PermissionAwareRoute
 from src.api.health import router as health_router
+from src.api.middleware.permission_middleware import PermissionMiddleware
 from src.api.roles import router as roles_router
 from src.api.user_roles import router as user_roles_router
 from src.api.users import router as users_router
@@ -57,6 +59,13 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(
+        PermissionMiddleware,
+        user_service= lambda app: app.container.user_service(),
+        secret_key=settings.secret_key
+    )
+
+    app.router.route_class = PermissionAwareRoute
 
     # Include routers
     app.include_router(health_router, prefix="/api/health", tags=["Health"])

@@ -3,6 +3,7 @@
 import logging
 
 from pydantic import BaseModel
+from src.api.decorators import requires_permissions
 from src.core.config import get_settings
 from src.db.database import Database
 from src.services.redis_service import check_redis_connection
@@ -24,6 +25,7 @@ class HealthResponse(BaseModel):
 
 
 @router.get("", response_model=HealthResponse)
+@requires_permissions(["healty_read"])
 async def health_check(request: Request) -> HealthResponse:
     """
     Health check endpoint to verify service status.

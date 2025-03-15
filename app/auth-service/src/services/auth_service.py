@@ -1,6 +1,7 @@
 """Authentication service for user authentication and authorization."""
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 from jose import jwt
@@ -250,3 +251,19 @@ class AuthService:
             "token_type": "bearer",
             "refresh_token": refresh_token,
         }
+
+    async def return_payload_token(self, token: str) -> dict[str, Any] | None:
+            """
+            Validate a JWT token and return its payload.
+
+            Args:
+                token: JWT token
+
+            Returns:
+                Pyaload token
+            """
+            try:
+                return jwt.decode(token, self.secret_key, algorithms=["HS256"])
+
+            except Exception:
+                return None

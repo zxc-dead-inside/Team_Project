@@ -42,6 +42,7 @@ class Container(containers.DeclarativeContainer):
         container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
+        container.config.set("cached_permission_ttl", settings.cached_permission_ttl)  # 5 min
 
     # Database
     db = providers.Singleton(
@@ -93,7 +94,7 @@ class Container(containers.DeclarativeContainer):
         secret_key=config.secret_key,
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
-        email_service=email_service,
+        email_service=email_service
     )
 
     user_service = providers.Factory(
@@ -103,6 +104,7 @@ class Container(containers.DeclarativeContainer):
         role_repository=role_repository,
         auth_service=auth_service,
         redis_service=redis_service,
+        cached_permission_ttl=config.cached_permission_ttl
     )
 
     role_service = providers.Factory(

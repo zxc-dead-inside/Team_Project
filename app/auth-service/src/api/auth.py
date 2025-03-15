@@ -1,14 +1,26 @@
 """Authentication endpoints."""
 
+import logging
+from typing import Annotated
+from uuid import UUID
+
 from src.api.schemas.auth import (
     ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate
 )
+from src.api.dependencies import get_current_user, has_permission, oauth2_scheme
+from src.api.decorators import requires_permissions
+from src.db.models.user import User
+from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.reset_password_service import ResetPasswordService
+from src.services.user_service import UserService
+
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
+
+setup_logging()
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -26,6 +38,10 @@ def get_email_service(request: Request) -> EmailService:
 def get_reset_password_service(request: Request) -> ResetPasswordService:
     """Get reset password service from the container."""
     return request.app.container.reset_password_service()
+
+def get_user_service(request: Request) -> UserService:
+    """Get user service from the container."""
+    return request.app.container.user_service()
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -213,3 +229,82 @@ async def reset_password(
         )
 
     return {"message": message}
+
+
+@router.get(
+    "/check-permission",
+    summary="Check if user has a specific permission",
+    response_model=dict[str, bool],
+)
+async def check_permission_endpoint(
+    permission_name: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict[str, bool]:
+    """
+    Checks if a user has permission.
+    Authentication is needed.
+
+    Args:
+        Permistion name, current user
+
+    Reterns:
+        True if a user has permission.
+    
+    Raises:
+        HTTPException: Unauthorized
+    """
+    
+    permission = await has_permission(current_user, permission_name)
+    return {"has_permission": permission}
+
+@router.get("/check-permission")
+async def check_permission(
+    permission_name: str,
+    request: Request,
+#    credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    user_service: Annotated[UserService, Depends(get_user_service)],
+):
+    """
+    Checks if a user has permission.
+    Authentication is needed.
+
+    Args:
+        Permission name, request
+
+    Reterns:
+        Dict[str, bool]: True if a user has permission.
+    
+    Raises:
+        HTTPException: Unauthorized
+    """
+
+    logging.info("Checking permisson")
+
+    # if not credentials:
+    #     raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+    # logging.info(f"credentials: {credentials}")
+    
+    token = request.headers.get("Authorization", "").split("Bearer ")[-1]
+    # if len(token) == 0:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Unauthorized"
+    #     )
+    logging.info(f"token: {token}")
+    
+    payload = await auth_service.return_payload_token(token)
+
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized"
+        )
+   
+    user_id = UUID(payload.get("sub"))
+    success, msg, permissions = await user_service.get_user_permissions(user_id)
+
+    if not success:
+        raise HTTPException(status_code=404, detail=msg)
+
+    return {"has_permission": permission_name in permissions}

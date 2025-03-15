@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     postgres_port: str = "5432"
     database_url: PostgresDsn | None = None
 
+    # Cache ttl
+    cached_permission_ttl: int = 300  # 5 min
+
     # Redis
     cache_ttl: int = 3600
 

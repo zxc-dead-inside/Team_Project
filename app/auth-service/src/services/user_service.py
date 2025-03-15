@@ -1,6 +1,7 @@
 """Service for user-related operations."""
 
 import logging
+import json
 from datetime import datetime
 from uuid import UUID
 
@@ -28,6 +29,7 @@ class UserService:
         auth_service: AuthService,
         redis_service: RedisService,
         role_repository: RoleRepository,
+        cached_permission_ttl: int,
     ):
         """Initialize the user service."""
         self.user_repository = user_repository
@@ -38,6 +40,11 @@ class UserService:
 
         self.user_cache_key_prefix = "user:"
         self.user_roles_cache_key_prefix = "user_roles:"
+
+        # Define cached permission vars
+        self.permissions_cache_key_prefix = "permissions:"
+        self.cached_permission_ttl = cached_permission_ttl
+
 
     async def _invalidate_user_cache(self, user_id: UUID):
         """Invalidate cache for a user and their roles."""
@@ -300,3 +307,50 @@ class UserService:
         logging.debug(f"Cached user roles for {user_id}")
 
         return True, "User roles retrieved successfully", response
+
+    async def get_user_permissions(
+            self, user_id: UUID
+            ) -> tuple[bool, str, list | None]:
+        """
+        Get all permissions assigned to a user with caching.
+
+        Args:
+            user_id: The user ID
+
+        Returns:
+            tuple[bool, str, list | None]: (success, message, response)
+        """
+
+        permission_key = f"{self.permissions_cache_key_prefix}{user_id}"
+        cached_permissions = await self.redis_service.get(permission_key)
+
+        if cached_permissions:
+            try:
+                permissions_data = json.loads(cached_permissions.decode('utf-8'))
+                return True, "Cached permissions", permissions_data.get("permissions", [])
+            except (json.JSONDecodeError, AttributeError) as e:
+                logging.error(f"Cache decode error: {str(e)}")
+        
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            return False, f"User with ID {user_id} not found", None
+
+        permissions = []
+        for role in user.roles:
+            permissions.extend(perm.name for perm in role.permissions)
+        
+        # Заглушка
+        if len(permissions) == 0:
+            permissions = ["content_all", "role_read", 'user_read']
+        await self.redis_service.set(
+            permission_key, 
+            {"permissions": permissions}, 
+            self.cached_permission_ttl
+        )
+
+        logging.debug(f"Cached user permissions for: {user.id}")
+
+        return True, "User permission retrieved from cache", permissions
+        
+
+        

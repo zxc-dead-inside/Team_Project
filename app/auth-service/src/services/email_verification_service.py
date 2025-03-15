@@ -2,7 +2,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from jose import JWTError, jwt
+import jwt
 from pydantic import EmailStr
 
 
@@ -12,8 +12,12 @@ logger = logging.getLogger(__name__)
 class EmailService:
     """Email verification service with secure HMAC-SHA-256 token storage."""
 
-    def __init__(self, secret_key: str, email_token_ttl_seconds: int):
-        self.secret_key = secret_key
+    def __init__(
+            self, public_key: str, private_key: str,
+            email_token_ttl_seconds: int
+        ):
+        self.public_key = public_key
+        self.private_key = private_key
         self.email_token_ttl_seconds = email_token_ttl_seconds
 
     def create_confirmation_token(self, user_id: str, email: str) -> str:
@@ -30,20 +34,20 @@ class EmailService:
             "type": "email_confirmation",
         }
 
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
     def validate_confirmation_token(
             self, token: str
     ) -> tuple[bool, dict[str, Any] | None]:
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
 
             if payload["type"] != "email_confirmation":
                 return False, None
 
             return True, payload
 
-        except JWTError as e:
+        except jwt.exceptions.InvalidTokenError as e:
             logger.error(f"Token validation failed: {e}")
             return False, None
 

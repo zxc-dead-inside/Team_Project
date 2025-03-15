@@ -7,14 +7,12 @@ from http import HTTPStatus
 
 from src.api.dependencies import get_auth_service
 from src.api.dependencies import get_email_service
-from src.api.dependencies import get_current_active_user
 from src.api.dependencies import get_user_service
 from src.api.dependencies import get_reset_password_service
 from src.api.schemas.auth import (
     ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate,
     LoginRequest, LoginResponse
 )
-from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.user_service import UserService
@@ -90,7 +88,6 @@ async def confirm_email_post(
 
 @public_router.post(
     "/login",
-    response_model=LoginResponse,
     responses={
         200: {'description': 'Login successful'},
         401: {'description': 'Invalid credentials'}
@@ -135,18 +132,16 @@ async def login(
     }
 )
 async def logout_other_devices(
-        current_user: User = Depends(get_current_active_user),
         user_service: UserService = Depends(get_user_service)
-
     ):
     """
     Logut user from other devices by changing token_version and return new jwt pair.
     """
 
-    jwt_pair = await user_service.logout_from_all_device(current_user.id)
+    jwt_pair = await user_service.logout_from_all_device()
     return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
 
-@private_router.post(
+@public_router.post(
     "/refresh",
     response_model=None,
     responses={

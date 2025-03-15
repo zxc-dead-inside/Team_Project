@@ -75,23 +75,24 @@ class Container(containers.DeclarativeContainer):
 
     email_service = providers.Factory(
         EmailService,
-        secret_key=config.secret_key,
+        public_key=config.public_key,
+        private_key=config.private_key,
         email_token_ttl_seconds=config.email_token_ttl_seconds,
     )
 
     reset_password_service = providers.Factory(
         ResetPasswordService,
-        user_repository = user_repository,
-        reset_token_ttl = config.reset_token_ttl,
-        max_requests_per_ttl = config.max_requests_per_ttl,
-        secret_key = config.secret_key,
-        cache_service = redis_service
+        user_repository=user_repository,
+        public_key=config.public_key,
+        private_key=config.private_key,
+        reset_token_ttl=config.reset_token_ttl,
+        max_requests_per_ttl=config.max_requests_per_ttl,
+        cache_service=redis_service
     )
 
     auth_service = providers.Factory(
         AuthService,
         user_repository=user_repository,
-        secret_key=config.secret_key,
         public_key=config.public_key,
         private_key=config.private_key,
         access_token_expire_minutes=config.access_token_expire_minutes,

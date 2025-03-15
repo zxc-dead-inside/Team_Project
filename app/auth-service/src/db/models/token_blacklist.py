@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import UUID, Column, DateTime, ForeignKey, Index, String
+from sqlalchemy import UUID, Column, DateTime, ForeignKey, Index
 from src.db.base_models import Base, IdMixin
 
 

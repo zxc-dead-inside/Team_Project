@@ -11,7 +11,7 @@ from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
-from src.services.reset_password_service import ResetPasswordService
+
 
 class AuthService:
     """Service for authentication operations."""
@@ -22,17 +22,14 @@ class AuthService:
     def __init__(
         self,
         user_repository: UserRepository,
-        secret_key: str,
         public_key: str,
         private_key: str,
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
-        reset_password_service: ResetPasswordService | None = None,
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
-        self.secret_key = secret_key
         self.public_key = public_key
         self.private_key = private_key
         self.access_token_expire_minutes = access_token_expire_minutes
@@ -151,7 +148,6 @@ class AuthService:
             "token_version": str(token_version),
             "jti": str(uuid.uuid4())
         }
-
         return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
     async def update_token_blacklist(self, token_blacklist) -> None:

@@ -245,15 +245,15 @@ class UserService:
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
 
-        access_token = self.auth_service.create_access_token(
+        new_access_token = self.auth_service.create_access_token(
             user_id=self.user.id, token_version=self.user.token_version)
-        refresh_token = self.auth_service.create_refresh_token(
+        new_refresh_token = self.auth_service.create_refresh_token(
             user_id=self.user.id, token_version=self.user.token_version)
-        
+
         await self.auth_service.update_token_blacklist(
             refresh_token
         )
-        return access_token, refresh_token
+        return new_access_token, new_refresh_token
 
     async def assign_role_to_user(
         self, user_id: UUID, role_id: UUID

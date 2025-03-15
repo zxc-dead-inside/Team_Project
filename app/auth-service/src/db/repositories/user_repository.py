@@ -1,7 +1,5 @@
 """Repository for User model operations."""
 
-from uuid import UUID
-
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from uuid import UUID

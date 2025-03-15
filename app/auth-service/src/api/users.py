@@ -20,13 +20,13 @@ router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
 @router.get("/public")
 async def get_profile(
-        request: Request,
+        current_user: User = Depends(require_permission("content_public")),
 ):
-    current_user = request.state.user
 
     return {
         "user_id": str(current_user.id),
         "username": current_user.username,
+        "roles": [role.name for role in current_user.roles],
     }
 
 

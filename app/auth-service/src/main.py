@@ -7,7 +7,9 @@ import logging
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
 from src.api.health import router as health_router
+from src.api.middleware.superuser_middleware import SuperuserMiddleware
 from src.api.roles import router as roles_router
+from src.api.superuser import router as superuser_router
 from src.api.user_roles import router as user_roles_router
 from src.api.users import router as users_router
 from src.core.config import get_settings
@@ -58,6 +60,7 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
+
     # Routers without required authentication
     public_router = APIRouter()
     public_router.include_router(
@@ -75,6 +78,11 @@ def create_application() -> FastAPI:
     # Include routers
     app.include_router(public_router)
     app.include_router(private_router)
+
+    app.add_middleware(
+        SuperuserMiddleware,
+        audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
+    )
 
     return app
 

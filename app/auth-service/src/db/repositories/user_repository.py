@@ -1,6 +1,8 @@
 """Repository for User model operations."""
 
-from sqlalchemy import select
+from uuid import UUID
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 from uuid import UUID
 from src.db.models import Role
@@ -285,3 +287,52 @@ class UserRepository:
             )
             result = await session.execute(stmt)
             return result.scalars().first()
+
+    async def get_all_superusers(self) -> list[User]:
+        """
+        Get all superusers in the system.
+
+        Returns:
+            List of superuser objects
+        """
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(User)
+                .filter(User.is_superuser == True)  # noqa: E712
+                .options(joinedload(User.roles))
+                .order_by(User.username)
+            )
+            return result.unique().scalars().all()
+
+    async def update_is_superuser(
+        self, user_id: UUID, is_superuser: bool
+    ) -> User | None:
+        """
+        Update the superuser status of a user.
+
+        Args:
+            user_id: User ID
+            is_superuser: New superuser status
+
+        Returns:
+            Updated user object if found, None otherwise
+        """
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+
+        user.is_superuser = is_superuser
+        return await self.update(user)
+
+    async def count_superusers(self) -> int:
+        """
+        Count the number of superusers in the system.
+
+        Returns:
+            Number of superusers
+        """
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(func.count()).select_from(User).filter(User.is_superuser == True)  # noqa: E712
+            )
+            return result.scalar() or 0

@@ -3,6 +3,7 @@
 from dependency_injector import containers, providers
 from src.core.config import Settings
 from src.db.database import Database
+from src.db.repositories.audit_log_repository import AuditLogRepository
 from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
@@ -11,6 +12,7 @@ from src.services.email_verification_service import EmailService
 from src.services.redis_service import RedisService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
+from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
 
 
@@ -37,9 +39,7 @@ class Container(containers.DeclarativeContainer):
         )
         container.config.set("database_url", str(settings.database_url))
         container.config.set("redis_url", str(settings.redis_url))
-        container.config.set(
-            "max_requests_per_ttl", int(settings.max_requests_per_ttl)
-        )
+        container.config.set("max_requests_per_ttl", int(settings.max_requests_per_ttl))
         container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
@@ -55,7 +55,7 @@ class Container(containers.DeclarativeContainer):
         UserRepository,
         session_factory=db.provided.session,
     )
-    
+
     login_history_repository = providers.Factory(
         LoginHistoryRepository,
         session_factory=db.provided.session,
@@ -63,6 +63,11 @@ class Container(containers.DeclarativeContainer):
 
     role_repository = providers.Factory(
         RoleRepository,
+        session_factory=db.provided.session,
+    )
+
+    audit_log_repository = providers.Factory(
+        AuditLogRepository,
         session_factory=db.provided.session,
     )
 
@@ -113,4 +118,10 @@ class Container(containers.DeclarativeContainer):
         RoleService,
         role_repository=role_repository,
         redis_service=redis_service,
+    )
+
+    superuser_service = providers.Factory(
+        SuperuserService,
+        user_repository=user_repository,
+        audit_log_repository=audit_log_repository,
     )

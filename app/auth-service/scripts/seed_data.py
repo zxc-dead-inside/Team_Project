@@ -127,6 +127,7 @@ async def assign_permissions_to_roles(
         "permissions",
         [permissions["content_public"]]
     )
+    await session.flush()
 
     logger.info("Permissions assigned to roles")
 

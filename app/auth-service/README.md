@@ -75,7 +75,15 @@ Populate the database with initial roles, permissions, and restrictions:
 docker-compose exec api python scripts/seed_data.py
 ```
 
-## 5. Create Superuser
+## 5. Create seed permissions
+
+Run the seed permissions script:
+
+```bash
+docker-compose exec api python scripts/seed_permissions.py
+```
+
+## 6. Create Superuser
 
 Create an admin superuser:
 
@@ -109,4 +117,16 @@ docker-compose exec db psql -U postgres -d auth_db -c "SELECT * FROM roles;"
 
 ```bash
 docker-compose exec db psql -U postgres -d auth_db -c "SELECT u.username, r.name FROM users u JOIN user_role ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id;"
+```
+
+### Create Database Migration (optional)
+
+1. Create a migration script for the new AuditLog table
+```bash
+docker compose exec api alembic revision --autogenerate -m "add_audit_log_table"
+```
+
+2. Upgrade model
+```bash
+docker compose exec api alembic upgrade head
 ```

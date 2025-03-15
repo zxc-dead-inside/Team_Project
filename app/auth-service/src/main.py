@@ -7,7 +7,9 @@ from src.api.auth import router as auth_router
 from src.api.decorators import PermissionAwareRoute
 from src.api.health import router as health_router
 from src.api.middleware.permission_middleware import PermissionMiddleware
+from src.api.middleware.superuser_middleware import SuperuserMiddleware
 from src.api.roles import router as roles_router
+from src.api.superuser import router as superuser_router
 from src.api.user_roles import router as user_roles_router
 from src.api.users import router as users_router
 from src.core.config import get_settings
@@ -59,6 +61,12 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.add_middleware(
+        SuperuserMiddleware,
+        audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
+    )
+    
     app.add_middleware(
         PermissionMiddleware,
         user_service= lambda app: app.container.user_service(),
@@ -73,6 +81,7 @@ def create_application() -> FastAPI:
     app.include_router(users_router)
     app.include_router(roles_router)
     app.include_router(user_roles_router)
+    app.include_router(superuser_router)
 
     return app
 

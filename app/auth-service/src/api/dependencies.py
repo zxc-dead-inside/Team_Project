@@ -5,6 +5,7 @@ from typing import Annotated
 from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
+from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
 
 from fastapi import Depends, HTTPException, Request, status
@@ -22,6 +23,11 @@ def get_auth_service(request: Request) -> AuthService:
 def get_user_service(request: Request) -> UserService:
     """Get user service from the container."""
     return request.app.container.user_service()
+
+
+def get_superuser_service(request: Request) -> SuperuserService:
+    """Get superuser service from the container."""
+    return request.app.container.superuser_service()
 
 
 async def get_current_user(
@@ -95,6 +101,9 @@ async def has_permission(user: User, permission_name: str) -> bool:
         bool: True if user has permission, False otherwise
     """
 
+    if user.is_superuser:
+        return True
+
     if hasattr(user, "roles") and user.roles:
         if any(role.name == "admin" for role in user.roles):
             return True
@@ -120,3 +129,15 @@ def require_permission(permission_name: str):
         return current_user
 
     return dependency
+
+
+def require_superuser(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> User:
+    """Dependency to ensure user is a superuser."""
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action requires superuser privileges",
+        )
+    return current_user

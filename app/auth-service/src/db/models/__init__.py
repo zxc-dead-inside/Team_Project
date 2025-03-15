@@ -1,4 +1,5 @@
 from src.db.base_models import Base, IdMixin, PreBase, TimestampMixin
+from src.db.models.audit_log import AuditLog
 from src.db.models.content_restriction import ContentRestriction
 from src.db.models.login_history import LoginHistory
 from src.db.models.permission import Permission
@@ -15,6 +16,7 @@ __all__ = [
     "LoginHistory",
     "TokenBlacklist",
     "ContentRestriction",
+    "AuditLog",
     
     # Association tables
     "user_role",

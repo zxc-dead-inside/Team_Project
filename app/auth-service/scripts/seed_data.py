@@ -25,7 +25,7 @@ settings = get_settings()
 db_url = str(settings.database_url)
 
 # Set up password context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 
 async def create_roles(session: AsyncSession) -> dict:

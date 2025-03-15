@@ -103,7 +103,7 @@ class AuthService:
         return self.password_context.hash(password)
 
     def create_access_token(
-            self, user_id: UUID, token_version: datetime) -> str:
+            self, to_encode: dict, token_version: datetime) -> str:
 
         """
         Create an access token for a user.
@@ -115,15 +115,14 @@ class AuthService:
         Returns:
             str: JWT access token
         """
-        expires_delta = timedelta(minutes=self.access_token_expire_minutes)
-        expire = datetime.now(UTC) + expires_delta
 
-        to_encode = {
-            "sub": str(user_id),
-            "exp": expire,
-            "type": "access",
-            "token_version": str(token_version)
-        }
+        if not to_encode.get('exp', None):
+            expires_delta = timedelta(minutes=self.access_token_expire_minutes)
+            expire = datetime.now(UTC) + expires_delta
+            to_encode["exp"] = expire
+
+        to_encode["type"] = "access"
+        to_encode["token_version"] = str(token_version)
         
         return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
@@ -303,9 +302,15 @@ class AuthService:
                 )
             ),
         }
-
-        access_token = self.create_access_token(access_token_data)
-        refresh_token = self.create_refresh_token({"sub": str(user.id)})
+        # await user_service.get_user_roles(user_id)
+        access_token = self.create_access_token(
+            to_encode=access_token_data,
+            token_version=user.token_version
+        )
+        refresh_token = self.create_refresh_token(
+            user_id=user.id,
+            token_version=user.token_version
+        )
 
         return {
             "access_token": access_token,

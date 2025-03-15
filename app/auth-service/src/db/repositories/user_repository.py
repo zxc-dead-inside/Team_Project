@@ -46,11 +46,12 @@ class UserRepository:
         Returns:
             Optional[User]: User found by username, None otherwise
         """
+
         async with self.session_factory() as session:
             result = await session.execute(
-                select(User).where(User.username == username)
+                select(User).where(User.username == username).options(
+                    joinedload(User.roles).joinedload(Role.permissions))
             )
-
             return result.scalars().first()
 
     async def get_by_email(self, email: str) -> User | None:
@@ -181,7 +182,8 @@ class UserRepository:
             await session.commit()
 
             stmt_updated = (
-                select(User).where(User.id == user_id).options(joinedload(User.roles))
+                select(User).where(User.id == user_id).options(
+                    joinedload(User.roles).joinedload(Role.permissions))
             )
             result_updated = await session.execute(stmt_updated)
             return result_updated.scalars().first()

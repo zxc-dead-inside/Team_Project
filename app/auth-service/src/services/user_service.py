@@ -200,18 +200,15 @@ class UserService:
         # Check token_version for multi-device-logout
         if user.token_version == None:
             user.token_version = datetime.now(UTC)
-
-        access_token = self.auth_service.create_access_token(
-            user_id=user.id, token_version=user.token_version)
-        refresh_token = self.auth_service.create_refresh_token(
-            user_id=user.id, token_version=user.token_version)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=user)
 
         await self.auth_service.user_repository.update(user=user)
 
         await self.auth_service.user_repository.update_history(
             login_history=login_history)
 
-        return access_token, refresh_token
+        return jwt_pair
 
     async def logout_from_all_device(self) -> tuple[str, str]:
         """
@@ -222,15 +219,11 @@ class UserService:
         """
 
         self.user.token_version = datetime.now(UTC)
-        
-        access_token = self.auth_service.create_access_token(
-            user_id=self.user.id, token_version=self.user.token_version)
-        refresh_token = self.auth_service.create_refresh_token(
-            user_id=self.user.id, token_version=self.user.token_version)
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
         
         await self.auth_service.user_repository.update(user=self.user)
 
-        return access_token, refresh_token
+        return jwt_pair
     
     async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
         """
@@ -244,16 +237,13 @@ class UserService:
             token=refresh_token, type='refresh')
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
-
-        new_access_token = self.auth_service.create_access_token(
-            user_id=self.user.id, token_version=self.user.token_version)
-        new_refresh_token = self.auth_service.create_refresh_token(
-            user_id=self.user.id, token_version=self.user.token_version)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
 
         await self.auth_service.update_token_blacklist(
             refresh_token
         )
-        return new_access_token, new_refresh_token
+        return jwt_pair
 
     async def assign_role_to_user(
         self, user_id: UUID, role_id: UUID

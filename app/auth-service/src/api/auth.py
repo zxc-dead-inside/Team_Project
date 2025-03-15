@@ -111,7 +111,7 @@ async def login(
         HTTPException: If authentication fails
     """
 
-    jwt_pair = await user_service.login_by_credentials(
+    jwt_pair: dict = await user_service.login_by_credentials(
         username=form_data.username, password=form_data.password,
         request=request
     )
@@ -121,7 +121,11 @@ async def login(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail='Invalid credentials'
         )
-    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
+
+    return LoginResponse(
+        access_token=jwt_pair.get('access_token'),
+        refresh_token=jwt_pair.get('refresh_token')
+    )
 
 @private_router.post(
     "/logout-other-devices",
@@ -138,8 +142,12 @@ async def logout_other_devices(
     Logut user from other devices by changing token_version and return new jwt pair.
     """
 
-    jwt_pair = await user_service.logout_from_all_device()
-    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
+    jwt_pair: dict = await user_service.logout_from_all_device()
+
+    return LoginResponse(
+        access_token=jwt_pair.get('access_token'),
+        refresh_token=jwt_pair.get('refresh_token')
+    )
 
 @public_router.post(
     "/refresh",
@@ -157,8 +165,11 @@ async def refresh(
     Add received Refresh token to blacklist and retrun new JWT tokens pair.
     """
     refresh_token = Authorization.split(' ')[-1]
-    jwt_pair = await user_service.refresh_token(refresh_token)
-    return LoginResponse(access_token=jwt_pair[0], refresh_token=jwt_pair[1])
+    jwt_pair: dict = await user_service.refresh_token(refresh_token)
+    return LoginResponse(
+        access_token=jwt_pair.get('access_token'),
+        refresh_token=jwt_pair.get('refresh_token')
+    )
 
 @public_router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(

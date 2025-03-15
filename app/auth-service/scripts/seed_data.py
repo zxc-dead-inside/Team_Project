@@ -37,6 +37,8 @@ async def create_roles(session: AsyncSession) -> dict:
         "moderator": Role(name="moderator", description="Content moderator"),
         "subscriber": Role(name="subscriber", description="Paid subscriber"),
         "user": Role(name="user", description="Regular user"),
+        "anonymous": Role(name="anonymous",
+                          description="Guest user with limited access"),
     }
 
     for role in roles.values():
@@ -52,18 +54,29 @@ async def create_permissions(session: AsyncSession) -> dict:
     logger.info("Creating permissions...")
 
     permissions = {
-        "user_create": Permission(name="user_create", description="Create users"),
-        "user_read": Permission(name="user_read", description="Read user details"),
-        "user_update": Permission(name="user_update", description="Update users"),
-        "user_delete": Permission(name="user_delete", description="Delete users"),
-        "role_create": Permission(name="role_create", description="Create roles"),
-        "role_read": Permission(name="role_read", description="Read roles"),
-        "role_update": Permission(name="role_update", description="Update roles"),
-        "role_delete": Permission(name="role_delete", description="Delete roles"),
-        "content_all": Permission(name="content_all", description="Access all content"),
-        "content_recent": Permission(
-            name="content_recent", description="Access recent content"
-        ),
+        "user_create": Permission(name="user_create",
+                                  description="Create users"),
+        "user_read": Permission(name="user_read",
+                                description="Read user details"),
+        "user_update": Permission(name="user_update",
+                                  description="Update users"),
+        "user_delete": Permission(name="user_delete",
+                                  description="Delete users"),
+        "role_create": Permission(name="role_create",
+                                  description="Create roles"),
+        "role_read": Permission(name="role_read",
+                                description="Read roles"),
+        "role_update": Permission(name="role_update",
+                                  description="Update roles"),
+        "role_delete": Permission(name="role_delete",
+                                  description="Delete roles"),
+        "content_all": Permission(name="content_all",
+                                  description="Access all content"),
+        "content_recent": Permission(name="content_recent",
+                                     description="Access recent content"),
+        "content_public": Permission(name="content_all",
+                                     description="Access public content"),
+
     }
 
     for permission in permissions.values():
@@ -107,6 +120,12 @@ async def assign_permissions_to_roles(
 
     set_committed_value(roles["user"], "permissions", [permissions["content_recent"]])
     await session.flush()
+
+    set_committed_value(
+        roles["anonymous"],
+        "permissions",
+        [permissions["content_public"]]
+    )
 
     logger.info("Permissions assigned to roles")
 
@@ -154,6 +173,25 @@ async def create_content_restrictions(session: AsyncSession, roles: dict) -> Non
     logger.info(f"Created {len(restrictions)} content restrictions")
 
 
+async def create_anonymous_user(session: AsyncSession, roles: dict) -> None:
+    """Create an anonymous user account."""
+    logger.info("Creating anonymous user...")
+
+    anonymous_user = User(
+        username="anonymous",
+        email="anonymous@example.com",
+        password=pwd_context.hash("anonymous"),
+        is_active=False,
+        is_superuser=False,
+    )
+
+    anonymous_user.roles.append(roles["anonymous"])
+    session.add(anonymous_user)
+
+    await session.flush()
+    logger.info("Anonymous user created")
+
+
 async def main():
     """Main function to run seed script."""
     logger.info("Starting seed script...")
@@ -168,6 +206,7 @@ async def main():
             await assign_permissions_to_roles(session, roles, permissions)
             await create_superuser(session, roles)
             await create_content_restrictions(session, roles)
+            await create_anonymous_user(session, roles)
 
             logger.info("Seed completed successfully!")
 

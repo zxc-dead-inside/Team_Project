@@ -39,6 +39,14 @@ class UserService:
         self.user_cache_key_prefix = "user:"
         self.user_roles_cache_key_prefix = "user_roles:"
 
+    async def get_by_username(self, username: str) -> User | None:
+        """Get a user by username using UserRepository."""
+        return await self.user_repository.get_by_username(username)
+
+    async def create_user(self, user: User) -> User:
+        """Create a new user using UserRepository."""
+        return await self.user_repository.create(user)
+
     async def _invalidate_user_cache(self, user_id: UUID):
         """Invalidate cache for a user and their roles."""
         try:

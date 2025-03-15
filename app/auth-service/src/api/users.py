@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from src.api.dependencies import get_current_active_user, get_user_service
+from src.api.dependencies import get_current_active_user, get_user_service, get_current_user
 from src.api.schemas.user import (
     LoginHistoryItem,
     LoginHistoryResponse,
@@ -13,10 +13,22 @@ from src.api.schemas.user import (
 from src.db.models.user import User
 from src.services.user_service import UserService
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
+
+
+@router.get("/public")
+async def get_profile(request: Request):
+    user = getattr(request.state, "user", None)
+    if user is None:
+        raise HTTPException(status_code=500,
+                            detail="User state is not initialized")
+
+    return {
+        "user_id": str(user.id),
+        "username": user.username,
+    }
 
 
 @router.get("/me", response_model=UserProfile, status_code=status.HTTP_200_OK)

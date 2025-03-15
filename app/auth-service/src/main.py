@@ -33,18 +33,9 @@ async def lifespan(app: FastAPI):
     app.container = container
 
     user_service = container.user_service()
-    anonymous_user = await user_service.get_by_username("anonymous")
-
-    if not anonymous_user:
-        logging.warning("Anonymous user not found in database. Creating.")
-        anonymous_user = User(
-            username="anonymous",
-            email="anonymous@example.com",
-            password=pwd_context.hash("anonymous"),
-            is_active=False,
-            is_superuser=False,
-        )
-        anonymous_user = await user_service.create_user(anonymous_user)
+    anonymous_user = await user_service.user_repository.get_by_id(
+        settings.anonymous_user_id
+    )
 
     app.state.anonymous_user = anonymous_user
 

@@ -1,5 +1,7 @@
 """Configuration settings for the application."""
 
+import uuid
+from uuid import UUID
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
@@ -21,7 +23,9 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     email_token_ttl_seconds: int = 600  # 10 minutes
     reset_token_ttl: int = 3600  # 1 hour
-    max_requests_per_ttl: int = 5  # 5 attempts 
+    max_requests_per_ttl: int = 5  # 5 attempts
+    anonymous_user_id: UUID = uuid.uuid5(
+        uuid.UUID("12345678-1234-5678-1234-567812345678"), "anonymous")
 
     # PostgreSQL
     postgres_user: str

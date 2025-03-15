@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import sys
+import uuid
 
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,7 +75,7 @@ async def create_permissions(session: AsyncSession) -> dict:
                                   description="Access all content"),
         "content_recent": Permission(name="content_recent",
                                      description="Access recent content"),
-        "content_public": Permission(name="content_all",
+        "content_public": Permission(name="content_public",
                                      description="Access public content"),
 
     }
@@ -178,6 +179,7 @@ async def create_anonymous_user(session: AsyncSession, roles: dict) -> None:
     logger.info("Creating anonymous user...")
 
     anonymous_user = User(
+        id=settings.anonymous_user_id,
         username="anonymous",
         email="anonymous@example.com",
         password=pwd_context.hash("anonymous"),

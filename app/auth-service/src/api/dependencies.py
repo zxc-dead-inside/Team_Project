@@ -24,39 +24,12 @@ def get_user_service(request: Request) -> UserService:
     return request.app.container.user_service()
 
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    auth_service: Annotated[AuthService, Depends(get_auth_service)],
-) -> User:
+async def get_current_user(request: Request) -> User:
     """
-    Get the current authenticated user from the JWT token.
-
-
-    Args:
-        token: JWT token
-        auth_service: Authentication service
-
-
-    Returns:
-        User: Current authenticated user
-
-
-    Raises:
-        HTTPException: If the token is invalid or the user is not found
+    Получает текущего пользователя из middleware.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    return request.state.user
 
-    try:
-        user = await auth_service.validate_token(token)
-        if user is None:
-            raise credentials_exception
-        return user
-    except JWTError as err:
-        raise credentials_exception from err
 
 
 async def get_current_active_user(

@@ -5,14 +5,19 @@ import logging
 from pydantic import BaseModel
 from src.api.decorators import requires_permissions
 from src.core.config import get_settings
+from src.core.logger import setup_logging
 from src.db.database import Database
 from src.services.redis_service import check_redis_connection
+from src.api.decorators import PermissionAwareRoute
 
 from fastapi import APIRouter
 from fastapi.requests import Request
 
+setup_logging()
 
-router = APIRouter()
+
+router = APIRouter(route_class=PermissionAwareRoute)
+# router = APIRouter()
 
 
 class HealthResponse(BaseModel):
@@ -25,7 +30,7 @@ class HealthResponse(BaseModel):
 
 
 @router.get("", response_model=HealthResponse)
-@requires_permissions(["healty_read"])
+@requires_permissions(["health_check"])
 async def health_check(request: Request) -> HealthResponse:
     """
     Health check endpoint to verify service status.
@@ -33,6 +38,8 @@ async def health_check(request: Request) -> HealthResponse:
     Returns:
         HealthResponse: Service health information
     """
+
+    logging.info(f"endpoint healthy: {dir(request.state)}")
     settings = get_settings()
     components = {"api": "healthy"}
     db_connector = Database(str(settings.database_url))

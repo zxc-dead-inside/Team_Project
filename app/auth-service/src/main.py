@@ -52,6 +52,7 @@ def create_application() -> FastAPI:
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url="/api/redoc" if settings.environment != "production" else None,
     )
+    app.router.route_class = PermissionAwareRoute
 
     # Configure CORS
     app.add_middleware(
@@ -63,17 +64,17 @@ def create_application() -> FastAPI:
     )
 
     app.add_middleware(
-        SuperuserMiddleware,
-        audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
-    )
-    
-    app.add_middleware(
         PermissionMiddleware,
         user_service= lambda app: app.container.user_service(),
         secret_key=settings.secret_key
-    )
+    ) 
 
-    app.router.route_class = PermissionAwareRoute
+    app.add_middleware(
+        SuperuserMiddleware,
+        audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
+    )
+   
+
 
     # Include routers
     app.include_router(health_router, prefix="/api/health", tags=["Health"])

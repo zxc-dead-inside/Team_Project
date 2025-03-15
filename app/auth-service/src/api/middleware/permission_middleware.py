@@ -48,8 +48,8 @@ class PermissionMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
 
-        route = request.scope.get("route")
-        logging.info(f"route: {route}")
+        logging.info("MIDDLEWARE STARTS")
+        logging.info(f"middleware request.state: {dir(request.state)}")
 
         required_permissions = getattr(request.state, "required_permissions", None)
         logging.info(f"required_permissions: {required_permissions}")

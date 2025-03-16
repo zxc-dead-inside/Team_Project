@@ -74,6 +74,7 @@ def create_application() -> FastAPI:
     private_router.include_router(roles_router)
     private_router.include_router(user_roles_router)
     private_router.include_router(auth_private_router)
+    private_router.include_router(superuser_router)
 
     # Include routers
     app.include_router(public_router)

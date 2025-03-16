@@ -4,7 +4,6 @@ Script to create a public and private keys for JWT with algorithm RS256.
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-import os
 from pathlib import Path
 
 

@@ -302,7 +302,6 @@ class AuthService:
                 )
             ),
         }
-        # await user_service.get_user_roles(user_id)
         access_token = self.create_access_token(
             to_encode=access_token_data,
             token_version=user.token_version

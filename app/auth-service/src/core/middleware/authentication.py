@@ -38,6 +38,6 @@ class AuthenticationMiddleware(SecurityBase):
                 detail="Authorization token missing"
             )
 
-        # Saving authenticated User to cashed UserService
+        # Saving authenticated User to cached UserService
         user_service.user = await user_service.auth_service.validate_token(
             token=token, type='access')

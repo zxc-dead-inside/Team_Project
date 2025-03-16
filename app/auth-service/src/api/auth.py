@@ -5,10 +5,12 @@ from fastapi import (
 )
 from http import HTTPStatus
 
-from src.api.dependencies import get_auth_service
-from src.api.dependencies import get_email_service
-from src.api.dependencies import get_user_service
-from src.api.dependencies import get_reset_password_service
+from src.api.dependencies import (
+    get_auth_service,
+    get_email_service,
+    get_user_service,
+    get_reset_password_service
+)
 from src.api.schemas.auth import (
     ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate,
     LoginRequest, LoginResponse
@@ -102,7 +104,9 @@ async def login(
     Authenticate User with credentials and return jwt pair tokens.
 
     Args:
+        Request: Raw request to get data for LoginHistory
         LoginRequest(username, password): Schema for User authentication with credentials
+        UserService (Depends): User service for login by credentials
 
     Returns:
         Dict with access token and refresh token
@@ -129,7 +133,7 @@ async def login(
 
 @private_router.post(
     "/logout-other-devices",
-    response_model=None,
+    response_model=LoginResponse,
     responses={
         200: {'description': 'You have successfully logged out'},
         401: {'description': 'You are not logged in'}
@@ -151,7 +155,7 @@ async def logout_other_devices(
 
 @public_router.post(
     "/refresh",
-    response_model=None,
+    response_model=LoginResponse,
     responses={
         200: {'description': 'Tokens have been refreshed'},
         401: {'description': 'Invalid token'}

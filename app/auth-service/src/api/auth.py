@@ -116,7 +116,8 @@ async def login(
     """
 
     jwt_pair: dict = await user_service.login_by_credentials(
-        username=form_data.username, password=form_data.password,
+        username=form_data.username, 
+        password=form_data.password,
         request=request
     )
 

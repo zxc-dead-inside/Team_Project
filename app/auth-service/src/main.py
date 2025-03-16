@@ -6,6 +6,7 @@ import logging
 
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
+from src.api.demo import router as demo_router
 from src.api.health import router as health_router
 from src.api.middleware.superuser_middleware import SuperuserMiddleware
 from src.api.roles import router as roles_router
@@ -16,6 +17,7 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
+from src.core.middleware.token_preprocessing import TokenParser
 
 
 @asynccontextmanager
@@ -66,6 +68,7 @@ def create_application() -> FastAPI:
     public_router.include_router(
         health_router, prefix="/api/health", tags=["Health"])
     public_router.include_router(auth_public_router)
+    public_router.include_router(demo_router)
 
     # Routers with required authentication
     private_router = APIRouter(
@@ -84,6 +87,8 @@ def create_application() -> FastAPI:
         SuperuserMiddleware,
         audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
     )
+
+    app.add_middleware(TokenParser, public_key=settings.public_key)
 
     return app
 

@@ -20,13 +20,14 @@ class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
 
     config = providers.Configuration()
-
+    
     @classmethod
     def init_config_from_settings(cls, container, settings: Settings):
         """Initialize configuration from settings."""
         container.config.set("environment", settings.environment)
         container.config.set("log_level", settings.log_level)
-        container.config.set("secret_key", settings.secret_key)
+        container.config.set("public_key", settings.public_key)
+        container.config.set("private_key", settings.private_key)
         container.config.set(
             "access_token_expire_minutes", settings.access_token_expire_minutes
         )
@@ -79,23 +80,26 @@ class Container(containers.DeclarativeContainer):
 
     email_service = providers.Factory(
         EmailService,
-        secret_key=config.secret_key,
+        public_key=config.public_key,
+        private_key=config.private_key,
         email_token_ttl_seconds=config.email_token_ttl_seconds,
     )
 
     reset_password_service = providers.Factory(
         ResetPasswordService,
         user_repository=user_repository,
+        public_key=config.public_key,
+        private_key=config.private_key,
         reset_token_ttl=config.reset_token_ttl,
         max_requests_per_ttl=config.max_requests_per_ttl,
-        secret_key=config.secret_key,
-        cache_service=redis_service,
+        cache_service=redis_service
     )
 
     auth_service = providers.Factory(
         AuthService,
         user_repository=user_repository,
-        secret_key=config.secret_key,
+        public_key=config.public_key,
+        private_key=config.private_key,
         access_token_expire_minutes=config.access_token_expire_minutes,
         refresh_token_expire_days=config.refresh_token_expire_days,
         email_service=email_service,

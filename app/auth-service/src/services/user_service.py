@@ -1,7 +1,8 @@
 """Service for user-related operations."""
 
+from datetime import UTC, datetime
+from fastapi import Request
 import logging
-from datetime import datetime
 from uuid import UUID
 
 from src.api.schemas.user_roles import UserRoleResponse
@@ -28,13 +29,16 @@ class UserService:
         auth_service: AuthService,
         redis_service: RedisService,
         role_repository: RoleRepository,
+        user: User = None
     ):
         """Initialize the user service."""
+        
         self.user_repository = user_repository
         self.login_history_repository = login_history_repository
         self.auth_service = auth_service
         self.redis_service = redis_service
         self.role_repository = role_repository
+        self.user = user
 
         self.user_cache_key_prefix = "user:"
         self.user_roles_cache_key_prefix = "user_roles:"
@@ -62,6 +66,7 @@ class UserService:
         Returns:
             User | None: User if found, None otherwise
         """
+        if self.user.id == user_id: return self.user
         return await self.user_repository.get_by_id(user_id)
 
     async def update_username(
@@ -156,6 +161,89 @@ class UserService:
             end_date=end_date,
             successful_only=successful_only,
         )
+    
+    async def login_by_credentials(
+            self, username: str, password: str, request: Request
+    ) -> tuple[str, str] | None:
+        """
+        Authenticate user by credentials and return JWT pair.
+        Creates event in LoginHistory.
+
+        Args:
+            username: User`s username
+            password: User`s password
+
+        Returns:
+            tuple[str, str | None]: (access_token, refresh_jwt), None if Login failed
+        """
+        user: User = await self.auth_service.identificate_user(
+            username=username)
+        
+        if not user:
+            return None
+        
+        login_history = LoginHistory(
+            user_id = user.id,
+            user_agent = request.headers.get('User-Agent', None),
+            ip_address = request.client.host,
+            login_time = datetime.now(UTC),
+            successful = 'Y'
+        )
+
+        if not await self.auth_service.authenticate_user(
+            user=user, password=password):
+            login_history.successful = 'N'
+            await self.auth_service.user_repository.update_history(
+                login_history=login_history)
+            return None
+
+        # Check token_version for multi-device-logout
+        if user.token_version == None:
+            user.token_version = datetime.now(UTC)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=user)
+
+        await self.auth_service.user_repository.update(user=user)
+
+        await self.auth_service.user_repository.update_history(
+            login_history=login_history)
+
+        return jwt_pair
+
+    async def logout_from_all_device(self) -> tuple[str, str]:
+        """
+        Logout from all device and return new JWT pair with new token_version.
+
+        Returns:
+            tuple[str, str]: (access_token, refresh_jwt)
+        """
+
+        self.user.token_version = datetime.now(UTC)
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
+        
+        await self.auth_service.user_repository.update(user=self.user)
+
+        return jwt_pair
+    
+    async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
+        """
+        Validate refresh token and create new JWT pair.
+        Adds current refresh token to blacklist.
+
+        Returns:
+            tuple[str, str] | None: (access_token, refresh_jwt)
+        """
+        self.user = await self.auth_service.validate_token(
+            token=refresh_token, type='refresh')
+        await self.auth_service.check_refresh_token_blacklist(
+            token=refresh_token)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
+
+        await self.auth_service.update_token_blacklist(
+            refresh_token
+        )
+        return jwt_pair
 
     async def assign_role_to_user(
         self, user_id: UUID, role_id: UUID

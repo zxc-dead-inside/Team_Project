@@ -1,18 +1,13 @@
 """API dependencies for dependency injection."""
-
+from fastapi import Depends, HTTPException, Request, status
 from typing import Annotated
 
-from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
+from src.services.email_verification_service import EmailService
+from src.services.reset_password_service import ResetPasswordService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
-
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
 
 def get_auth_service(request: Request) -> AuthService:
@@ -25,69 +20,43 @@ def get_user_service(request: Request) -> UserService:
     return request.app.container.user_service()
 
 
+def get_email_service(request: Request) -> EmailService:
+    """Get email service from the container."""
+    return request.app.container.email_service()
+
+
 def get_superuser_service(request: Request) -> SuperuserService:
     """Get superuser service from the container."""
     return request.app.container.superuser_service()
 
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    auth_service: Annotated[AuthService, Depends(get_auth_service)],
-) -> User:
-    """
-    Get the current authenticated user from the JWT token.
-
-
-    Args:
-        token: JWT token
-        auth_service: Authentication service
-
-
-    Returns:
-        User: Current authenticated user
-
-
-    Raises:
-        HTTPException: If the token is invalid or the user is not found
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        user = await auth_service.validate_token(token)
-        if user is None:
-            raise credentials_exception
-        return user
-    except JWTError as err:
-        raise credentials_exception from err
-
+def get_reset_password_service(request: Request) -> ResetPasswordService:
+    """Get reset password service from the container."""
+    return request.app.container.reset_password_service()
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
 ) -> User:
     """
     Get the current active user.
 
     Args:
-        current_user: Current authenticated user
+        user_service: Current user service
 
     Returns:
-        User: Current active user
+        User: Current active authenticated user
 
     Raises:
         HTTPException: If user is inactive
     """
-    if not current_user.is_active:
+
+    if not user_service.user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
 
-    return current_user
-
+    return user_service.user
 
 async def has_permission(user: User, permission_name: str) -> bool:
     """
@@ -120,7 +89,7 @@ async def has_permission(user: User, permission_name: str) -> bool:
 def require_permission(permission_name: str):
     """Dependency factory for permission-based access control."""
 
-    async def dependency(current_user: User = Depends(get_current_user)):
+    async def dependency(current_user: User = Depends(get_current_active_user)):
         if not await has_permission(current_user, permission_name):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

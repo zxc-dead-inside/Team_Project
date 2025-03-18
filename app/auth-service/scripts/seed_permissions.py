@@ -45,6 +45,13 @@ DEFAULT_PERMISSIONS = [
     {"name": "settings_update", "description": "Update system settings"},
     {"name": "superuser_manage", "description": "Manage superuser privileges"},
     {"name": "audit_log_read", "description": "Read audit logs"},
+    # Anonymous user permissions
+    {"name": "view_public_content",
+     "description": "Permission to view public content"},
+    {"name": "access_public_endpoints",
+     "description": "Permission to access public endpoints"},
+    {"name": "read_public_resources",
+     "description": "Permission to read public resources"},
 ]
 
 

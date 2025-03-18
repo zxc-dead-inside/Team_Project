@@ -24,8 +24,6 @@ class Settings(BaseSettings):
     email_token_ttl_seconds: int = 600  # 10 minutes
     reset_token_ttl: int = 3600  # 1 hour
     max_requests_per_ttl: int = 5  # 5 attempts
-    anonymous_user_id: UUID = uuid.uuid5(
-        uuid.UUID("12345678-1234-5678-1234-567812345678"), "anonymous")
 
     # PostgreSQL
     postgres_user: str

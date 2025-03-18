@@ -91,6 +91,14 @@ Create an admin superuser:
 docker-compose exec api python scripts/create_superuser.py
 ```
 
+## 7. Create anonymous_role
+
+Create an admin superuser:
+
+```bash
+docker-compose exec api python scripts/create_anonymous_userrole.py
+```
+
 ## Verifying Setup
 
 To verify that everything is working, use these commands:

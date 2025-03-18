@@ -38,8 +38,10 @@ async def create_roles(session: AsyncSession) -> dict:
         "moderator": Role(name="moderator", description="Content moderator"),
         "subscriber": Role(name="subscriber", description="Paid subscriber"),
         "user": Role(name="user", description="Regular user"),
-        "anonymous": Role(name="anonymous",
-                          description="Guest user with limited access"),
+        "anonymous": Role(
+            name="anonymous",
+            description="Role for unauthenticated users with limited access"
+        ),
     }
 
     for role in roles.values():
@@ -75,8 +77,18 @@ async def create_permissions(session: AsyncSession) -> dict:
                                   description="Access all content"),
         "content_recent": Permission(name="content_recent",
                                      description="Access recent content"),
-        "content_public": Permission(name="content_public",
-                                     description="Access public content"),
+        "view_public_content": Permission(
+            name="view_public_content",
+            description="Permission to view public content"
+        ),
+        "access_public_endpoints": Permission(
+            name="access_public_endpoints",
+            description="Permission to access public endpoints"
+        ),
+        "read_public_resources": Permission(
+            name="read_public_resources",
+            description="Permission to read public resources"
+        ),
 
     }
 
@@ -125,7 +137,11 @@ async def assign_permissions_to_roles(
     set_committed_value(
         roles["anonymous"],
         "permissions",
-        [permissions["content_public"]]
+        [
+            permissions["view_public_content"],
+            permissions["access_public_endpoints"],
+            permissions["read_public_resources"],
+        ],
     )
     await session.flush()
 
@@ -175,26 +191,6 @@ async def create_content_restrictions(session: AsyncSession, roles: dict) -> Non
     logger.info(f"Created {len(restrictions)} content restrictions")
 
 
-async def create_anonymous_user(session: AsyncSession, roles: dict) -> None:
-    """Create an anonymous user account."""
-    logger.info("Creating anonymous user...")
-
-    anonymous_user = User(
-        id=settings.anonymous_user_id,
-        username="anonymous",
-        email="anonymous@example.com",
-        password=pwd_context.hash("anonymous"),
-        is_active=False,
-        is_superuser=False,
-    )
-
-    anonymous_user.roles.append(roles["anonymous"])
-    session.add(anonymous_user)
-
-    await session.flush()
-    logger.info("Anonymous user created")
-
-
 async def main():
     """Main function to run seed script."""
     logger.info("Starting seed script...")
@@ -209,7 +205,6 @@ async def main():
             await assign_permissions_to_roles(session, roles, permissions)
             await create_superuser(session, roles)
             await create_content_restrictions(session, roles)
-            await create_anonymous_user(session, roles)
 
             logger.info("Seed completed successfully!")
 

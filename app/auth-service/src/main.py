@@ -16,6 +16,7 @@ from src.core.container import Container
 from src.core.logger import setup_logging
 from src.api.middleware.anonymous_user_middleware import AnonymousUserMiddleware
 
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,13 +33,6 @@ async def lifespan(app: FastAPI):
 
     Container.init_config_from_settings(container, settings)
     app.container = container
-
-    user_service = container.user_service()
-    anonymous_user = await user_service.user_repository.get_by_id(
-        settings.anonymous_user_id
-    )
-
-    app.state.anonymous_user = anonymous_user
 
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
@@ -76,7 +70,9 @@ def create_application() -> FastAPI:
         audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
     )
 
-    app.add_middleware(AnonymousUserMiddleware)
+    app.add_middleware(
+        AnonymousUserMiddleware
+    )
 
     # Include routers
     app.include_router(health_router, prefix="/api/health", tags=["Health"])

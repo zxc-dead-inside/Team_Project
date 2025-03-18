@@ -8,6 +8,7 @@ from src.api.schemas.roles import RoleCreate, RoleResponse, RoleUpdate
 from src.core.logger import setup_logging
 from src.db.repositories.role_repository import RoleRepository
 from src.services.redis_service import RedisService
+from src.db.models.role import Role
 
 
 setup_logging()
@@ -217,3 +218,9 @@ class RoleService:
         except Exception as e:
             logging.error(f"Error deleting role {role_id}: {e}")
             return False, f"Failed to delete role: {str(e)}"
+
+    async def get_role_by_name(self, name: str) -> Role | None:
+        """Get a role by name (returns ORM model, not Pydantic schema)."""
+        return await self.role_repository.get_by_name(name)
+
+

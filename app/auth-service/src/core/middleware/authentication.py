@@ -10,12 +10,14 @@ from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from jose import JWTError
 from src.api.dependencies import get_user_service, get_role_service
 from src.services.user_service import UserService
+from src.services.role_service import RoleService
 from src.db.models import User, Role
 
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/login",
-    scheme_name="LoginRequest"
+    scheme_name="LoginRequest",
+    auto_error=False
 )
 
 
@@ -30,9 +32,9 @@ class AuthenticationMiddleware(SecurityBase):
     async def __call__(
             self,
             request: Request,
-            token: str = Depends(oauth2_scheme),
+            token: str  | None = Depends(oauth2_scheme),
             user_service: UserService = Depends(get_user_service),
-            role_service: UserService = Depends(get_role_service),
+            role_service: RoleService = Depends(get_role_service),
     ) -> None:
         """
         Checks the presence and validity of the authorization token.

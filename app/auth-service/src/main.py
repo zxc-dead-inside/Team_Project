@@ -7,7 +7,6 @@ import logging
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
 from passlib.context import CryptContext
-from src.api.auth import router as auth_router
 from src.api.health import router as health_router
 from src.api.middleware.superuser_middleware import SuperuserMiddleware
 from src.api.roles import router as roles_router
@@ -18,10 +17,6 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
-
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -95,7 +90,6 @@ def create_application() -> FastAPI:
 
     # Include routers
     app.include_router(health_router, prefix="/api/health", tags=["Health"])
-    app.include_router(auth_router)
     app.include_router(users_router)
     app.include_router(roles_router)
     app.include_router(user_roles_router)

@@ -18,12 +18,39 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # Authentication
-    secret_key: str
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     email_token_ttl_seconds: int = 600  # 10 minutes
+
     reset_token_ttl: int = 3600  # 1 hour
     max_requests_per_ttl: int = 5  # 5 attempts
+
+    # JWT
+    secrets_path: str = 'secrets'
+    private_key: str | None = None # Value of private key
+    public_key: str | None = None # Value of public key
+
+    @field_validator("private_key", mode="before")
+    def assemble_private_key(cls, v: str | None, values) -> str:
+        """Assemble private_key from folder"""
+        if v:
+            return v
+        try:
+            path = values.data.get("secrets_path") + "/private_key.pem"
+            return open(path, 'rb').read()
+        except Exception:
+            raise ValueError(f"Not found private_key.pem by path: {path}")
+
+    @field_validator("public_key", mode="before")
+    def assemble_public_key(cls, v: str | None, values) -> str:
+        """Assemble public_key.pem from folder"""
+        if v:
+            return v
+        try:
+            path = values.data.get("secrets_path") + "/public_key.pem"
+            return open(path, 'rb').read()
+        except Exception:
+            raise ValueError(f"Not found public_key.pem by path: {path}")
 
     # PostgreSQL
     postgres_user: str

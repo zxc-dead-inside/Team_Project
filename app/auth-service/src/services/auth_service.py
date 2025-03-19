@@ -1,49 +1,51 @@
 """Authentication service for user authentication and authorization."""
 
 from datetime import UTC, datetime, timedelta
+from fastapi import HTTPException
+import jwt
+from passlib.context import CryptContext
+import uuid
 from uuid import UUID
 
-from jose import jwt
-from passlib.context import CryptContext
+from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
-from src.services.reset_password_service import ResetPasswordService
 
 
 class AuthService:
     """Service for authentication operations."""
-
-    password_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+    
+    password_context = CryptContext(
+        schemes=["argon2", "bcrypt"], deprecated="auto")
 
     def __init__(
         self,
         user_repository: UserRepository,
-        secret_key: str,
+        public_key: str,
+        private_key: str,
         access_token_expire_minutes: int = 30,
         refresh_token_expire_days: int = 7,
         email_service: EmailService | None = None,
-        reset_password_service: ResetPasswordService | None = None
     ):
         """Initialize the auth service."""
         self.user_repository = user_repository
-        self.secret_key = secret_key
+        self.public_key = public_key
+        self.private_key = private_key
         self.access_token_expire_minutes = access_token_expire_minutes
         self.refresh_token_expire_days = refresh_token_expire_days
         self.email_service = email_service
-        self.reset_password_service = reset_password_service
-    
+        
 
-    async def authenticate_user(self, username: str, password: str) -> User | None:
+    async def identificate_user(self, username: str) -> User | None:
         """
-        Authenticate a user with username/email and password.
-
+        Identificate a user with username/email.
+        
         Args:
             username: Username or email
-            password: Password
-
+            
         Returns:
-            Optional[User]: User if authentication is successful, None otherwise
+            Optional[User]: User if identification is successful, None otherwise
         """
         user = await self.user_repository.get_by_username(username)
 
@@ -53,13 +55,29 @@ class AuthService:
 
         if not user:
             return None
+        
+        return user
 
+    async def authenticate_user(
+            self, user: User, password: str) -> User | None:
+        """
+        Authenticate a user with password.
+        
+        Args:
+            username: Username or email
+            password: Password
+            
+        Returns:
+            Optional[User]: User if authentication is successful, None otherwise
+        """
         if not self.verify_password(password, user.password):
+
             return None
 
         return user
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+    def verify_password(
+              self, plain_password: str, hashed_password: str) -> bool:
         """
         Verify a password against its hash.
 
@@ -84,49 +102,69 @@ class AuthService:
         """
         return self.password_context.hash(password)
 
-    def create_access_token(self, user_id: UUID) -> str:
+    def create_access_token(
+            self, to_encode: dict, token_version: datetime) -> str:
+
         """
         Create an access token for a user.
 
         Args:
             user_id: User ID
-
+            token_version: User token version
+            
         Returns:
             str: JWT access token
         """
-        expires_delta = timedelta(minutes=self.access_token_expire_minutes)
-        expire = datetime.now(UTC) + expires_delta
 
-        to_encode = {
-            "sub": str(user_id),
-            "exp": expire,
-            "type": "access",
-        }
+        if not to_encode.get('exp', None):
+            expires_delta = timedelta(minutes=self.access_token_expire_minutes)
+            expire = datetime.now(UTC) + expires_delta
+            to_encode["exp"] = expire
 
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+        to_encode["type"] = "access"
+        to_encode["token_version"] = str(token_version)
+        
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
-    def create_refresh_token(self, user_id: UUID) -> str:
+    def create_refresh_token(
+            self, user_id: UUID, token_version: datetime) -> str:
         """
         Create a refresh token for a user.
 
         Args:
             user_id: User ID
+            user_token_version: User token version
 
         Returns:
             str: JWT refresh token
         """
         expires_delta = timedelta(days=self.refresh_token_expire_days)
         expire = datetime.now(UTC) + expires_delta
-
         to_encode = {
             "sub": str(user_id),
             "exp": expire,
             "type": "refresh",
+            "token_version": str(token_version),
+            "jti": str(uuid.uuid4())
         }
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+    async def update_token_blacklist(self, token_blacklist) -> None:
+        payload = jwt.decode(
+            token_blacklist, self.public_key, algorithms=["RS256"])
 
-    async def validate_token(self, token: str) -> User | None:
+        await self.user_repository.update_token_blacklist(
+            TokenBlacklist(
+                user_id = payload.get('sub'),
+                expires_at = datetime.fromtimestamp(payload.get('exp')),
+                jti = payload.get('jti')
+            )
+        )
+
+        return None
+
+    async def validate_token(self, token: str, type: str) -> User | None:
+
         """
         Validate a JWT token and return the associated user.
 
@@ -136,13 +174,36 @@ class AuthService:
         Returns:
             Optional[User]: User if the token is valid, None otherwise
         """
-        try:
-            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-            user_id = payload.get("sub")
 
-            return await self.user_repository.get_by_id(user_id)
-        except Exception:
-            return None
+        if not token:
+            raise HTTPException(
+                status_code=401, detail="Authentication required")
+
+        try:
+            payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
+            user_id = payload.get("sub")
+            if payload.get('type') != type: raise jwt.InvalidTokenError
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token has been expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user: User = await self.user_repository.get_by_id(user_id)
+        if not user: raise HTTPException(
+            status_code=401, detail="Invalid token")
+        
+        if payload.get('token_version') != str(user.token_version):
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        return user
+
+    async def check_refresh_token_blacklist(self, token: str) -> None:
+        payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
+        if await self.user_repository.get_token_from_blacklist(
+            payload.get('jti')):
+            raise HTTPException(status_code=401, detail="Token has expired")
+        
+        return None
 
     async def register_user(
         self, username: str, email: str, password: str
@@ -241,9 +302,14 @@ class AuthService:
                 )
             ),
         }
-
-        access_token = self.create_access_token(access_token_data)
-        refresh_token = self.create_refresh_token({"sub": str(user.id)})
+        access_token = self.create_access_token(
+            to_encode=access_token_data,
+            token_version=user.token_version
+        )
+        refresh_token = self.create_refresh_token(
+            user_id=user.id,
+            token_version=user.token_version
+        )
 
         return {
             "access_token": access_token,

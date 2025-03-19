@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from pydantic import EmailStr
 
@@ -22,12 +22,13 @@ class ResetPasswordService:
     def __init__(
             self, user_repository: UserRepository,
             reset_token_ttl: int, max_requests_per_ttl: int,
-            secret_key: str, cache_service: RedisService
+            public_key: str, private_key: str, cache_service: RedisService
     ):
         self.user_repository = user_repository
         self.reset_token_ttl = reset_token_ttl
         self.max_requests_per_ttl = max_requests_per_ttl
-        self.secret_key = secret_key
+        self.public_key = public_key
+        self.private_key = private_key
         self.cache_service = cache_service
 
     async def __get_request_number(self, key: str) -> int | None:
@@ -123,7 +124,7 @@ class ResetPasswordService:
             "type": "reset_token",
         }
 
-        return jwt.encode(to_encode, self.secret_key, algorithm="HS256")
+        return jwt.encode(to_encode, self.private_key, algorithm="RS256")
     
     def validate_reset_token(
             self, token: str
@@ -137,14 +138,14 @@ class ResetPasswordService:
             True and payload if token is valid, False and None in otherwise
         """
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
 
             if payload["type"] != "reset_token":
                 return False, None
 
             return True, payload
 
-        except JWTError as e:
+        except jwt.exceptions.InvalidTokenError as e:
             logging.error(f"Token validation failed: {e}")
             return False, None
 

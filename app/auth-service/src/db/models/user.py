@@ -27,6 +27,7 @@ class User(PreBase, Base):
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+    token_version = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     roles = relationship("Role", secondary=user_role, back_populates="users")

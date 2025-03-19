@@ -18,7 +18,6 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
-from src.api.middleware.anonymous_user_middleware import AnonymousUserMiddleware
 
 
 from fastapi import FastAPI
@@ -92,10 +91,6 @@ def create_application() -> FastAPI:
     app.add_middleware(
         SuperuserMiddleware,
         audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
-    )
-
-    app.add_middleware(
-        AnonymousUserMiddleware
     )
 
     # Include routers

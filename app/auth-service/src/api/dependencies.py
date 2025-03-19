@@ -9,6 +9,7 @@ from src.services.email_verification_service import EmailService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
+from src.services.role_service import RoleService
 
 
 def get_auth_service(request: Request) -> AuthService:
@@ -19,6 +20,11 @@ def get_auth_service(request: Request) -> AuthService:
 def get_user_service(request: Request) -> UserService:
     """Get user service from the container."""
     return request.app.container.user_service()
+
+
+def get_role_service(request: Request) -> RoleService:
+    """Get role service from the container."""
+    return request.app.container.role_service()
 
 
 def get_email_service(request: Request) -> EmailService:

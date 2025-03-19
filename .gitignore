@@ -1,7 +1,7 @@
 # Environments
 .venv
 venv
-.devcontainer
+# .devcontainer
 .devcontainer_
 _films.py
 _movies.py
@@ -17,3 +17,9 @@ notebooks/*
 
 app/data
 app/state
+
+*.log
+
+# Migrations
+app/auth-service/migrations/versions/*
+app/auth-service/secrets/*

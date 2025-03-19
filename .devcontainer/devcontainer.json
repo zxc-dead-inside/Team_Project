@@ -1,0 +1,40 @@
+{
+    "name": "Async_API_sprint_1",
+    "runArgs": [
+        "--env-file", ".devcontainer/devcontainer.env",
+        "--network=theatre_network",
+        "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro"
+    ],
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.isort",
+                "charliermarsh.ruff"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.formatting.provider": "ruff",
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": false,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": false
+                    }
+                },
+                "isort.args": ["--profile", "isort"]
+            }
+        }
+    },
+    "containerEnv": {
+        "NUMEXPR_MAX_THREADS": "8"
+    },
+    "forwardPorts": [],
+    "remoteUser": "vscode"
+}

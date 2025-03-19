@@ -6,16 +6,19 @@ import logging
 
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
+from passlib.context import CryptContext
 from src.api.health import router as health_router
 from src.api.middleware.superuser_middleware import SuperuserMiddleware
 from src.api.roles import router as roles_router
-from src.api.superuser import router as superuser_router
 from src.api.user_roles import router as user_roles_router
+from src.api.superuser import router as superuser_router
 from src.api.users import router as users_router
 from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 @asynccontextmanager

@@ -2,12 +2,14 @@
 from fastapi import Depends, HTTPException, Request, status
 from typing import Annotated
 
+from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
+from src.services.role_service import RoleService
 
 
 def get_auth_service(request: Request) -> AuthService:
@@ -18,6 +20,11 @@ def get_auth_service(request: Request) -> AuthService:
 def get_user_service(request: Request) -> UserService:
     """Get user service from the container."""
     return request.app.container.user_service()
+
+
+def get_role_service(request: Request) -> RoleService:
+    """Get role service from the container."""
+    return request.app.container.role_service()
 
 
 def get_email_service(request: Request) -> EmailService:
@@ -34,29 +41,38 @@ def get_reset_password_service(request: Request) -> ResetPasswordService:
     """Get reset password service from the container."""
     return request.app.container.reset_password_service()
 
+
+async def get_current_user(request: Request) -> User:
+    """
+    Получает текущего пользователя из middleware.
+    """
+    return request.state.user
+
+
 async def get_current_active_user(
-    user_service: UserService = Depends(get_user_service)
+    user: User = Depends(get_current_user)
 ) -> User:
     """
     Get the current active user.
 
     Args:
-        user_service: Current user service
+        user: Current user
 
     Returns:
-        User: Current active authenticated user
+        User: Current active authenticated user or anonymus
 
     Raises:
         HTTPException: If user is inactive
     """
 
-    if not user_service.user.is_active:
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
 
-    return user_service.user
+    return user
+
 
 async def has_permission(user: User, permission_name: str) -> bool:
     """
@@ -89,7 +105,7 @@ async def has_permission(user: User, permission_name: str) -> bool:
 def require_permission(permission_name: str):
     """Dependency factory for permission-based access control."""
 
-    async def dependency(current_user: User = Depends(get_current_active_user)):
+    async def dependency(current_user: User = Depends(get_current_user)):
         if not await has_permission(current_user, permission_name):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

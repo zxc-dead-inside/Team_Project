@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from src.api.dependencies import get_current_active_user, get_user_service
+from src.api.dependencies import get_current_active_user, get_user_service, require_permission
 from src.api.schemas.user import (
     LoginHistoryItem,
     LoginHistoryResponse,
@@ -13,10 +13,21 @@ from src.api.schemas.user import (
 from src.db.models.user import User
 from src.services.user_service import UserService
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
+
+
+@router.get("/public")
+async def get_profile(
+        current_user: User = Depends(require_permission("access_public_endpoints")),
+):
+
+    return {
+        "user_id": str(current_user.id),
+        "username": current_user.username,
+        "roles": [role.name for role in current_user.roles],
+    }
 
 
 @router.get("/me", response_model=UserProfile, status_code=status.HTTP_200_OK)

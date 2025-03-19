@@ -1,5 +1,7 @@
 """Configuration settings for the application."""
 
+import uuid
+from uuid import UUID
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
@@ -21,7 +23,7 @@ class Settings(BaseSettings):
     email_token_ttl_seconds: int = 600  # 10 minutes
 
     reset_token_ttl: int = 3600  # 1 hour
-    max_requests_per_ttl: int = 5  # 5 attempts 
+    max_requests_per_ttl: int = 5  # 5 attempts
 
     # JWT
     secrets_path: str = 'secrets'

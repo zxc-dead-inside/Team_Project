@@ -88,13 +88,6 @@ def create_application() -> FastAPI:
         audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
     )
 
-    # Include routers
-    app.include_router(health_router, prefix="/api/health", tags=["Health"])
-    app.include_router(users_router)
-    app.include_router(roles_router)
-    app.include_router(user_roles_router)
-    app.include_router(superuser_router)
-
     return app
 
 

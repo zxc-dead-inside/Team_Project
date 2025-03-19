@@ -50,28 +50,28 @@ async def get_current_user(request: Request) -> User:
 
 
 async def get_current_active_user(
-    user_service: UserService = Depends(get_user_service)
+    user: User = Depends(get_current_user)
 ) -> User:
     """
     Get the current active user.
 
     Args:
-        user_service: Current user service
+        user: Current user
 
     Returns:
-        User: Current active authenticated user
+        User: Current active authenticated user or anonymus
 
     Raises:
         HTTPException: If user is inactive
     """
 
-    if not user_service.user.is_active:
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
 
-    return user_service.user
+    return user
 
 
 async def has_permission(user: User, permission_name: str) -> bool:

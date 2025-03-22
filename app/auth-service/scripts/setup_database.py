@@ -34,9 +34,6 @@ settings = get_settings()
 db_url = str(settings.database_url)
 scripts_dir = Path(__file__).parent
 
-# Connection check parameters
-MAX_RETRIES = 5
-RETRY_INTERVAL = 3
 
 # Core roles that must exist
 CORE_ROLES = {"admin", "anonymous", "user", "moderator", "subscriber"}

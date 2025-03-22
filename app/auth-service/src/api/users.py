@@ -13,7 +13,7 @@ from src.api.schemas.user import (
 from src.db.models.user import User
 from src.services.user_service import UserService
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 

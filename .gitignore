@@ -1,6 +1,7 @@
 # Environments
 .venv
 venv
+test_venv
 # .devcontainer
 .devcontainer_
 _films.py
@@ -20,6 +21,5 @@ app/state
 
 *.log
 
-# Migrations
-app/auth-service/migrations/versions/*
+# Secrets
 app/auth-service/secrets/*

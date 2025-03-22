@@ -9,8 +9,9 @@ import logging
 import os
 import sys
 
-from sqlalchemy import select
-from sqlalchemy.orm.attributes import set_committed_value
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +20,8 @@ from src.api.schemas.permissions import PermissionCreate
 from src.core.config import get_settings
 from src.core.logger import setup_logging
 from src.db.database import Database
-from src.db.models import Permission, Role
+from src.db.models import Permission, Role, role_permission
+
 
 setup_logging()
 settings = get_settings()
@@ -31,17 +33,21 @@ ANONYMOUS_ROLE_DESCRIPTION = "Role for unauthenticated users with limited access
 
 # Anonymous permissions
 ANONYMOUS_PERMISSIONS = [
-    {"name": "view_public_content",
-     "description": "Permission to view public content"},
-    {"name": "access_public_endpoints",
-     "description": "Permission to access public endpoints"},
-    {"name": "read_public_resources",
-     "description": "Permission to read public resources"},
+    {"name": "view_public_content", "description": "Permission to view public content"},
+    {
+        "name": "access_public_endpoints",
+        "description": "Permission to access public endpoints",
+    },
+    {
+        "name": "read_public_resources",
+        "description": "Permission to read public resources",
+    },
 ]
 
 
-async def create_permission(session, name: str,
-                            description: str | None = None) -> Permission | None:
+async def create_permission(
+    session: AsyncSession, name: str, description: str | None = None
+) -> Permission | None:
     """
     Create a permission if it doesn't exist.
 
@@ -96,8 +102,7 @@ async def create_anonymous_role_and_permissions(dry_run: bool = False) -> bool:
     """
     if dry_run:
         logging.info("DRY RUN: The following would be created:")
-        logging.info(
-            f"Role: {ANONYMOUS_ROLE_NAME} - {ANONYMOUS_ROLE_DESCRIPTION}")
+        logging.info(f"Role: {ANONYMOUS_ROLE_NAME} - {ANONYMOUS_ROLE_DESCRIPTION}")
         logging.info("Permissions:")
         for perm in ANONYMOUS_PERMISSIONS:
             logging.info(f"  - {perm['name']}: {perm['description']}")
@@ -108,14 +113,21 @@ async def create_anonymous_role_and_permissions(dry_run: bool = False) -> bool:
     async with db.session() as session:
         try:
             async with session.begin():
+                # Check if role exists
                 result = await session.execute(
                     select(Role).filter(Role.name == ANONYMOUS_ROLE_NAME)
                 )
                 existing_role = result.scalars().first()
 
                 if existing_role:
-                    logging.info(
-                        f"Role '{ANONYMOUS_ROLE_NAME}' already exists.")
+                    logging.info(f"Role '{ANONYMOUS_ROLE_NAME}' already exists.")
+
+                    # Delete existing role-permission associations for this role
+                    query = delete(role_permission).where(
+                        role_permission.c.role_id == existing_role.id
+                    )
+                    await session.execute(query)
+
                     anonymous_role = existing_role
                 else:
                     anonymous_role = Role(
@@ -126,6 +138,7 @@ async def create_anonymous_role_and_permissions(dry_run: bool = False) -> bool:
                     await session.flush()
                     logging.info(f"Created role: {ANONYMOUS_ROLE_NAME}")
 
+                # Get all permissions first
                 permissions = []
                 for perm_data in ANONYMOUS_PERMISSIONS:
                     permission = await create_permission(
@@ -134,14 +147,19 @@ async def create_anonymous_role_and_permissions(dry_run: bool = False) -> bool:
                     if permission:
                         permissions.append(permission)
 
+                # Add all permissions to the role
                 if permissions:
-                    # Use set_committed_value to avoid lazy loading
-                    set_committed_value(anonymous_role, "permissions",
-                                        permissions)
-                    await session.flush()
+                    for permission in permissions:
+                        # When role_id and permission_id are known, directly create the association
+                        stmt = role_permission.insert().values(
+                            role_id=anonymous_role.id, permission_id=permission.id
+                        )
+                        await session.execute(stmt)
 
-                    logging.info(
-                        f"Assigned {len(permissions)} permissions to {ANONYMOUS_ROLE_NAME} role")
+                await session.flush()
+                logging.info(
+                    f"Assigned {len(permissions)} permissions to {ANONYMOUS_ROLE_NAME} role"
+                )
 
             return True
 
@@ -169,7 +187,8 @@ async def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Create anonymous role and permissions")
+        description="Create anonymous role and permissions"
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",

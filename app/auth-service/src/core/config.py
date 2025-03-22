@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     postgres_password: str
     postgres_db: str
     postgres_host: str = "db"
-    postgres_port: str = "5432"
+    postgres_port: int = 5432
     database_url: PostgresDsn | None = None
 
     # Redis

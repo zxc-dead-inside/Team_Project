@@ -182,50 +182,71 @@ async def setup_database(skip_if_initialized: bool = True) -> None:
         logging.error("Cannot continue without database connection")
         sys.exit(1)
 
-    # Apply migrations - this is always safe to run
+    # Apply migrations
     logging.info("Applying database migrations...")
     if not run_script("apply_migrations.py"):
         logging.error("Failed to apply migrations")
         sys.exit(1)
 
-    # Check if database is already initialized
+    # Check if database is already initialized by looking for a superuser
     if skip_if_initialized:
-        is_fully_initialized = await check_database_fully_initialized()
-        if is_fully_initialized:
-            logging.info("Database already fully initialized, skipping initialization")
-            return
+        has_superuser = await check_superuser_exists()
+        if has_superuser:
+            logging.info("Superuser exists, assuming database is initialized")
+
+            is_fully_initialized = await check_database_fully_initialized()
+            if is_fully_initialized:
+                logging.info("Database fully initialized, no additional setup needed")
+                return
+            else:
+                logging.info(
+                    "Database partially initialized, checking for missing components..."
+                )
         else:
-            logging.info("Database needs initialization or updates")
+            logging.info("No superuser found, database needs full initialization")
 
-    # Seed permissions first
-    logging.info("Seeding permissions...")
-    if not run_script("seed_permissions.py"):
-        logging.error("Failed to seed permissions")
-        sys.exit(1)
+    # Check what's missing and initialize accordingly
+    _, missing_roles, missing_permissions = await check_roles_and_permissions()
+    has_superuser = await check_superuser_exists()
 
-    # Check if anonymous role exists, create if not
-    _, missing_roles, _ = await check_roles_and_permissions()
-    if "anonymous" in missing_roles:
-        logging.info("Creating anonymous role...")
-        if not run_script("create_anonymous_userrole.py"):
-            logging.error("Failed to create anonymous role")
+    if not has_superuser or len(missing_roles) > 1:
+        logging.info("Running full data seeding...")
+        if not run_script("seed_data.py"):
+            logging.error("Failed to seed data")
             sys.exit(1)
     else:
-        logging.info("Anonymous role already exists")
+        if missing_permissions:
+            logging.info(
+                f"Missing permissions detected: {', '.join(missing_permissions)}"
+            )
+            logging.info("Seeding permissions...")
+            if not run_script("seed_permissions.py"):
+                logging.error("Failed to seed permissions")
+                sys.exit(1)
+
+        if "anonymous" in missing_roles:
+            logging.info("Anonymous role missing, creating it...")
+            if not run_script("create_anonymous_userrole.py"):
+                logging.error("Failed to create anonymous role")
+                sys.exit(1)
 
     # Final verification
     is_fully_initialized = await check_database_fully_initialized()
     if is_fully_initialized:
         logging.info("Database setup completed successfully!")
     else:
-        logging.error(
-            "Database initialization incomplete - some components are missing"
-        )
-        _, missing_roles, missing_permissions = await check_roles_and_permissions()
-        if missing_roles:
-            logging.error(f"Missing roles: {', '.join(missing_roles)}")
-        if missing_permissions:
-            logging.error(f"Missing permissions: {', '.join(missing_permissions)}")
+        logging.error("Database initialization incomplete after running all scripts")
+        (
+            _,
+            still_missing_roles,
+            still_missing_permissions,
+        ) = await check_roles_and_permissions()
+        if still_missing_roles:
+            logging.error(f"Still missing roles: {', '.join(still_missing_roles)}")
+        if still_missing_permissions:
+            logging.error(
+                f"Still missing permissions: {', '.join(still_missing_permissions)}"
+            )
         if not await check_superuser_exists():
             logging.error("No superuser account found")
         sys.exit(1)

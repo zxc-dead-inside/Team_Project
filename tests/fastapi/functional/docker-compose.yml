@@ -28,13 +28,13 @@ services:
 
   fastapi:
     build: 
-      context: ../../app/fastapi
+      context: ../../../app/fastapi
       dockerfile: Dockerfile
     image: fastapi-image
     ports:
       - "9000:9000"
     env_file:
-      - ../../app/fastapi/.env
+      - ../../../app/fastapi/.env
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -44,7 +44,7 @@ services:
   tests:
     image: fastapi-image
     volumes:
-      - ../../tests:/tests
+      - ../../../tests:/tests
       - pip_cache:/root/.cache/pip
     depends_on:
       elasticsearch:
@@ -57,12 +57,12 @@ services:
       - ELASTICSEARCH_HOST=elasticsearch
       - REDIS_HOST=theatre-redis
       - API_HOST=fastapi
-      - PYTHONPATH=/tests/functional
+      - PYTHONPATH=/tests/fastapi/functional
     entrypoint: >
       sh -c "
-      cd /tests/functional &&
-      python -m venv /tests/venv &&
-      . /tests/venv/bin/activate &&
+      cd /tests/fastapi/functional &&
+      python -m venv /tests/fastapi/venv &&
+      . /tests/fastapi/venv/bin/activate &&
       pip install --upgrade pip &&
       pip install --no-cache-dir -r requirements.txt &&
       python utils/wait_for_es.py &&

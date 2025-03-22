@@ -1,0 +1,109 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: auth-db
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-auth_db}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    restart: always
+    networks:
+      - auth_network_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: auth_redis_test
+    env_file:
+      - ../../../app/auth-service/.env
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis}
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    volumes:
+      - redis_test_data:/data
+    restart: always
+    networks:
+      - auth_network_test
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: 
+      context: ../../../app/auth-service
+      dockerfile: Dockerfile
+    image: auth-service-image
+    container_name: auth-service
+    volumes:
+      - ../../../app/auth-service:/app
+    ports:
+      - ${API_PORT:-8100}:8100
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-auth_db}
+      - REDIS_URL=redis://${REDIS_PASSWORD:-redis}@redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    networks:
+      - auth_network_test
+#    command: uvicorn src.main:app --host 0.0.0.0 --port 8100 --reload
+
+
+  tests:
+    image: auth-service-image
+    container_name: auth-tests
+    volumes:
+      - ../../../tests:/tests
+      - pip_cache:/root/.cache/pip
+    environment:
+      - API=api
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379/0
+      - PYTHONPATH=/tests/auth-service/functional
+    networks:
+      - auth_network_test
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    entrypoint: >
+      sh -c "
+      cd /tests/auth-service/functional &&
+      python -m venv /tests/auth-service/venv &&
+      . /tests/auth-service/venv/bin/activate &&
+      pip install --upgrade pip &&
+      pip install --no-cache-dir -r requirements.txt &&
+      python utils/wait_for_redis.py &&
+      pytest src -v"
+networks:
+  auth_network_test:
+    driver: bridge
+
+volumes:
+  pip_cache:
+  postgres_test_data:
+  redis_test_data:

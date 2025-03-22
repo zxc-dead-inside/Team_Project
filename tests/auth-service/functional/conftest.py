@@ -1,4 +1,4 @@
-import time
+import asyncio
 import pytest
 
 pytest_plugins = (
@@ -26,4 +26,4 @@ def wait_for_services(redis_client):
             retries += 1
             if retries == max_retries:
                 pytest.fail("Redis is not available")
-            # time.sleep(1)
+            asyncio.sleep(1)

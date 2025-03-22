@@ -1,6 +1,5 @@
-from string import Template
-from pydantic import Field, PostgresDsn, RedisDsn
-from pydantic_settings import BaseSettings
+from pydantic import Field, RedisDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class TestSettings(BaseSettings):
@@ -19,7 +18,20 @@ class TestSettings(BaseSettings):
     )
     redis_port: int = Field(default=6379, json_schema_extra={"env": "redis_port"})
     redis_password: str | None = Field(default="redis", json_schema_extra={"env": "redis_password"})
-    redis_url: str | None = None
+    redis_url: RedisDsn | None = None
+
+    @field_validator("redis_url", mode="before")
+    def assemble_redis_url(cls, v: str | None, values) -> str:
+        """Assemble Redis URL if not provided."""
+        
+        if v:
+            return v
+
+        password_part = ""
+        if values.data.get("redis_password"):
+            password_part = f":{values.data.get('redis_password')}@"
+
+        return f"redis://{password_part}{values.data.get('redis_host')}:{values.data.get('redis_port')}/0"
 
 
     # FastAPI service settings
@@ -29,6 +41,13 @@ class TestSettings(BaseSettings):
     @property
     def service_url(self) -> str:
         return f"{self.auth_host}:{self.auth_port}"
+
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        # case_sensitive=True,
+    )
 
 
 test_settings = TestSettings()

@@ -35,7 +35,7 @@ def check_redis_connection(client: redis.Redis) -> bool:
 
 
 if __name__ == "__main__":
-    redis_client = redis.Redis.from_url(test_settings.redis_url)
+    redis_client = redis.Redis.from_url(str(test_settings.redis_url))
     # redis_client = redis.Redis(
     #     host=test_settings.redis_host,
     #     port=test_settings.redis_port,

@@ -1,3 +1,4 @@
+# DEPRECATED
 # Running the tests
 
 Start the service with Docker Compose:

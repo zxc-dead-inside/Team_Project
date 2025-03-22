@@ -6,12 +6,12 @@ import pytest
 @pytest.mark.asyncio
 class TestUsers:
     async def test_me(
-            self, make_post_request, make_get_request, superuser_data):
+            self, make_post_request, make_get_request, admin_data):
         response: ClientResponse = await make_post_request(
             url='/api/v1/auth/login',
             data = {
-                'username': superuser_data.get('username'),
-                'password': superuser_data.get('password')
+                'username': admin_data.get('username'),
+                'password': admin_data.get('password')
             }
         )
         data: dict = await response.json()
@@ -23,15 +23,15 @@ class TestUsers:
         data: dict = await response.json()
 
         assert response.status == HTTPStatus.OK
-        assert data.get('email') == superuser_data.get('email')
+        assert data.get('email') == admin_data.get('email')
 
     async def test_history(
-            self, make_post_request, make_get_request, superuser_data):
+            self, make_post_request, make_get_request, admin_data):
         response: ClientResponse = await make_post_request(
             url='/api/v1/auth/login',
             data = {
-                'username': superuser_data.get('username'),
-                'password': superuser_data.get('password')
+                'username': admin_data.get('username'),
+                'password': admin_data.get('password')
             }
         )
         data: dict = await response.json()

@@ -64,12 +64,12 @@ class TestAuth:
             assert response.status == HTTPStatus.CREATED
     
     async def test_login_user(
-            self, make_post_request, superuser_data: dict):
+            self, make_post_request, admin_data: dict):
         response: ClientResponse = await make_post_request(
             url='/api/v1/auth/login',
             data = {
-                'username': superuser_data.get('username'),
-                'password': superuser_data.get('password')
+                'username': admin_data.get('username'),
+                'password': admin_data.get('password')
             }
         )
         data: dict = await response.json()
@@ -119,13 +119,13 @@ class TestAuth:
         assert data.get('message') == 'We have sent an email to you. Check your mailbox please.'
 
     async def test_logout_other_devices(
-        self, make_post_request, make_get_request, superuser_data: dict):
+        self, make_post_request, make_get_request, admin_data: dict):
         responses = [
             await make_post_request(
                 url='/api/v1/auth/login',
                 data = {
-                    'username': superuser_data.get('username'),
-                    'password': superuser_data.get('password')
+                    'username': admin_data.get('username'),
+                    'password': admin_data.get('password')
                 }
             ) for _ in range(3)
         ]
@@ -142,7 +142,7 @@ class TestAuth:
             data: dict = await response.json()
 
             assert response.status == HTTPStatus.OK
-            assert data.get('username') == superuser_data.get('username')
+            assert data.get('username') == admin_data.get('username')
         
         response = await make_post_request(
             url='/api/v1/auth/logout-other-devices',
@@ -159,7 +159,7 @@ class TestAuth:
         data: dict = await response.json()
 
         assert response.status == HTTPStatus.OK
-        assert data.get('username') == superuser_data.get('username')
+        assert data.get('username') == admin_data.get('username')
 
         for token in tokens:
             response: ClientResponse = await make_get_request(

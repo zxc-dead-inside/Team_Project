@@ -4,6 +4,7 @@ from typing import Any
 
 from testdata.users import (
     superuser,
+    admin,
     weak_password_user,
     regular_users,
     disabled_user
@@ -13,6 +14,10 @@ from testdata.users import (
 @pytest.fixture
 def superuser_data() -> dict[str, Any]:
     return superuser
+
+@pytest.fixture
+def admin_data() -> dict[str, Any]:
+    return admin
 
 @pytest.fixture
 def weak_password_user_data() -> dict[str, Any]:

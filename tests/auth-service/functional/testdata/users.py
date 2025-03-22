@@ -1,7 +1,15 @@
 superuser = {
+    "username": "superuser",
+    "email": "superuser@example.com",
+    "password": "Qwerty123!",
+    "is_superuser": True,
+    "is_active": True
+}
+
+admin = {
     "username": "admin",
     "email": "admin@example.com",
-    "password": "Qwerty123!",
+    "password": "admin",
     "is_superuser": True,
     "is_active": True
 }

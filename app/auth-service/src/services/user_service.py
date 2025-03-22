@@ -183,7 +183,7 @@ class UserService:
         user: User = await self.auth_service.identificate_user(
             username=username)
         
-        if not user:
+        if not user or user.is_active == False:
             return None
         
         login_history = LoginHistory(

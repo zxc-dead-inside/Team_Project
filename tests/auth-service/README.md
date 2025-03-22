@@ -2,7 +2,7 @@
 
 1. Navigate to
 
-cd tests/functional
+cd tests/auth-service/functional
 
 2. Execute
 

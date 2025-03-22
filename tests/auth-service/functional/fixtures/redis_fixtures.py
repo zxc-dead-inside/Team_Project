@@ -7,9 +7,7 @@ from settings import test_settings
 def redis_client():
     """Create Redis client fixture."""
 
-    client = redis.Redis(
-        host=test_settings.redis_host, port=6379, decode_responses=True
-    )
+    client = redis.Redis.from_url(str(test_settings.redis_url))
 
     yield client
 

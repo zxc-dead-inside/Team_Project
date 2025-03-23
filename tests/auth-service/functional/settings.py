@@ -1,5 +1,4 @@
-from string import Template
-from pydantic import Field, PostgresDsn, RedisDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -12,7 +11,7 @@ class TestSettings(BaseSettings):
     postgres_host: str = "db"
     postgres_port: str = "5432"
     database_url: str | None = None
-    
+
     # Redis settings
     redis_host: str = Field(
         default="auth-redis", json_schema_extra={"env": "redis_host"}
@@ -23,7 +22,7 @@ class TestSettings(BaseSettings):
 
 
     # FastAPI service settings
-    auth_host: str = Field(default="auth-service")
+    auth_host: str = Field(default="api")
     auth_port: int = Field(default=8100)
 
     @property

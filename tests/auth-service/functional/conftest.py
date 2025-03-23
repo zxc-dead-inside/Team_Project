@@ -3,14 +3,14 @@ import pytest
 
 pytest_plugins = (
     "fixtures.redis_fixtures",
-    "fixtures.app_auth_fixtures"
-    
+    "fixtures.app_auth_fixtures",
+    "fixtures.postgres_fixtures",
 )
 
-@pytest.fixture(scope="session", autouse=True)
-def wait_for_services(es_client, redis_client):
-    """Wait for all required services to be ready."""
 
+@pytest.fixture(scope="session", autouse=True)
+def wait_for_services(redis_client):
+    """Wait for all required services to be ready."""
 
     max_retries = 30
     retries = 0

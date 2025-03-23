@@ -61,7 +61,7 @@ services:
     restart: always
     networks:
       - auth_network_test
-#    command: uvicorn src.main:app --host 0.0.0.0 --port 8100 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8100 --reload
 
 
   tests:
@@ -77,6 +77,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-auth_db}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
       - REDIS_HOST=redis
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379/0

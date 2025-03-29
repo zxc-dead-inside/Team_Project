@@ -2,7 +2,6 @@
 from fastapi import Depends, HTTPException, Request, status
 from typing import Annotated
 
-from jose import JWTError
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService

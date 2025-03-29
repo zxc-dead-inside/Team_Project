@@ -17,6 +17,8 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
+from src.core.middleware.rps_limiter import RateLimitterMiddleware
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -27,10 +29,6 @@ async def lifespan(app: FastAPI):
     # Setup
     settings = get_settings()
     setup_logging(settings.log_level)
-    container = Container()
-
-    Container.init_config_from_settings(container, settings)
-    app.container = container
 
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
@@ -39,7 +37,6 @@ async def lifespan(app: FastAPI):
 
     # Teardown
     logging.info(f"Shutting down {settings.project_name}")
-
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -52,6 +49,22 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url="/api/redoc" if settings.environment != "production" else None
+    )
+
+    # Configure container befor middlware adding to create dependecies
+    container = Container()
+    Container.init_config_from_settings(container, settings)
+    container.wire(modules=[__name__])
+    
+    app.container = container
+
+    app.add_middleware(
+        RateLimitterMiddleware,
+        unlimited_roles=settings.unlimited_roles,
+        special_roles=settings.special_roles,
+        special_capacity=settings.special_capacity,
+        default_capacity=settings.default_capacity,
+        undefind_capacity=settings.undefind_capacity
     )
 
     # Configure CORS
@@ -92,9 +105,3 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
-
-
-@app.get("/")
-async def root():
-    """Root endpoint redirecting to documentation."""
-    return {"message": "Welcome to the Authentication Service API", "docs": "/api/docs"}

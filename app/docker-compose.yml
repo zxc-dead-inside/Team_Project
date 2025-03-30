@@ -10,8 +10,9 @@ services:
       - theatre-db
     volumes:
       - static-data:/var/www/static/
-    # networks:
-    #   - theatre_network
+    networks:
+      - theatre_network_d
+      - auth-service_auth_network
 
   nginx:
     image: nginx:latest
@@ -23,8 +24,8 @@ services:
       - service
     ports:
       - "80:80"
-    # networks:
-    #   - theatre_network
+    networks:
+      - theatre_network_d
 
   theatre-db:
     image: postgres:14
@@ -32,8 +33,9 @@ services:
       - ./.env
     volumes:
       - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
-    # networks:
-    #   - theatre_network
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - theatre_network_d
 
   elasticsearch:
     image: elasticsearch:8.6.2
@@ -45,8 +47,8 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    # networks:
-    #   - theatre_network
+    networks:
+      - theatre_network_d
 
   movies-etl:
     build: etl/
@@ -54,11 +56,13 @@ services:
       - etl/.env
     volumes:
       - ./state:/app/state
-    # networks:
-    #   - theatre_network
+    networks:
+      - theatre_network_d
 
   theatre-redis:
     image: redis
+    networks:
+      - theatre_network_d 
 
   fastapi:
     build: fastapi/
@@ -70,14 +74,17 @@ services:
       - elasticsearch
       - service
       - theatre-redis
-    # networks:
-    #   - theatre_network
+    networks:
+      - theatre_network_d
+      - auth-service_auth_network
 
 volumes:
   static-data:
   esdata:
+  postgres_data:
 
-# networks:
-#   theatre_network:
-#     name: theatre_network
-#     external: true
+networks:
+  theatre_network_d:
+    name: theatre_network_d
+  auth-service_auth_network:
+    external: true

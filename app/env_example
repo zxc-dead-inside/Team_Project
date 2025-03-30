@@ -13,3 +13,5 @@ SQL_HOST=theatre-db
 SQL_PORT=5432
 SQL_OPTIONS=-c search_path=public,content
 DATABASE_TYPE=postgres
+
+AUTH_SERVICE_URL=http://auth_service_api:8100

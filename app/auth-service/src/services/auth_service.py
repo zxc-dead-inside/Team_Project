@@ -163,7 +163,8 @@ class AuthService:
 
         return None
 
-    async def validate_token(self, token: str, type: str) -> User | None:
+    # async def validate_token(self, token: str, type: str) -> User | None:
+    async def validate_token(self, token: str) -> User | None:
 
         """
         Validate a JWT token and return the associated user.
@@ -182,7 +183,7 @@ class AuthService:
         try:
             payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
             user_id = payload.get("sub")
-            if payload.get('type') != type: raise jwt.InvalidTokenError
+            # if payload.get('type') != type: raise jwt.InvalidTokenError
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token has been expired")
         except jwt.InvalidTokenError:

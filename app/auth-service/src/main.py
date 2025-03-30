@@ -17,7 +17,7 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
-from src.core.middleware.rps_limiter import RateLimitterMiddleware
+from src.core.middleware.rate_limiter import RateLimiterMiddleware
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -59,7 +59,7 @@ def create_application() -> FastAPI:
     app.container = container
 
     app.add_middleware(
-        RateLimitterMiddleware,
+        RateLimiterMiddleware,
         unlimited_roles=settings.unlimited_roles,
         special_roles=settings.special_roles,
         special_capacity=settings.special_capacity,

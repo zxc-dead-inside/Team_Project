@@ -2,7 +2,6 @@
 
 from dependency_injector import containers, providers
 from src.core.config import Settings
-from src.core.token_bucket import TokenBucket
 from src.db.database import Database
 from src.db.repositories.audit_log_repository import AuditLogRepository
 from src.db.repositories.login_history_repository import LoginHistoryRepository
@@ -125,10 +124,4 @@ class Container(containers.DeclarativeContainer):
         SuperuserService,
         user_repository=user_repository,
         audit_log_repository=audit_log_repository,
-    )
-
-    # Redis RPS limiter provider
-    token_bucket = providers.Singleton(
-        TokenBucket,
-        redis_service=redis_service
     )

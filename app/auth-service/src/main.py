@@ -105,3 +105,9 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
+
+
+@app.get("/")
+async def root():
+    """Root endpoint redirecting to documentation."""
+    return {"message": "Welcome to the Authentication Service API", "docs": "/api/docs"}

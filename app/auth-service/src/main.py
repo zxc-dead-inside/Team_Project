@@ -29,6 +29,11 @@ async def lifespan(app: FastAPI):
     # Setup
     settings = get_settings()
     setup_logging(settings.log_level)
+    container = Container()
+
+    Container.init_config_from_settings(container, settings)
+    container.wire(modules=[__name__])
+    app.container = container
 
     # Start services
     logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
@@ -50,13 +55,6 @@ def create_application() -> FastAPI:
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url="/api/redoc" if settings.environment != "production" else None
     )
-
-    # Configure container befor middlware adding to create dependecies
-    container = Container()
-    Container.init_config_from_settings(container, settings)
-    container.wire(modules=[__name__])
-    
-    app.container = container
 
     app.add_middleware(
         RateLimiterMiddleware,

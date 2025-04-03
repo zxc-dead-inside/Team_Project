@@ -1,4 +1,3 @@
-# fastapi/app/api/endpoints/health.py
 from datetime import UTC, datetime
 
 import httpx

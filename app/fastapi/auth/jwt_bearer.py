@@ -122,7 +122,9 @@ class JWTBearer(HTTPBearer):
         except Exception as e:
             logger.warning(f"Failed to cache roles: {e}")
 
-    async def validate_token_locally(self, token: str) -> dict[str, Any]:
+    async def validate_token_locally(
+        self, token: str, token_type: str = "access"
+    ) -> dict[str, Any]:
         """Validate token locally using cached public key."""
         try:
             public_key = await self.get_public_key()
@@ -130,6 +132,12 @@ class JWTBearer(HTTPBearer):
             payload = jwt.decode(
                 token, public_key, algorithms=["RS256"], options={"verify_exp": True}
             )
+
+            if payload.get("type") != token_type:
+                raise HTTPException(
+                    status_code=http.HTTPStatus.UNAUTHORIZED,
+                    detail=f"Invalid token type: expected {token_type}, got {payload.get('type')}",
+                )
 
             if self.redis:
                 try:
@@ -242,7 +250,7 @@ class JWTBearer(HTTPBearer):
                 )
             return await self.get_anonymous_user(request)
 
-    async def validate_token(self, token: str) -> UserData:
+    async def validate_token(self, token: str, token_type: str = "access") -> UserData:
         """Validate token with Auth service or locally if service unavailable."""
         try:
             async with httpx.AsyncClient(
@@ -250,7 +258,7 @@ class JWTBearer(HTTPBearer):
             ) as client:
                 response = await client.post(
                     f"{settings.auth_service_url}/api/v1/auth/validate-token",
-                    json={"token": token},
+                    json={"token": token, "type": token_type},
                 )
                 response.raise_for_status()
                 user_data = response.json().get("user_data", {})
@@ -272,7 +280,7 @@ class JWTBearer(HTTPBearer):
             logger.warning(
                 f"Auth service unavailable, falling back to local validation: {e}"
             )
-            payload = await self.validate_token_locally(token)
+            payload = await self.validate_token_locally(token, token_type)
             return self._convert_to_user_data(payload)
 
         except httpx.HTTPStatusError as e:

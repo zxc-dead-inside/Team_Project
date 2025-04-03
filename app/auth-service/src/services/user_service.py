@@ -238,7 +238,7 @@ class UserService:
             tuple[str, str] | None: (access_token, refresh_jwt)
         """
         self.user = await self.auth_service.validate_token(
-            token=refresh_token)  # , type='refresh'
+            token=refresh_token, type='refresh')
         await self.auth_service.check_refresh_token_blacklist(
             token=refresh_token)
         

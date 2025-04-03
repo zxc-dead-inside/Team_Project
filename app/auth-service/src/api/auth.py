@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
+
 from src.api.dependencies import (
     get_auth_service,
     get_email_service,
@@ -21,8 +23,6 @@ from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.user_service import UserService
-
-from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
 
 
 public_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -290,7 +290,8 @@ async def validate_token(
         )
     
     try:
-        user = await auth_service.validate_token(token)
+        token_type = token_data.get("type", "access")
+        user = await auth_service.validate_token(token, type=token_type)
         user_data = {
             "id": str(user.id),
             "username": user.username,

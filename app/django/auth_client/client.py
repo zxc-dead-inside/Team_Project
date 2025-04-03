@@ -69,13 +69,16 @@ class AuthServiceClient:
                     return cached_key.decode()
             raise
 
-    def validate_token(self, token: str) -> tuple[bool, dict[str, Any] | None]:
+    def validate_token(
+        self, token: str, token_type: str = "access"
+    ) -> tuple[bool, dict[str, Any] | None]:
         """Validate JWT token with Auth service or locally if service unavailable."""
         try:
             # First try to validate with auth service
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.post(
-                    f"{self.base_url}/api/v1/auth/validate-token", json={"token": token}
+                    f"{self.base_url}/api/v1/auth/validate-token",
+                    json={"token": token, "type": token_type},
                 )
                 response.raise_for_status()
                 return True, response.json().get("user_data")
@@ -84,12 +87,14 @@ class AuthServiceClient:
                 f"Auth service unavailable, falling back to local validation: {e}"
             )
             # Fallback to local validation
-            return self._validate_token_locally(token)
+            return self._validate_token_locally(token, token_type)
         except httpx.HTTPStatusError as e:
             logger.error(f"Auth service rejected token: {e}")
             return False, None
 
-    def _validate_token_locally(self, token: str) -> tuple[bool, dict[str, Any] | None]:
+    def _validate_token_locally(
+        self, token: str, token_type: str = "access"
+    ) -> tuple[bool, dict[str, Any] | None]:
         """Validate JWT token locally using cached public key."""
         try:
             public_key = self._get_public_key()
@@ -99,6 +104,12 @@ class AuthServiceClient:
                 algorithms=["RS256"],
                 options={"verify_signature": True},
             )
+
+            if payload.get("type") != token_type:
+                logger.warning(
+                    f"Token type mismatch: expected {token_type}, got {payload.get('type')}"
+                )
+                return False, None
 
             # Check if token is expired
             exp = payload.get("exp")

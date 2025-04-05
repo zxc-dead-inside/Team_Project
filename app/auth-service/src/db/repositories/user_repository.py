@@ -67,6 +67,24 @@ class UserRepository:
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.email == email))
             return result.scalars().first()
+    
+    async def get_by_yandex_id(self, yandex_id: str) -> User | None:
+        """
+        Get user by yandex id.
+
+        Args:
+            yandex_id: yandex_id to find User
+
+        Returns:
+            Optional[User]: User found by yandex_id, None otherwise
+        """
+
+        async with self.session_factory() as session:
+            result =  await session.execute(
+                select(User).where(User.yandex_id == yandex_id).options(
+                    joinedload(User.roles).joinedload(Role.permissions))
+            )
+            return result.scalars().first()
 
     async def create(self, user: User) -> User:
         """
@@ -81,7 +99,7 @@ class UserRepository:
         async with self.session_factory() as session:
             session.add(user)
             await session.commit()
-            await session.refresh(user)
+            await session.refresh(user, ['roles'])
             return user
 
     async def update_history(self, login_history: LoginHistory) -> None:

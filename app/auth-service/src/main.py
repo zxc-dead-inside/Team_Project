@@ -1,8 +1,10 @@
 """Main application entry point for the Authentication Service."""
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-import logging
+
 
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
@@ -51,7 +53,7 @@ def create_application() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
-        redoc_url="/api/redoc" if settings.environment != "production" else None
+        redoc_url="/api/redoc" if settings.environment != "production" else None,
     )
 
     # Configure CORS
@@ -62,7 +64,6 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
 
     # Routers without required authentication
     public_router = APIRouter()

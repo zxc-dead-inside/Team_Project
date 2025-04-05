@@ -1,8 +1,9 @@
 """API dependencies for dependency injection."""
-from fastapi import Depends, HTTPException, Request, status
+
 from typing import Annotated
 
-from jose import JWTError
+from fastapi import Depends, HTTPException, Request, status
+
 from src.db.models.user import User
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
@@ -10,6 +11,7 @@ from src.services.reset_password_service import ResetPasswordService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
 from src.services.role_service import RoleService
+from src.services.yandex_oauth_service import YandexOAuthService
 
 
 def get_auth_service(request: Request) -> AuthService:
@@ -40,6 +42,11 @@ def get_superuser_service(request: Request) -> SuperuserService:
 def get_reset_password_service(request: Request) -> ResetPasswordService:
     """Get reset password service from the container."""
     return request.app.container.reset_password_service()
+
+
+def get_yandex_oauth_service(request: Request) -> YandexOAuthService:
+    """Get Yandex OAuth service from the container."""
+    return request.app.container.yandex_oauth_service()
 
 
 async def get_current_user(request: Request) -> User:

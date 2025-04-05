@@ -14,6 +14,7 @@ from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
+from src.services.yandex_oauth_service import YandexOAuthService
 
 
 class Container(containers.DeclarativeContainer):
@@ -43,6 +44,12 @@ class Container(containers.DeclarativeContainer):
         container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
+        container.config.set("yandex_client_id", str(settings.yandex_client_id))
+        container.config.set("yandex_client_secret", str(settings.yandex_client_secret))
+        container.config.set("yandex_redirect_uri", str(settings.yandex_redirect_uri))
+        container.config.set("yandex_oauth_url", str(settings.yandex_oauth_url))
+        container.config.set("yandex_token_url", str(settings.yandex_token_url))
+        container.config.set("yandex_user_info_url", str(settings.yandex_user_info_url))
 
     # Database
     db = providers.Singleton(
@@ -105,6 +112,17 @@ class Container(containers.DeclarativeContainer):
         email_service=email_service,
     )
 
+    yandex_oauth_service = providers.Factory(
+        YandexOAuthService,
+        client_id=config.yandex_client_id,
+        client_secret=config.yandex_client_secret,
+        redirect_uri=config.yandex_redirect_uri,
+        redis_service=redis_service,
+        oauth_url=config.yandex_oauth_url,
+        token_url=config.yandex_token_url,
+        user_info_url=config.yandex_user_info_url,
+    )
+
     user_service = providers.Factory(
         UserService,
         user_repository=user_repository,
@@ -112,6 +130,7 @@ class Container(containers.DeclarativeContainer):
         role_repository=role_repository,
         auth_service=auth_service,
         redis_service=redis_service,
+        yandex_oauth_service=yandex_oauth_service,
     )
 
     role_service = providers.Factory(

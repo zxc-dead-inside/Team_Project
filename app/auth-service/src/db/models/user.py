@@ -22,12 +22,15 @@ class User(PreBase, Base):
 
     __tablename__ = "users"
 
-    username = Column(String(50), unique=True, nullable=False, index=True)
+    username = Column(String(50), unique=False, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     token_version = Column(DateTime(timezone=True), nullable=True)
+
+    # External OAuth
+    yandex_id = Column(String(255), unique=True, nullable=True)
 
     # Relationships
     roles = relationship("Role", secondary=user_role, back_populates="users")

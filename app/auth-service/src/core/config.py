@@ -1,7 +1,5 @@
 """Configuration settings for the application."""
 
-import uuid
-from uuid import UUID
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
@@ -29,6 +27,14 @@ class Settings(BaseSettings):
     secrets_path: str = 'secrets'
     private_key: str | None = None # Value of private key
     public_key: str | None = None # Value of public key
+
+    # Yandex OAuth
+    yandex_client_id: str | None = None
+    yandex_client_secret: str | None = None
+    yandex_redirect_uri: str = "http://localhost:8100/api/v1/auth/yandex/callback"
+    yandex_oauth_url: str = "https://oauth.yandex.ru/authorize"
+    yandex_token_url: str = "https://oauth.yandex.ru/token"
+    yandex_user_info_url: str = "https://login.yandex.ru/info"
 
     @field_validator("private_key", mode="before")
     def assemble_private_key(cls, v: str | None, values) -> str:

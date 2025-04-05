@@ -1,8 +1,9 @@
 """Service for user-related operations."""
 
+import httpx
+import logging
 from datetime import UTC, datetime
 from fastapi import Request
-import logging
 from uuid import UUID
 
 from src.api.schemas.user_roles import UserRoleResponse
@@ -14,6 +15,7 @@ from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.redis_service import RedisService
+from src.services.yandex_oauth_service import YandexOAuthService
 
 
 setup_logging()
@@ -29,6 +31,7 @@ class UserService:
         auth_service: AuthService,
         redis_service: RedisService,
         role_repository: RoleRepository,
+        yandex_oauth_service: YandexOAuthService | None = None,
         user: User = None
     ):
         """Initialize the user service."""
@@ -38,6 +41,7 @@ class UserService:
         self.auth_service = auth_service
         self.redis_service = redis_service
         self.role_repository = role_repository
+        self.yandex_oauth_service = yandex_oauth_service
         self.user = user
 
         self.user_cache_key_prefix = "user:"
@@ -211,6 +215,49 @@ class UserService:
 
         await self.auth_service.user_repository.update_history(
             login_history=login_history)
+
+        return jwt_pair
+    
+    async def login_via_yandex(
+        self, 
+        code: str,
+        state: str,
+        request: Request) -> tuple[str, str] | None:
+        """Authenticate user via Yandex OAuth"""
+        
+        if not await self.yandex_oauth_service.validate_state(state):
+            return None #  raise HTTPException(400, "Invalid state token")
+
+        try:
+            tokens = await self.yandex_oauth_service.get_tokens(code)
+            user_info = await self.yandex_oauth_service.get_user_info(
+                tokens["access_token"])
+        except httpx.HTTPStatusError:
+            return None
+
+        login_history = LoginHistory(
+            user_agent=request.headers.get('User-Agent'),
+            ip_address=request.client.host,
+            login_time=datetime.now(UTC),
+            successful='N'
+        )
+
+        user = await self.auth_service.get_or_create_yandex_user(user_info)
+        
+        if not user or not user.is_active:
+            await self.auth_service.user_repository.update_history(login_history)
+            return None
+
+        login_history.user_id = user.id
+        login_history.successful = 'Y'
+
+        if user.token_version is None:
+            user.token_version = datetime.now(UTC)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user)
+        
+        await self.auth_service.user_repository.update(user)
+        await self.auth_service.user_repository.update_history(login_history)
 
         return jwt_pair
 

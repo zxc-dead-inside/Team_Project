@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from models.models import Genre, MovieFull, MovieShort, Person
 from services.base import AbstractService
 from services.di import get_film_service
+from auth.dependencies import admin_required, moderator_required, subscriber_required, anonymous_required
 
 
 router = APIRouter()
@@ -56,6 +57,8 @@ async def films_popular_by_genre(
     )
 )
 async def film_general(
+    _: Annotated[dict, Depends(anonymous_required)],
+    film_service: Annotated[AbstractService, Depends(get_film_service)],
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100,
@@ -63,7 +66,6 @@ async def film_general(
     sort: Annotated[str | None, Query(
         description="Sorting criteria, optional")] = None,
     genre: UUID | None = None,
-    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
     films = await film_service.search_query(
         page_number=page_number,
@@ -92,13 +94,14 @@ async def film_general(
     description="Return list of films by search query"
 )
 async def film_search(
+    _: Annotated[dict, Depends(subscriber_required)],
+    film_service: Annotated[AbstractService, Depends(get_film_service)],
     page_number: Annotated[
         int, Query(ge=1, description="Page number, must be >= 1")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100,
         description="Number of items per page, must be between 1 and 100")] = 10,
     search_query: Annotated[str | None, Query(alias="query",
         description="Search query for filtering movies")] = None,
-    film_service: AbstractService = Depends(get_film_service)
 ) -> list[MovieShort]:
     films = await film_service.search_query(
         page_number=page_number,

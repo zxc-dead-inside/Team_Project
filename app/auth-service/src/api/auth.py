@@ -1,24 +1,28 @@
 """Authentication endpoints."""
 
-from fastapi import (
-    APIRouter, Depends, HTTPException, Request, status, Header, Form
-)
 from http import HTTPStatus
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
 
 from src.api.dependencies import (
     get_auth_service,
     get_email_service,
+    get_reset_password_service,
     get_user_service,
-    get_reset_password_service
 )
 from src.api.schemas.auth import (
-    ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate,
-    LoginRequest, LoginResponse
+    EmailConfirmation,
+    ForgotPasswordRequest,
+    LoginRequest,
+    LoginResponse,
+    ResetPasswordRequest,
+    UserCreate,
 )
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
-from src.services.user_service import UserService
 from src.services.reset_password_service import ResetPasswordService
+from src.services.user_service import UserService
 
 
 public_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -260,3 +264,47 @@ async def reset_password(
         )
 
     return {"message": message}
+
+
+@public_router.get("/public-key", status_code=status.HTTP_200_OK)
+async def get_public_key(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """Return the public key for token verification."""
+    return {
+        "public_key": auth_service.public_key
+    }
+
+@public_router.post("/validate-token", status_code=status.HTTP_200_OK)
+async def validate_token(
+    token_data: dict,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """Validate a JWT token and return user data if valid."""
+    token = token_data.get("token")
+    
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token is required"
+        )
+    
+    try:
+        token_type = token_data.get("type", "access")
+        user = await auth_service.validate_token(token, type=token_type)
+        user_data = {
+            "id": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "is_superuser": user.is_superuser,
+            "roles": [{"id": str(role.id), "name": role.name} for role in user.roles]
+        }
+        
+        return {"user_data": user_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(e)}"
+        ) from e

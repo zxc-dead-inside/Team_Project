@@ -1,7 +1,5 @@
 """Configuration settings for the application."""
 
-import uuid
-from uuid import UUID
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator

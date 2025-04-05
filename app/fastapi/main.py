@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.api import api_router
 from core.config import settings
 from db.redis import redis_connector
-from db import elastic
 from db.elastic import es_connector
 
 @asynccontextmanager
@@ -38,8 +36,3 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.api_v1_str)
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now(UTC)}

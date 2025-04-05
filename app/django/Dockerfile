@@ -7,10 +7,10 @@ ENV PYTHONUNBUFFERED=1
 ENV UWSGI_PROCESSES=1
 ENV UWSGI_THREADS=16
 ENV UWSGI_HARAKIRI=240
-ENV DJANGO_SETTINGS_MODULE 'example.settings'
+ENV DJANGO_SETTINGS_MODULE='example.settings'
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY run_uwsgi.sh run_uwsgi.sh
+COPY docker-entrypoint.sh /usr/local/bin/
 COPY requirements.txt requirements.txt
 COPY uwsgi/uwsgi.ini uwsgi.ini
 
@@ -19,7 +19,6 @@ RUN apt-get update && \
     gcc \
     build-essential \
     libpython3-dev \
-    postgresql \
     postgresql-client && \
     apt-get autoremove -y && \
     apt-get clean && \
@@ -34,8 +33,9 @@ RUN  mkdir -p /var/www/static/ \
 
 COPY . .
 
-RUN python manage.py collectstatic --no-input
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["uwsgi", "--ini", "uwsgi.ini"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["uwsgi", "--ini", "uwsgi.ini"]

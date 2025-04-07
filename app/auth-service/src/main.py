@@ -17,6 +17,7 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
+from src.tracing import setup_tracer
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -87,6 +88,9 @@ def create_application() -> FastAPI:
         SuperuserMiddleware,
         audit_log_repository_getter=lambda app: app.container.audit_log_repository(),
     )
+
+    # Tracing
+    setup_tracer(app)
 
     return app
 

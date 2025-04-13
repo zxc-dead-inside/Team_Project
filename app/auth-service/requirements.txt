@@ -36,6 +36,7 @@ opentelemetry-exporter-otlp==1.21.0
 opentelemetry-exporter-otlp-proto-common==1.21.0
 opentelemetry-exporter-otlp-proto-grpc==1.21.0
 opentelemetry-exporter-otlp-proto-http==1.21.0
+python-dateutil==2.9.0.post0
 
 
 

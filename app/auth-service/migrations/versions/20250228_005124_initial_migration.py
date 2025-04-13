@@ -11,6 +11,8 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
+from src.db.partitioning import generate_partition_login_history
+
 
 # revision identifiers, used by Alembic.
 revision: str = "f991fb728e0a"
@@ -75,29 +77,21 @@ def upgrade() -> None:
         ["name"],
         unique=True,
     )
-    op.create_table(
-        "login_history",
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("user_agent", sa.String(length=255), nullable=True),
-        sa.Column("ip_address", sa.String(length=45), nullable=True),
-        sa.Column("login_time", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("successful", sa.String(length=1), nullable=True),
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        op.f("ix_login_history_login_time"),
-        "login_history",
-        ["login_time"],
-        unique=False,
-    )
-    op.create_index(
-        op.f("ix_login_history_user_id"), "login_history", ["user_id"], unique=False
-    )
+    op.execute("""
+        CREATE TABLE login_history (
+            id UUID,
+            user_id UUID NOT NULL REFERENCES users(id),
+            user_agent VARCHAR(255),
+            ip_address VARCHAR(45),
+            login_time TIMESTAMPTZ NOT NULL,
+            successful CHAR(1) DEFAULT 'Y'
+        ) PARTITION BY RANGE (login_time);
+        """)
+    sql_statements = generate_partition_login_history().split(';')
+    for statement in sql_statements:
+        clean_statement = statement.strip()
+        if clean_statement:
+            op.execute(clean_statement)
     op.create_table(
         "role_permission",
         sa.Column("role_id", sa.UUID(), nullable=False),

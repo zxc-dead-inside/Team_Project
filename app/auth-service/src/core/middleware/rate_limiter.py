@@ -113,7 +113,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             key,
             capacity,
             redis_service: RedisService = Provide[Container.redis_service]
-    ):
+    ) -> bool:
         """
         Attempt to take a token from a bucket while maintaining an
         rate limit given the time since the last token refresh.

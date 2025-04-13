@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # RPS limits
-    unlimited_roles: str | set[str] = ['admin', 'moderator']
-    special_roles: str | set[str] = ['subscriber']
+    unlimited_roles: str | set[str] = {'admin', 'moderator'}
+    special_roles: str | set[str] = {'subscriber'}
     special_capacity: int = 40
     default_capacity: int = 20
     undefind_capacity: int = 10

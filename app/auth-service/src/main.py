@@ -3,12 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+from passlib.context import CryptContext
 
 from src.api.auth import public_router as auth_public_router
 from src.api.auth import private_router as auth_private_router
-from passlib.context import CryptContext
 from src.api.health import router as health_router
 from src.api.middleware.superuser_middleware import SuperuserMiddleware
+from src.api.middleware.trace import TraceParentMiddleware
 from src.api.roles import router as roles_router
 from src.api.user_roles import router as user_roles_router
 from src.api.superuser import router as superuser_router
@@ -17,8 +18,9 @@ from src.core.config import get_settings
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.core.middleware.authentication import AuthenticationMiddleware
+from src.core.middleware.rate_limiter import RateLimiterMiddleware
 from src.tracing import setup_tracer
-from src.api.middleware.trace import TraceParentMiddleware
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -32,6 +34,7 @@ async def lifespan(app: FastAPI):
     container = Container()
 
     Container.init_config_from_settings(container, settings)
+    container.wire(modules=[__name__])
     app.container = container
 
     # Start services
@@ -41,7 +44,6 @@ async def lifespan(app: FastAPI):
 
     # Teardown
     logging.info(f"Shutting down {settings.project_name}")
-
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -54,6 +56,15 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
         redoc_url="/api/redoc" if settings.environment != "production" else None
+    )
+
+    app.add_middleware(
+        RateLimiterMiddleware,
+        unlimited_roles=settings.unlimited_roles,
+        special_roles=settings.special_roles,
+        special_capacity=settings.special_capacity,
+        default_capacity=settings.default_capacity,
+        undefind_capacity=settings.undefind_capacity
     )
 
     # Configure CORS

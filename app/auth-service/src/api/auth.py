@@ -18,7 +18,8 @@ from src.api.dependencies import (
     get_reset_password_service,
     get_user_service,
     get_reset_password_service,
-    get_yandex_oauth_service,
+    # get_yandex_oauth_service,
+    get_oauth_service,
 )
 from src.api.schemas.auth import (
     EmailConfirmation,
@@ -31,9 +32,13 @@ from src.api.schemas.auth import (
 from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
+from src.services.oauth.oauth_service import OAuthService
 from src.services.reset_password_service import ResetPasswordService
-from src.services.yandex_oauth_service import YandexOAuthService
+# from src.services.yandex_oauth_service import YandexOAuthService
 from src.services.user_service import UserService
+
+from dependency_injector.wiring import Provide, inject
+from src.core.container import Container
 
 setup_logging()
 
@@ -148,48 +153,32 @@ async def login(
         refresh_token=jwt_pair.get('refresh_token')
     )
 
-@public_router.get("/auth/yandex")
-async def yandex_auth_start(
-    yandex_oauth_service: YandexOAuthService = Depends(get_yandex_oauth_service),
-):
-    try:
-        state = yandex_oauth_service.generate_state()
-        await yandex_oauth_service.save_state(f"oauth:yandex:{state}", 300)
-        return RedirectResponse(
-            url=yandex_oauth_service.get_auth_url(state),
-            status_code=307  # Temporary Redirect
-        )
-    except Exception as e:
-        raise HTTPException(500, detail=str(e))
-
-
-@public_router.post("/login-via-yandex")
-async def yandex_auth_start(
+@public_router.get("/{provider}/login")
+async def oauth_login(
     request: Request,
-    yandex_oauth_service: YandexOAuthService = Depends(get_yandex_oauth_service)
+    provider: str,
+    oauth_service: OAuthService = Depends(get_oauth_service)
 ):
-    # Генерируем и сохраняем state (например, в Redis)
-    state = yandex_oauth_service.generate_state()
-    await yandex_oauth_service.save_state(state)
-    logging.info(f"YANDEX state: {state}")
-    logging.info(yandex_oauth_service.get_auth_url(state))
+    state = oauth_service.generate_state()
+
+    await oauth_service.save_state(provider, state)
+    auth_url = await oauth_service.provider_factory[provider].get_auth_url(state)
+
     return {
-        "auth_url": yandex_oauth_service.get_auth_url(state),
+        "auth_url": auth_url,
         "debug_message": "Use this URL in your browser for test purposes."
     }
     
-    # return RedirectResponse(yandex_oauth_service.get_auth_url(state))
-
-@public_router.get("/yandex/callback")
-async def yandex_auth_callback(
+@public_router.get("/{provider}/callback")
+async def oauth_callback(
     code: str,
     state: str,
+    provider: str,
     request: Request,
     user_service: UserService = Depends(get_user_service)
 ):
-    logging.info("YANDEX CALLBACK")
     try:
-        tokens = await user_service.login_via_yandex(code, state, request)
+        tokens = await user_service.login_via_oauth(provider, code, state, request)
     except HTTPException as e:
         return {"status": "error", "message": str(e.detail)}
     
@@ -198,9 +187,7 @@ async def yandex_auth_callback(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail='...'
         )
-    logging.info(f"tokens type: {type(tokens)}")
-    logging.info(f"len tokens: {len(tokens)}")
-    logging.info(f"tokens: {tokens}")
+
     return LoginResponse(
         access_token=tokens.get("access_token"),
         refresh_token=tokens.get("refresh_token"),

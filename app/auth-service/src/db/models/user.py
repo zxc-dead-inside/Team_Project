@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy import UUID, Boolean, Column, DateTime, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
 from src.db.base_models import Base, PreBase
+from src.db.models.oauth import OAuthAccount
 
 
 # Association table for User-Role relationship
@@ -22,7 +23,7 @@ class User(PreBase, Base):
 
     __tablename__ = "users"
 
-    username = Column(String(50), unique=False, nullable=False, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
@@ -30,7 +31,7 @@ class User(PreBase, Base):
     token_version = Column(DateTime(timezone=True), nullable=True)
 
     # External OAuth
-    yandex_id = Column(String(255), unique=True, nullable=True)
+    oauth_accounts = relationship("OAuthAccount", cascade="all, delete-orphan", back_populates="user")
 
     # Relationships
     roles = relationship("Role", secondary=user_role, back_populates="users")

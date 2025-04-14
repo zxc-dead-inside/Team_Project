@@ -14,7 +14,9 @@ from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
-from src.services.yandex_oauth_service import YandexOAuthService
+
+from src.services.oauth.oauth_service import OAuthService
+from src.services.oauth.providers import VKOAuthProvider, YandexOAuthProvider
 
 
 class Container(containers.DeclarativeContainer):
@@ -44,12 +46,24 @@ class Container(containers.DeclarativeContainer):
         container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
+        
+        # OAuth providers
         container.config.set("yandex_client_id", str(settings.yandex_client_id))
         container.config.set("yandex_client_secret", str(settings.yandex_client_secret))
         container.config.set("yandex_redirect_uri", str(settings.yandex_redirect_uri))
         container.config.set("yandex_oauth_url", str(settings.yandex_oauth_url))
         container.config.set("yandex_token_url", str(settings.yandex_token_url))
         container.config.set("yandex_user_info_url", str(settings.yandex_user_info_url))
+
+        container.config.set("vk_client_id", str(settings.vk_client_id))
+        container.config.set("vk_client_secret", str(settings.vk_client_secret))
+        container.config.set("vk_redirect_uri", str(settings.vk_redirect_uri))
+        container.config.set("vk_oauth_url", str(settings.vk_oauth_url))
+        container.config.set("vk_token_url", str(settings.vk_token_url))
+        container.config.set("vk_user_info_url", str(settings.vk_user_info_url))
+
+        container.config.set("oauth_state_ttl", str(settings.oauth_state_ttl))
+
 
     # Database
     db = providers.Singleton(
@@ -112,15 +126,45 @@ class Container(containers.DeclarativeContainer):
         email_service=email_service,
     )
 
-    yandex_oauth_service = providers.Factory(
-        YandexOAuthService,
-        client_id=config.yandex_client_id,
-        client_secret=config.yandex_client_secret,
-        redirect_uri=config.yandex_redirect_uri,
+    yandex_config = providers.Dict({
+        "client_id": config.yandex_client_id,
+        "client_secret": config.yandex_client_secret,
+        "redirect_uri": config.yandex_redirect_uri,
+        "auth_url": config.yandex_oauth_url,
+        "token_url": config.yandex_token_url,
+        "user_info_url": config.yandex_user_info_url
+    })
+
+    vk_config = providers.Dict({
+        "client_id": config.vk_client_id,
+        "client_secret": config.vk_client_secret,
+        "redirect_uri": config.vk_redirect_uri,
+        "auth_url": config.vk_oauth_url,
+        "token_url": config.vk_token_url,
+        "user_info_url": config.vk_user_info_url
+    })
+
+    yandex_provider = providers.Factory(
+        YandexOAuthProvider,
+        config=yandex_config
+    )
+
+    vk_provider = providers.Factory(
+        VKOAuthProvider,
+        config=vk_config
+    )
+
+    provider_factory = providers.Dict({
+        "yandex": yandex_provider,
+        "vk": vk_provider
+    })
+
+    oauth_service = providers.Factory(
+        OAuthService,
+        provider_factory=provider_factory,
         redis_service=redis_service,
-        oauth_url=config.yandex_oauth_url,
-        token_url=config.yandex_token_url,
-        user_info_url=config.yandex_user_info_url,
+        user_repository=user_repository,
+        state_ttl=config.oauth_state_ttl
     )
 
     user_service = providers.Factory(
@@ -130,7 +174,7 @@ class Container(containers.DeclarativeContainer):
         role_repository=role_repository,
         auth_service=auth_service,
         redis_service=redis_service,
-        yandex_oauth_service=yandex_oauth_service,
+        oauth_service=oauth_service,
     )
 
     role_service = providers.Factory(

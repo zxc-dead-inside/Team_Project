@@ -320,7 +320,8 @@ class AuthService:
             "refresh_token": refresh_token,
         }
 
-    async def get_or_create_yandex_user(self, user_info: dict) -> User | None:
+    async def get_or_create_oauth_user(
+            self, provider: str, user_info: dict) -> User | None:
         """
         Auxiliary method to work with Yandex users.
         

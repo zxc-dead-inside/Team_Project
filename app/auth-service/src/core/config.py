@@ -15,6 +15,36 @@ class Settings(BaseSettings):
     environment: str = Field(default="development")
     log_level: str = "INFO"
 
+    # RPS limits
+    unlimited_roles: str | set[str] = {'admin', 'moderator'}
+    special_roles: str | set[str] = {'subscriber'}
+    special_capacity: int = 40
+    default_capacity: int = 20
+    undefind_capacity: int = 10
+
+    @field_validator("unlimited_roles", mode="before")
+    def assemble_unlimited_roles(cls, v: str | list[str]) -> list[str]:
+        """Parse string UNLIMITED_ROLES into set of Roles."""
+        if isinstance(v, str) and not v.startswith("["):
+            origins = [role.strip() for role in v.split(",")]
+            return set(origins)
+        elif isinstance(v, set):
+            return v
+        raise ValueError(
+            "UNLIMITED_ROLES should be a comma-separated string of Roles")
+    
+    @field_validator("special_roles", mode="before")
+    def assemble_special_roles(cls, v: str | list[str]) -> list[str]:
+        """Parse string SPECIAL_ROLES into set of Roles."""
+        if isinstance(v, str) and not v.startswith("["):
+            origins = [role.strip() for role in v.split(",")]
+            return set(origins)
+        elif isinstance(v, set):
+            return v
+        raise ValueError(
+            "SPECIAL_ROLES should be a comma-separated string of Roles")
+
+
     # Authentication
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7

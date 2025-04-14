@@ -183,7 +183,7 @@ class AuthService:
                 status_code=401, detail="Authentication required")
 
         try:
-            payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
+            payload = await self.decode_token(token)
             user_id = payload.get("sub")
             if payload.get('type') != type: raise jwt.InvalidTokenError
         except jwt.ExpiredSignatureError:
@@ -199,6 +199,9 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid token")
 
         return user
+    
+    async def decode_token(self, token: str) -> dict:
+        return jwt.decode(token, self.public_key, algorithms=["RS256"])
 
     async def check_refresh_token_blacklist(self, token: str) -> None:
         payload = jwt.decode(token, self.public_key, algorithms=["RS256"])

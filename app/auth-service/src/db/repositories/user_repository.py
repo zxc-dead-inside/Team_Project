@@ -9,6 +9,8 @@ from src.db.models import Role
 from src.db.models.user import User
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.login_history import LoginHistory
+from src.db.models.oauth import OAuthAccount
+
 
 
 class UserRepository:
@@ -66,6 +68,24 @@ class UserRepository:
         """
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.email == email))
+            return result.scalars().first()
+    
+    async def get_by_yandex_id(self, yandex_id: str) -> User | None:
+        """
+        Get user by yandex id.
+
+        Args:
+            yandex_id: yandex_id to find User
+
+        Returns:
+            Optional[User]: User found by yandex_id, None otherwise
+        """
+
+        async with self.session_factory() as session:
+            result =  await session.execute(
+                select(User).where(User.yandex_id == yandex_id).options(
+                    joinedload(User.roles).joinedload(Role.permissions))
+            )
             return result.scalars().first()
 
     async def create(self, user: User) -> User:
@@ -338,3 +358,40 @@ class UserRepository:
                 select(func.count()).select_from(User).filter(User.is_superuser == True)  # noqa: E712
             )
             return result.scalar() or 0
+    
+    async def get_by_oauth(self, provider: str, provider_id: str) -> User | None:
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(User).join(OAuthAccount).where(
+                    OAuthAccount.provider == provider,
+                    OAuthAccount.provider_id == provider_id
+                ).options(joinedload(User.oauth_accounts)).options(joinedload(User.roles).joinedload(Role.permissions))
+            )
+            return result.unique().scalar_one_or_none()
+
+       
+    
+    async def create_oauth_user(
+        self,
+        provider: str,
+        provider_id: str,
+        email: str,
+        username: str,
+        password: str
+    ) -> User:
+        async with self.session_factory() as session:
+            user = User(
+                email=email,
+                username=username,
+                password=password,
+                is_active=True,
+                oauth_accounts=[OAuthAccount(
+                    provider=provider,
+                    provider_id=provider_id
+                )]
+            )
+            session.add(user)
+            await session.commit()
+            await session.refresh(user, ['roles'])
+            return user
+

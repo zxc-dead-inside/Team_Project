@@ -1,7 +1,5 @@
 """Configuration settings for the application."""
 
-import uuid
-from uuid import UUID
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, Field, PostgresDsn, RedisDsn, field_validator
@@ -17,6 +15,36 @@ class Settings(BaseSettings):
     environment: str = Field(default="development")
     log_level: str = "INFO"
 
+    # RPS limits
+    unlimited_roles: str | set[str] = {'admin', 'moderator'}
+    special_roles: str | set[str] = {'subscriber'}
+    special_capacity: int = 40
+    default_capacity: int = 20
+    undefind_capacity: int = 10
+
+    @field_validator("unlimited_roles", mode="before")
+    def assemble_unlimited_roles(cls, v: str | list[str]) -> list[str]:
+        """Parse string UNLIMITED_ROLES into set of Roles."""
+        if isinstance(v, str) and not v.startswith("["):
+            origins = [role.strip() for role in v.split(",")]
+            return set(origins)
+        elif isinstance(v, set):
+            return v
+        raise ValueError(
+            "UNLIMITED_ROLES should be a comma-separated string of Roles")
+    
+    @field_validator("special_roles", mode="before")
+    def assemble_special_roles(cls, v: str | list[str]) -> list[str]:
+        """Parse string SPECIAL_ROLES into set of Roles."""
+        if isinstance(v, str) and not v.startswith("["):
+            origins = [role.strip() for role in v.split(",")]
+            return set(origins)
+        elif isinstance(v, set):
+            return v
+        raise ValueError(
+            "SPECIAL_ROLES should be a comma-separated string of Roles")
+
+
     # Authentication
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -29,6 +57,24 @@ class Settings(BaseSettings):
     secrets_path: str = 'secrets'
     private_key: str | None = None # Value of private key
     public_key: str | None = None # Value of public key
+
+    # Yandex OAuth
+    yandex_client_id: str | None = None
+    yandex_client_secret: str | None = None
+    yandex_redirect_uri: str = "http://localhost:8100/api/v1/auth/yandex/callback"
+    yandex_oauth_url: str = "https://oauth.yandex.ru/authorize"
+    yandex_token_url: str = "https://oauth.yandex.ru/token"
+    yandex_user_info_url: str = "https://login.yandex.ru/info"
+
+    # VK OAuth. It does not work
+    vk_client_id: str | None = None
+    vk_client_secret: str | None = None
+    vk_redirect_uri: str = "http://localhost:8100/api/v1/auth/vk/callback"
+    vk_oauth_url: str = "https://oauth.vk.com/authorize"
+    vk_token_url: str = "https://oauth.vk.com/access_token"
+    vk_user_info_url: str = "https://api.vk.com/method/users.get"
+
+    oauth_state_ttl: int = 300  # 5 мину
 
     @field_validator("private_key", mode="before")
     def assemble_private_key(cls, v: str | None, values) -> str:

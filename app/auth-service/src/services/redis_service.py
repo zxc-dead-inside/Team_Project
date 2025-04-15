@@ -59,6 +59,11 @@ class RedisService:
         self.default_ttl = default_ttl
         self.redis_client = redis.from_url(redis_url)
 
+    async def exists(self, key: str) -> bool:
+        """Return True if key exists or False if does not"""
+
+        return self.exists(key)
+
     async def get(self, key: str) -> str | None:
         """Get a value from Redis by key."""
         try:

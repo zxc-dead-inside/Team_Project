@@ -2,16 +2,15 @@
 from datetime import datetime, UTC
 from uuid import uuid5, NAMESPACE_DNS
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security.base import SecurityBase
 from fastapi.openapi.models import OAuth2 as OAuth2Model
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
-from jose import JWTError
 from src.api.dependencies import get_user_service, get_role_service
 from src.services.user_service import UserService
 from src.services.role_service import RoleService
-from src.db.models import User, Role
+from src.db.models import User
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -48,7 +47,7 @@ class AuthenticationMiddleware(SecurityBase):
                 user = await user_service.auth_service.validate_token(
                     token=token, type='access'
                 )
-            except JWTError:
+            except Exception:
                 user = None
 
         if not user:
@@ -74,4 +73,3 @@ class AuthenticationMiddleware(SecurityBase):
 
         user_service.user = user
         request.state.user = user
-

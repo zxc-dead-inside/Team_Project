@@ -1,25 +1,46 @@
 """Authentication endpoints."""
 
+import logging
+from http import HTTPStatus
+from typing import Annotated
+
 from fastapi import (
     APIRouter, Depends, HTTPException, Request, status, Header, Form
 )
-from http import HTTPStatus
+from fastapi.responses import RedirectResponse
+
+
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
 
 from src.api.dependencies import (
     get_auth_service,
     get_email_service,
+    get_reset_password_service,
     get_user_service,
-    get_reset_password_service
+    get_reset_password_service,
+    # get_yandex_oauth_service,
+    get_oauth_service,
 )
 from src.api.schemas.auth import (
-    ForgotPasswordRequest, EmailConfirmation, ResetPasswordRequest, UserCreate,
-    LoginRequest, LoginResponse
+    EmailConfirmation,
+    ForgotPasswordRequest,
+    LoginRequest,
+    LoginResponse,
+    ResetPasswordRequest,
+    UserCreate,
 )
+from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
-from src.services.user_service import UserService
+from src.services.oauth.oauth_service import OAuthService
 from src.services.reset_password_service import ResetPasswordService
+# from src.services.yandex_oauth_service import YandexOAuthService
+from src.services.user_service import UserService
 
+from dependency_injector.wiring import Provide, inject
+from src.core.container import Container
+
+setup_logging()
 
 public_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 private_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -130,6 +151,46 @@ async def login(
     return LoginResponse(
         access_token=jwt_pair.get('access_token'),
         refresh_token=jwt_pair.get('refresh_token')
+    )
+
+@public_router.get("/{provider}/login")
+async def oauth_login(
+    request: Request,
+    provider: str,
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    state = oauth_service.generate_state()
+
+    await oauth_service.save_state(provider, state)
+    auth_url = await oauth_service.provider_factory[provider].get_auth_url(state)
+
+    return {
+        "auth_url": auth_url,
+        "debug_message": "Use this URL in your browser for test purposes."
+    }
+    
+@public_router.get("/{provider}/callback")
+async def oauth_callback(
+    code: str,
+    state: str,
+    provider: str,
+    request: Request,
+    user_service: UserService = Depends(get_user_service)
+):
+    try:
+        tokens = await user_service.login_via_oauth(provider, code, state, request)
+    except HTTPException as e:
+        return {"status": "error", "message": str(e.detail)}
+    
+    if not tokens:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='...'
+        )
+
+    return LoginResponse(
+        access_token=tokens.get("access_token"),
+        refresh_token=tokens.get("refresh_token"),
     )
 
 @private_router.post(
@@ -260,3 +321,47 @@ async def reset_password(
         )
 
     return {"message": message}
+
+
+@public_router.get("/public-key", status_code=status.HTTP_200_OK)
+async def get_public_key(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """Return the public key for token verification."""
+    return {
+        "public_key": auth_service.public_key
+    }
+
+@public_router.post("/validate-token", status_code=status.HTTP_200_OK)
+async def validate_token(
+    token_data: dict,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """Validate a JWT token and return user data if valid."""
+    token = token_data.get("token")
+    
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token is required"
+        )
+    
+    try:
+        token_type = token_data.get("type", "access")
+        user = await auth_service.validate_token(token, type=token_type)
+        user_data = {
+            "id": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "is_superuser": user.is_superuser,
+            "roles": [{"id": str(role.id), "name": role.name} for role in user.roles]
+        }
+        
+        return {"user_data": user_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(e)}"
+        ) from e

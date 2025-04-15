@@ -58,6 +58,24 @@ class Settings(BaseSettings):
     private_key: str | None = None # Value of private key
     public_key: str | None = None # Value of public key
 
+    # Yandex OAuth
+    yandex_client_id: str | None = None
+    yandex_client_secret: str | None = None
+    yandex_redirect_uri: str = "http://localhost:8100/api/v1/auth/yandex/callback"
+    yandex_oauth_url: str = "https://oauth.yandex.ru/authorize"
+    yandex_token_url: str = "https://oauth.yandex.ru/token"
+    yandex_user_info_url: str = "https://login.yandex.ru/info"
+
+    # VK OAuth. It does not work
+    vk_client_id: str | None = None
+    vk_client_secret: str | None = None
+    vk_redirect_uri: str = "http://localhost:8100/api/v1/auth/vk/callback"
+    vk_oauth_url: str = "https://oauth.vk.com/authorize"
+    vk_token_url: str = "https://oauth.vk.com/access_token"
+    vk_user_info_url: str = "https://api.vk.com/method/users.get"
+
+    oauth_state_ttl: int = 300  # 5 мину
+
     @field_validator("private_key", mode="before")
     def assemble_private_key(cls, v: str | None, values) -> str:
         """Assemble private_key from folder"""

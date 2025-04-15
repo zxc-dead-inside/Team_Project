@@ -1,7 +1,14 @@
 """Authentication endpoints."""
 
+import logging
 from http import HTTPStatus
 from typing import Annotated
+
+from fastapi import (
+    APIRouter, Depends, HTTPException, Request, status, Header, Form
+)
+from fastapi.responses import RedirectResponse
+
 
 from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
 
@@ -10,6 +17,9 @@ from src.api.dependencies import (
     get_email_service,
     get_reset_password_service,
     get_user_service,
+    get_reset_password_service,
+    # get_yandex_oauth_service,
+    get_oauth_service,
 )
 from src.api.schemas.auth import (
     EmailConfirmation,
@@ -19,11 +29,18 @@ from src.api.schemas.auth import (
     ResetPasswordRequest,
     UserCreate,
 )
+from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
+from src.services.oauth.oauth_service import OAuthService
 from src.services.reset_password_service import ResetPasswordService
+# from src.services.yandex_oauth_service import YandexOAuthService
 from src.services.user_service import UserService
 
+from dependency_injector.wiring import Provide, inject
+from src.core.container import Container
+
+setup_logging()
 
 public_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 private_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -134,6 +151,46 @@ async def login(
     return LoginResponse(
         access_token=jwt_pair.get('access_token'),
         refresh_token=jwt_pair.get('refresh_token')
+    )
+
+@public_router.get("/{provider}/login")
+async def oauth_login(
+    request: Request,
+    provider: str,
+    oauth_service: OAuthService = Depends(get_oauth_service)
+):
+    state = oauth_service.generate_state()
+
+    await oauth_service.save_state(provider, state)
+    auth_url = await oauth_service.provider_factory[provider].get_auth_url(state)
+
+    return {
+        "auth_url": auth_url,
+        "debug_message": "Use this URL in your browser for test purposes."
+    }
+    
+@public_router.get("/{provider}/callback")
+async def oauth_callback(
+    code: str,
+    state: str,
+    provider: str,
+    request: Request,
+    user_service: UserService = Depends(get_user_service)
+):
+    try:
+        tokens = await user_service.login_via_oauth(provider, code, state, request)
+    except HTTPException as e:
+        return {"status": "error", "message": str(e.detail)}
+    
+    if not tokens:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='...'
+        )
+
+    return LoginResponse(
+        access_token=tokens.get("access_token"),
+        refresh_token=tokens.get("refresh_token"),
     )
 
 @private_router.post(

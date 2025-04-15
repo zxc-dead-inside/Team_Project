@@ -1,11 +1,14 @@
 """Authentication service for user authentication and authorization."""
 
-from datetime import UTC, datetime, timedelta
-from fastapi import HTTPException
-import jwt
-from passlib.context import CryptContext
+import secrets
+import string
 import uuid
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
+
+import jwt
+from fastapi import HTTPException
+from passlib.context import CryptContext
 
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
@@ -319,3 +322,67 @@ class AuthService:
             "token_type": "bearer",
             "refresh_token": refresh_token,
         }
+
+    async def get_or_create_oauth_user(
+            self, provider: str, user_info: dict) -> User | None:
+        """
+        Auxiliary method to work with Yandex users.
+        
+        Args:
+            user_info: dict of user info received from yandex
+        
+        Returns:
+           Optional[User]
+        """
+
+        user = await self.user_repository.get_by_yandex_id(
+            user_info["id"]
+        )
+        if user:
+            return user
+
+        if email := user_info.get("default_email"):
+            user = await self.user_repository.get_by_email(email)
+            if user:
+                user.yandex_id = user_info["id"]
+                await self.user_repository.update(user)
+                return user
+
+        username = self.generate_user_name("yandex", user_info["login"])
+        while not username:
+            username = self.generate_user_name("yandex", user_info["login"])
+
+        user = User(
+            username=username,
+            password=self.hash_password(self.generate_password()),
+            email=user_info.get("default_email"),
+            yandex_id=user_info["id"],
+            is_active=True,
+            roles=[],
+        )
+        return await self.user_repository.create(user)
+
+    
+    async def check_unique_username(self, username) -> bool:
+        """Retruns true if username is unique."""
+
+        return (
+            True if self.user_repository.get_by_username(username) is None
+            else False
+        )
+
+    @staticmethod
+    def generate_user_name(prefix: str, login: str, length: int = 4) -> str:
+        """
+        Auxiliary method to generate unique user name.
+        """
+
+        return f"{prefix}_{login}_{secrets.token_hex(length)}"
+    
+    @staticmethod
+    def generate_password(length: int = 12) -> str:
+        """
+        Auxiliary method to generate password.
+        """
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for i in range(length))

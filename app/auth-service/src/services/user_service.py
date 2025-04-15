@@ -1,8 +1,9 @@
 """Service for user-related operations."""
 
+import httpx
+import logging
 from datetime import UTC, datetime
 from fastapi import Request
-import logging
 from uuid import UUID
 
 from src.api.schemas.user_roles import UserRoleResponse
@@ -14,6 +15,7 @@ from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.redis_service import RedisService
+from src.services.oauth.base import BaseOAuthProvider
 
 
 setup_logging()
@@ -29,6 +31,7 @@ class UserService:
         auth_service: AuthService,
         redis_service: RedisService,
         role_repository: RoleRepository,
+        oauth_service: BaseOAuthProvider | None = None,
         user: User = None
     ):
         """Initialize the user service."""
@@ -38,6 +41,7 @@ class UserService:
         self.auth_service = auth_service
         self.redis_service = redis_service
         self.role_repository = role_repository
+        self.oauth_service = oauth_service
         self.user = user
 
         self.user_cache_key_prefix = "user:"
@@ -211,6 +215,61 @@ class UserService:
 
         await self.auth_service.user_repository.update_history(
             login_history=login_history)
+
+        return jwt_pair
+    
+    async def login_via_oauth(
+        self, 
+        provider: str,
+        code: str,
+        state: str,
+        request: Request) -> tuple[str, str] | None:
+        """Authenticate user via Yandex OAuth"""
+        
+        if not await self.oauth_service.validate_state(provider, state):
+            return None
+
+        try:
+            tokens = await self.oauth_service.provider_factory[
+                provider].get_tokens(code)
+            user_data = await self.oauth_service.provider_factory[
+                provider].get_user_data(tokens)
+        except httpx.HTTPStatusError:
+            return None
+        logging.info(f"user_info: {user_data}")
+        login_history = LoginHistory(
+            user_agent=request.headers.get('User-Agent'),
+            ip_address=request.client.host,
+            login_time=datetime.now(UTC),
+            successful='N'
+        )
+
+        user = await self.user_repository.get_by_oauth(provider, user_data["provider_id"])
+        if not user:
+            username = self.auth_service.generate_user_name(provider, user_data["username"])
+            password =self.auth_service.hash_password(self.auth_service.generate_password())
+            user = await self.user_repository.create_oauth_user(
+                provider=provider,
+                provider_id=user_data["provider_id"],
+                email=user_data["email"],
+                username=username,
+                password=password
+            )
+        
+        if not user or not user.is_active:
+            await self.auth_service.user_repository.update_history(login_history)
+            return None
+
+        login_history.user_id = user.id
+        login_history.successful = 'Y'
+
+        if user.token_version is None:
+            user.token_version = datetime.now(UTC)
+        
+        jwt_pair = await self.auth_service.refresh_tokens_for_user(user)
+        
+        await self.auth_service.user_repository.update(user)
+        await self.auth_service.user_repository.update_history(login_history)
 
         return jwt_pair
 

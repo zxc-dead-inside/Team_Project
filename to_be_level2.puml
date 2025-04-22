@@ -1,0 +1,53 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Container(frontend, "Фронтенд")
+Person(admin, "Администратор")
+
+System_Boundary(theatre, "Кинотеатр") {
+    Container(web, "nginx", "Reverse Proxy")
+    Container(django, "Django Service", "Admin Panel", "Панель администратора")
+    Container(fastapi, "FastAPI", "Python/FastAPI", "Публичный API")
+    Container(etl, "ETL Service", "Python", "Синхронизация данных с Elasticsearch")
+    ContainerDb(db, "PostgreSQL", "Хранит данные фильмов")
+    Container(es, "Elasticsearch", "Поисковый движок")
+    Container(redis, "Redis", "Кэш/Очереди")
+}
+
+System_Ext(auth, "Auth-сервис") {
+    Container(nginx_auth, "nginx", "Reverse Proxy", "")
+    Container(api, "Auth API", "FastAPI", "Обработка аутентификации")
+    ContainerDb(auth_db, "PostgreSQL", "БД пользователей")
+    Container(redis_auth, "Redis", "Сессии/Кэш авторизации")
+    Container(jaeger, "Jaeger", "Monitoring", "Трассировка запросов")
+}
+
+System_Ext(analytics, "Analytics-сервис") {
+    Container(analitics_api, "FastAPI", "Python/FastAPI", "Публичный API")
+    Container(etl_click_house, "ETL Service", "Python", "Синхронизация данных с ClickHouse")
+    Container(kafka, "Распределенная очередь", "Kafka/RabbitMQ")
+    Container(clickhouse, "Хранилище", "ClickHouse/Vertica", "")
+}
+
+' Взаимодействие
+Rel(admin, web, "Обращается через браузер")
+Rel(frontend, web, "Обращается через API")
+Rel(web, django, "Проксирует запросы")
+Rel(web, fastapi, "Вызывает API", "HTTP")
+Rel(fastapi, es, "Поиск фильмов")
+Rel(fastapi, redis, "Кэширует данные")
+Rel(django, db, "Читает и пишет")
+Rel(etl, db, "Читает данные")
+Rel(etl, es, "Пишет индекс")
+Rel(fastapi, nginx_auth, "Проксирует запросы авторизации")
+Rel(django, nginx_auth, "Проксирует запросы авторизации")
+Rel(nginx_auth, api, "Переадресует API-вызовы")
+Rel(api, auth_db, "Проверка данных пользователей")
+Rel(api, redis_auth, "Сохраняет сессии")
+Rel(api, jaeger, "Отправляет трассировки")
+Rel(fastapi, analitics_api, "Передает данные о действиях юзера", "HTTP")
+Rel(analitics_api, kafka, "Отправляет данные в очередь")
+Rel(kafka, etl_click_house, "Получает данные из очереди")
+Rel(etl_click_house, clickhouse, "Пишет данные в ClickHouse")
+
+@enduml

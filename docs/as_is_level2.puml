@@ -5,22 +5,23 @@ Container(frontend, "Фронтенд")
 Person(admin, "Администратор")
 
 System_Boundary(theatre, "Кинотеатр") {
-    Container(web, "nginx", "Reverse Proxy", "")
+    Container(web, "nginx", "Reverse Proxy", "Обратный прокси")
     Container(django, "Django Service", "Admin Panel", "Панель администратора")
     Container(fastapi, "FastAPI", "Python/FastAPI", "Публичный API")
     Container(etl, "ETL Service", "Python", "Синхронизация данных с Elasticsearch")
-    ContainerDb(db, "PostgreSQL", "Хранит данные фильмов")
-    Container(es, "Elasticsearch", "Поисковый движок")
-    Container(redis, "Redis", "Кэш/Очереди")
+    ContainerDb(db, "Database", "PostgreSQL", "Хранит данные фильмов")
+    Container(es, "Elasticsearch", "Elasticsearch", "Поисковый движок")
+    Container(redis, "Cash storage", "Redis", "Кэш/Очереди")
 }
 
 System_Ext(auth, "Auth-сервис") {
-    Container(nginx_auth, "nginx", "Reverse Proxy", "")
+    Container(nginx_auth, "nginx", "Reverse Proxy", "Обратный прокси")
     Container(api, "Auth API", "FastAPI", "Обработка аутентификации")
-    ContainerDb(auth_db, "PostgreSQL", "БД пользователей")
-    Container(redis_auth, "Redis", "Сессии/Кэш авторизации")
+    ContainerDb(auth_db, "Database", "PostgreSQL", "БД пользователей")
+    Container(redis_auth, "Cash storage", "Redis", "Сессии/Кэш авторизации")
     Container(jaeger, "Jaeger", "Monitoring", "Трассировка запросов")
 }
+
 
 ' Взаимодействие
 Rel(admin, web, "Обращается через браузер")

@@ -5,28 +5,28 @@ Container(frontend, "Фронтенд")
 Person(admin, "Администратор")
 
 System_Boundary(theatre, "Кинотеатр") {
-    Container(web, "nginx", "Reverse Proxy")
+    Container(web, "nginx", "Reverse Proxy", "Обратный прокси")
     Container(django, "Django Service", "Admin Panel", "Панель администратора")
-    Container(fastapi, "FastAPI", "Python/FastAPI", "Публичный API")
+    Container(fastapi, "Film API", "Python/FastAPI", "Публичный API")
     Container(etl, "ETL Service", "Python", "Синхронизация данных с Elasticsearch")
-    ContainerDb(db, "PostgreSQL", "Хранит данные фильмов")
-    Container(es, "Elasticsearch", "Поисковый движок")
-    Container(redis, "Redis", "Кэш/Очереди")
+    ContainerDb(db, "Database", "PostgreSQL", "Хранит данные фильмов")
+    Container(es, "Elasticsearch", "Elasticsearch", "Поисковый движок")
+    Container(redis, "Cash storage", "Redis", "Кэш/Очереди")
 }
 
 System_Ext(auth, "Auth-сервис") {
-    Container(nginx_auth, "nginx", "Reverse Proxy", "")
+    Container(nginx_auth, "nginx", "Reverse Proxy", "Обратный прокси")
     Container(api, "Auth API", "FastAPI", "Обработка аутентификации")
-    ContainerDb(auth_db, "PostgreSQL", "БД пользователей")
-    Container(redis_auth, "Redis", "Сессии/Кэш авторизации")
+    ContainerDb(auth_db, "Database", "PostgreSQL", "БД пользователей")
+    Container(redis_auth, "Cash storage", "Redis", "Сессии/Кэш авторизации")
     Container(jaeger, "Jaeger", "Monitoring", "Трассировка запросов")
 }
 
 System_Ext(analytics, "Analytics-сервис") {
-    Container(analitics_api, "FastAPI", "Python/FastAPI", "Публичный API")
+    Container(analitics_api, "Analytics API", "Python/FastAPI", "Публичный API")
     Container(etl_click_house, "ETL Service", "Python", "Синхронизация данных с ClickHouse")
-    Container(kafka, "Распределенная очередь", "Kafka/RabbitMQ")
-    Container(clickhouse, "Хранилище", "ClickHouse/Vertica", "")
+    Container(kafka, "Message broker", "Kafka/RabbitMQ", "Распределенная очередь")
+    Container(clickhouse, "Analytics Data Storage", "ClickHouse/Vertica", "Хранит данные по аналитике")
 }
 
 ' Взаимодействие
@@ -45,7 +45,7 @@ Rel(nginx_auth, api, "Переадресует API-вызовы")
 Rel(api, auth_db, "Проверка данных пользователей")
 Rel(api, redis_auth, "Сохраняет сессии")
 Rel(api, jaeger, "Отправляет трассировки")
-Rel(fastapi, analitics_api, "Передает данные о действиях юзера", "HTTP")
+Rel(frontend, analitics_api, "Передает данные о действиях юзера", "HTTP")
 Rel(analitics_api, kafka, "Отправляет данные в очередь")
 Rel(kafka, etl_click_house, "Получает данные из очереди")
 Rel(etl_click_house, clickhouse, "Пишет данные в ClickHouse")

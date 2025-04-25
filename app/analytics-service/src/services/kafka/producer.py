@@ -1,13 +1,6 @@
-from kafka import KafkaProducer as _KafkaProducer
+from aiokafka import AIOKafkaProducer
 
-class KafkaProducer(_KafkaProducer):
-    def __init__(self, topic: str, **configs):
-        super().__init__(**configs)
-        self.topic = topic
-    
-    def send(self, key: str, value: str) -> None:
-        super().send(
-            topic=self.topic,
-            value=value.encode(),
-            key=key.encode()
-        )
+
+class KafkaProducer(AIOKafkaProducer):
+    def __init__(self, bootstrap_servers):
+        super().__init__(bootstrap_servers=bootstrap_servers)

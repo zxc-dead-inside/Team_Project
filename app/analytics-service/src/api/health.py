@@ -3,10 +3,11 @@
 import logging
 from pydantic import BaseModel
 
-from fastapi import APIRouter
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends
 
-from src.core import get_settings
-
+from src.core.container import Container
+from src.services.kafka.producer import KafkaProducer
 
 router = APIRouter()
 
@@ -21,7 +22,11 @@ class HealthResponse(BaseModel):
 
 
 @router.get("", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
+@inject
+async def health_check(
+    environment: str = Depends(Provide[Container.config.environment]),
+    kafka_producer: KafkaProducer = Depends(Provide[Container.kafka_producer])
+) -> HealthResponse:
     """
     Health check endpoint to verify service status.
 
@@ -29,12 +34,17 @@ async def health_check() -> HealthResponse:
         HealthResponse: Service health information
     """
     
-    settings = get_settings()
+    logging.debug('Healthcheck requested')
     components = {"api": "healthy"}
 
-    # Check Redis connection
-    logging.error(f"Kafka health check failed:")
-    components["kafka"] = "unhealthy"
+    # Check Kafka connection
+    kafka_healthcheck = await kafka_producer.healthcheck()
+    if kafka_healthcheck.get('status'):
+        components["kafka"] = "healthy"
+    else:
+        components["kafka"] = "unhealthy"
+        logging.error(
+            f"Kafka health check failed: {kafka_healthcheck.get('detail')}")
 
     # Determine overall status
     if all(v == "healthy" for v in components.values()):
@@ -45,6 +55,6 @@ async def health_check() -> HealthResponse:
     return HealthResponse(
         status=status,
         version="0.1.0",
-        environment=settings.environment,
+        environment=environment,
         components=components,
     )

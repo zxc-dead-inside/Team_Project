@@ -1,4 +1,4 @@
-"""Health check endpoints."""
+"""Metrics endpoints."""
 
 import logging
 

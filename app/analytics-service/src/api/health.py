@@ -42,11 +42,9 @@ async def health_check() -> HealthResponse:
     else:
         status = "degraded"
 
-    response = HealthResponse(
+    return HealthResponse(
         status=status,
         version="0.1.0",
         environment=settings.environment,
         components=components,
     )
-
-    return response

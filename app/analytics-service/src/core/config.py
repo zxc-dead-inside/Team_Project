@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     kafka_username: str
     kafka_password: str
 
+    # Backoff
+    retry_max_attempts: int = 10
+    retry_base_delay: float = 0.1
 
     @field_validator("kafka_boostrap_servers", mode="before")
     def ensure_list(cls, v: str | list[str]) -> list[str]:

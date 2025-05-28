@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     container = Container()
     Container.init_config_from_settings(container, settings)
     await container.kafka_producer().start()
-    container.wire(modules=['src.api.metrics', 'src.api.health'])
+    container.wire(modules=['src.api.v1.metrics', 'src.api.health'])
     app.container = container
 
     # Start services

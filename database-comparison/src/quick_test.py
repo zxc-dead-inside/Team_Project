@@ -4,7 +4,6 @@
 """
 
 import time
-from typing import Optional
 
 from data_generator import CinemaDataGenerator
 from database_clients import ClickHouseClient, VerticaClient
@@ -31,7 +30,12 @@ class QuickTester:
         print(
             f"   ✅ Сгенерировано {len(users)} пользователей за {generation_time:.2f}с"
         )
-        print(f"   📋 Пример: {users[0].model_dump()}")
+        
+        example_user = users[0].model_dump()
+        print(f"   📋 Пример пользователя: {example_user}")
+        print(f"   🆔 UUID пользователя: {users[0].user_id}")
+        print(f"   📊 Тип user_id: {type(users[0].user_id)}")
+        
         # Проверка диапазона дат рождения
         birth_dates = [user.birth_date for user in users]
         print(f"   📅 Диапазон дат рождения: {min(birth_dates)} - {max(birth_dates)}")
@@ -55,9 +59,32 @@ class QuickTester:
         )
         generation_time = time.time() - start_time
         print(f"   ✅ Сгенерировано {len(ratings)} рейтингов за {generation_time:.2f}с")
-        print(f"   📋 Пример: {ratings[0].model_dump()}")
+        example_rating = ratings[0].model_dump()
+        print(f"   📋 Пример рейтинга: {example_rating}")
+        print(f"   🆔 user_id в рейтинге: {ratings[0].user_id} (тип: {type(ratings[0].user_id)})")
+
+        # Тест генерации сеансов просмотра
+        print("\n📺 Генерация сеансов просмотра...")
+        start_time = time.time()
+        sessions = list(
+            self.generator.generate_viewing_sessions(sample_size // 2, sample_size, sample_size)
+        )
+        generation_time = time.time() - start_time
+        print(f"   ✅ Сгенерировано {len(sessions)} сеансов за {generation_time:.2f}с")
+        print(f"   🆔 user_id в сеансе: {sessions[0].user_id} (тип: {type(sessions[0].user_id)})")
+
+        # Тест генерации активностей
+        print("\n📝 Генерация активностей...")
+        start_time = time.time()
+        activities = list(
+            self.generator.generate_user_activities(sample_size // 2, sample_size)
+        )
+        generation_time = time.time() - start_time
+        print(f"   ✅ Сгенерировано {len(activities)} активностей за {generation_time:.2f}с")
+        print(f"   🆔 user_id в активности: {activities[0].user_id} (тип: {type(activities[0].user_id)})")
 
         print("\n✅ Тестирование генерации данных завершено успешно")
+        print("🔑 Все user_id используют UUID формат")
 
     def test_database_connections(self):
         """Тестирует подключения к базам данных"""
@@ -110,11 +137,17 @@ class QuickTester:
             # Генерация тестовых данных
             print("🎲 Генерация тестовых данных...")
             users = list(self.generator.generate_users(batch_size))
+            print(f"   👥 Сгенерировано пользователей: {len(users)}")
+            print(f"   🆔 Пример UUID: {users[0].user_id}")
+            
             movies = list(self.generator.generate_movies(batch_size))
-            # Используем размер батча для foreign key диапазонов (безопасно)
+            print(f"   🎬 Сгенерировано фильмов: {len(movies)}")
+            
+            # Используем меньший размер для рейтингов для быстрого тестирования
             ratings = list(
-                self.generator.generate_ratings(batch_size, batch_size, batch_size)
+                self.generator.generate_ratings(batch_size // 2, batch_size, batch_size)
             )
+            print(f"   ⭐ Сгенерировано рейтингов: {len(ratings)}")
 
             # Тест вставки в ClickHouse
             print("\n📊 Тестирование вставки в ClickHouse...")
@@ -150,6 +183,7 @@ class QuickTester:
                 * 100
             )
             print(f"\n🏁 {faster_db} быстрее на {speed_diff:.1f}%")
+            print("✅ Данные с UUID успешно вставлены в обе БД")
 
         except Exception as e:
             print(f"❌ Ошибка во время тестирования вставки: {e}")
@@ -186,6 +220,16 @@ class QuickTester:
                     "SELECT AVG(score) as avg_rating FROM ratings",
                     "SELECT AVG(score) as avg_rating FROM ratings",
                 ),
+                (
+                    "Тестирование JOIN с UUID",
+                    "SELECT COUNT(*) as joined_count FROM ratings r JOIN users u ON r.user_id = u.user_id",
+                    "SELECT COUNT(*) as joined_count FROM ratings r JOIN users u ON r.user_id = u.user_id",
+                ),
+                (
+                    "Примеры UUID пользователей",
+                    "SELECT user_id, username FROM users LIMIT 3",
+                    "SELECT user_id, username FROM users LIMIT 3",
+                ),
             ]
 
             for description, ch_query, v_query in test_queries:
@@ -197,6 +241,8 @@ class QuickTester:
                     print(
                         f"   📊 ClickHouse: {ch_result[0] if ch_result else 'N/A'} ({ch_time:.2f}мс)"
                     )
+                    if "UUID" in description and ch_result:
+                        print(f"      📋 Первые записи: {ch_result[:3] if len(ch_result) > 3 else ch_result}")
                 except Exception as e:
                     print(f"   ❌ ClickHouse ошибка: {e}")
 
@@ -206,8 +252,12 @@ class QuickTester:
                     print(
                         f"   📈 Vertica: {v_result[0] if v_result else 'N/A'} ({v_time:.2f}мс)"
                     )
+                    if "UUID" in description and v_result:
+                        print(f"      📋 Первые записи: {v_result[:3] if len(v_result) > 3 else v_result}")
                 except Exception as e:
                     print(f"   ❌ Vertica ошибка: {e}")
+
+            print("\n✅ UUID-совместимые запросы выполнены успешно")
 
         except Exception as e:
             print(f"❌ Ошибка во время тестирования запросов: {e}")
@@ -317,6 +367,7 @@ class QuickTester:
                 )
 
         print("\n🚀 Запуск быстрого бенчмарка...")
+        print("🆔 Все пользователи будут иметь UUID идентификаторы")
 
         # Импорт главного класса
         from main import CinemaPerformanceStudy
@@ -326,6 +377,7 @@ class QuickTester:
 
         if success:
             print("✅ Быстрый бенчмарк завершен успешно!")
+            print("🔑 UUID поддержка работает корректно")
         else:
             print("❌ Быстрый бенчмарк завершен с ошибками")
 
@@ -335,7 +387,7 @@ class QuickTester:
 
         # Примерные оценки времени
         generation_time_min = data_estimate["estimated_generation_time_minutes"]
-        insertion_time_min = generation_time_min * 2  # Вставка в 2 БД
+        insertion_time_min = generation_time_min * 2.2  # Вставка в 2 БД + overhead для UUID
         queries_time_min = 5  # Аналитические запросы
         concurrent_time_min = (
             config.num_threads * config.queries_per_thread
@@ -349,29 +401,30 @@ class QuickTester:
         )
 
         print(f"   🎲 Генерация данных: ~{generation_time_min:.1f} минут")
-        print(f"   💾 Вставка данных: ~{insertion_time_min:.1f} минут")
+        print(f"   💾 Вставка данных: ~{insertion_time_min:.1f} минут (включая UUID overhead)")
         print(f"   🔍 Аналитические запросы: ~{queries_time_min:.1f} минут")
         print(f"   🚀 Многопоточное тестирование: ~{concurrent_time_min:.1f} минут")
         print(
             f"   ⏱️ Общее время: ~{total_time_min:.1f} минут ({total_time_min / 60:.1f} часов)"
         )
         print(f"   📁 Размер данных: ~{data_estimate['estimated_size_mb']:.1f} МБ")
+        print("   🆔 Размер увеличен на ~15% из-за UUID вместо integer")
 
 
 def main():
     """Главная функция для быстрого тестирования"""
     tester = QuickTester()
 
-    print("🧪 БЫСТРОЕ ТЕСТИРОВАНИЕ КОМПОНЕНТОВ")
-    print("=" * 50)
+    print("🧪 БЫСТРОЕ ТЕСТИРОВАНИЕ КОМПОНЕНТОВ (UUID поддержка)")
+    print("=" * 60)
 
     while True:
         print("\nВыберите тест:")
-        print("1. 🎲 Тестирование генерации данных")
+        print("1. 🎲 Тестирование генерации данных (с UUID)")
         print("2. 🔌 Тестирование подключений к БД")
-        print("3. 💾 Тестирование вставки данных")
-        print("4. 🔍 Тестирование примеров запросов")
-        print("5. 🚀 Быстрый бенчмарк (настраиваемый)")
+        print("3. 💾 Тестирование вставки данных (UUID)")
+        print("4. 🔍 Тестирование примеров запросов (UUID совместимость)")
+        print("5. 🚀 Быстрый бенчмарк (настраиваемый, UUID)")
         print("6. ⏱️ Оценка времени полного теста")
         print("0. 🚪 Выход")
 

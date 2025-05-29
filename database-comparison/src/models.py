@@ -6,6 +6,7 @@
 from datetime import date, datetime
 from enum import Enum
 from typing import Annotated
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, PositiveInt
 
@@ -43,7 +44,7 @@ class Country(str, Enum):
 class User(BaseModel):
     """Модель пользователя"""
 
-    user_id: PositiveInt = Field(description="Уникальный ID пользователя")
+    user_id: UUID = Field(default_factory=uuid4, description="Уникальный UUID пользователя")
     email: EmailStr = Field(description="Email пользователя")
     username: Annotated[
         str, Field(min_length=3, max_length=50, description="Имя пользователя")
@@ -99,7 +100,7 @@ class Rating(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     rating_id: PositiveInt = Field(description="Уникальный ID рейтинга")
-    user_id: PositiveInt = Field(description="ID пользователя")
+    user_id: UUID = Field(description="UUID пользователя")
     movie_id: PositiveInt = Field(description="ID фильма")
     score: Annotated[float, Field(ge=1.0, le=10.0, description="Оценка от 1 до 10")]
     review_text: Annotated[str, Field(max_length=1000)] | None = Field(
@@ -115,7 +116,7 @@ class ViewingSession(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     session_id: PositiveInt = Field(description="Уникальный ID сеанса")
-    user_id: PositiveInt = Field(description="ID пользователя")
+    user_id: UUID = Field(description="UUID пользователя")
     movie_id: PositiveInt = Field(description="ID фильма")
     started_at: datetime = Field(description="Время начала просмотра")
     ended_at: datetime | None = Field(
@@ -140,7 +141,7 @@ class UserActivity(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     activity_id: PositiveInt = Field(description="Уникальный ID активности")
-    user_id: PositiveInt = Field(description="ID пользователя")
+    user_id: UUID = Field(description="UUID пользователя")
     activity_type: Annotated[
         str,
         Field(

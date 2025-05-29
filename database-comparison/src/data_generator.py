@@ -4,9 +4,10 @@
 """
 
 import random
+from collections.abc import Iterator
 from datetime import date, datetime, timedelta
 from itertools import islice
-from typing import Iterator
+from uuid import UUID, uuid4
 
 import numpy as np
 from faker import Faker
@@ -37,11 +38,13 @@ class CinemaDataGenerator:
         np.random.seed(seed)
 
         # Счетчики для уникальных ID
-        self._user_id_counter = 0
         self._movie_id_counter = 0
         self._rating_id_counter = 0
         self._session_id_counter = 0
         self._activity_id_counter = 0
+
+        # Список сгенерированных user_id для использования в foreign keys
+        self._generated_user_ids: list[UUID] = []
 
         # Настройка весов для более реалистичного распределения
         self.genre_weights = {
@@ -145,6 +148,12 @@ class CinemaDataGenerator:
         # Используем random.choices для корректной работы с enum
         return random.choices(items, weights=weights, k=1)[0]
 
+    def _get_random_user_id(self) -> UUID:
+        """Возвращает случайный UUID пользователя из уже сгенерированных"""
+        if not self._generated_user_ids:
+            raise ValueError("Нет сгенерированных пользователей для выбора user_id")
+        return random.choice(self._generated_user_ids)
+
     def generate_users(self, count: int) -> Iterator[User]:
         """
         Генерирует пользователей
@@ -155,9 +164,13 @@ class CinemaDataGenerator:
         Yields:
             User: Объект пользователя
         """
+        # Очищаем список при новой генерации
+        self._generated_user_ids.clear()
+        
         for _ in range(count):
-            self._user_id_counter += 1
-            user_id = self._user_id_counter
+            # Генерируем новый UUID для каждого пользователя
+            user_id = uuid4()
+            self._generated_user_ids.append(user_id)
 
             # Генерация основных данных
             first_name = self.fake.first_name()
@@ -280,12 +293,15 @@ class CinemaDataGenerator:
 
         Args:
             count: Количество рейтингов
-            user_count: Общее количество пользователей
+            user_count: Общее количество пользователей (используем сгенерированные UUIDs)
             movie_count: Общее количество фильмов
 
         Yields:
             Rating: Объект рейтинга
         """
+        if not self._generated_user_ids:
+            raise ValueError("Необходимо сначала сгенерировать пользователей перед генерацией рейтингов")
+
         # Распределение оценок (больше высоких оценок)
         score_distribution = [1, 1, 2, 3, 5, 8, 12, 15, 20, 33]  # Веса для оценок 1-10
 
@@ -293,7 +309,7 @@ class CinemaDataGenerator:
             self._rating_id_counter += 1
             rating_id = self._rating_id_counter
 
-            user_id = random.randint(1, user_count)
+            user_id = self._get_random_user_id()
             movie_id = random.randint(1, movie_count)
 
             # Генерация оценки с учетом распределения
@@ -337,12 +353,15 @@ class CinemaDataGenerator:
 
         Args:
             count: Количество сеансов
-            user_count: Общее количество пользователей
+            user_count: Общее количество пользователей (используем сгенерированные UUIDs)
             movie_count: Общее количество фильмов
 
         Yields:
             ViewingSession: Объект сеанса просмотра
         """
+        if not self._generated_user_ids:
+            raise ValueError("Необходимо сначала сгенерировать пользователей перед генерацией сеансов просмотра")
+
         device_types = ["mobile", "desktop", "smart_tv", "tablet"]
         device_weights = [0.4, 0.3, 0.2, 0.1]
 
@@ -353,7 +372,7 @@ class CinemaDataGenerator:
             self._session_id_counter += 1
             session_id = self._session_id_counter
 
-            user_id = random.randint(1, user_count)
+            user_id = self._get_random_user_id()
             movie_id = random.randint(1, movie_count)
 
             started_at = self.fake.date_time_between(
@@ -405,11 +424,14 @@ class CinemaDataGenerator:
 
         Args:
             count: Количество активностей
-            user_count: Общее количество пользователей
+            user_count: Общее количество пользователей (используем сгенерированные UUIDs)
 
         Yields:
             UserActivity: Объект активности пользователя
         """
+        if not self._generated_user_ids:
+            raise ValueError("Необходимо сначала сгенерировать пользователей перед генерацией активностей")
+
         activity_types = [
             "login",
             "logout",
@@ -438,7 +460,7 @@ class CinemaDataGenerator:
             self._activity_id_counter += 1
             activity_id = self._activity_id_counter
 
-            user_id = random.randint(1, user_count)
+            user_id = self._get_random_user_id()
             activity_type = random.choices(
                 activity_types, weights=activity_weights, k=1
             )[0]
@@ -502,13 +524,13 @@ class CinemaDataGenerator:
         Returns:
             dict: Оценка размеров данных
         """
-        # Примерные размеры записей в байтах
+        # Примерные размеры записей в байтах (UUID увеличивает размер user записей)
         sizes = {
-            "user": 200,
+            "user": 250,
             "movie": 500,
-            "rating": 150,
-            "viewing_session": 250,
-            "user_activity": 300,
+            "rating": 170,
+            "viewing_session": 270,
+            "user_activity": 320,
         }
 
         total_records = (

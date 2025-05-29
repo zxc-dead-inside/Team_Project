@@ -257,6 +257,28 @@ class DatabaseBenchmark:
                 ORDER BY month
                 """,
             ),
+            "Распределение пользователей по странам": (
+                """
+                SELECT 
+                    country,
+                    COUNT(*) as user_count,
+                    COUNT(CASE WHEN is_premium = 1 THEN 1 END) as premium_users,
+                    COUNT(CASE WHEN is_premium = 1 THEN 1 END) * 100.0 / COUNT(*) as premium_percentage
+                FROM users
+                GROUP BY country
+                ORDER BY user_count DESC
+                """,
+                """
+                SELECT 
+                    country,
+                    COUNT(*) as user_count,
+                    COUNT(CASE WHEN is_premium = true THEN 1 END) as premium_users,
+                    COUNT(CASE WHEN is_premium = true THEN 1 END) * 100.0 / COUNT(*) as premium_percentage
+                FROM users
+                GROUP BY country
+                ORDER BY user_count DESC
+                """,
+            ),
         }
 
         return queries
@@ -365,7 +387,7 @@ class DatabaseBenchmark:
     def worker_function(
         self,
         database_name: str,
-        client_class,
+        client_connection_params: dict,
         queries: list[tuple[str, str]],
         thread_id: int,
         queries_per_thread: int,
@@ -375,7 +397,7 @@ class DatabaseBenchmark:
 
         Args:
             database_name: Название БД
-            client_class: Класс клиента БД
+            client_connection_params: Параметры подключения к БД
             queries: Список запросов
             thread_id: ID потока
             queries_per_thread: Количество запросов на поток
@@ -386,7 +408,11 @@ class DatabaseBenchmark:
         thread_results = []
 
         # Создаем отдельный клиент для этого потока
-        thread_client = client_class()
+        if database_name == "clickhouse":
+            thread_client = ClickHouseClient(**client_connection_params)
+        else:
+            thread_client = VerticaClient(**client_connection_params)
+        
         thread_client.connect()
 
         try:
@@ -447,6 +473,11 @@ class DatabaseBenchmark:
                 "SELECT COUNT(*) FROM viewing_sessions",
                 "SELECT COUNT(*) FROM viewing_sessions",
             ),
+            (
+                "Количество активностей",
+                "SELECT COUNT(*) FROM user_activities",
+                "SELECT COUNT(*) FROM user_activities",
+            ),
         ]
 
         logger.info(
@@ -463,7 +494,7 @@ class DatabaseBenchmark:
                 future = executor.submit(
                     self.worker_function,
                     "clickhouse",
-                    type(self.clickhouse),  # Передаем класс клиента
+                    self.clickhouse.connection_params,  # Передаем параметры подключения
                     clickhouse_queries,
                     thread_id,
                     queries_per_thread,
@@ -488,7 +519,7 @@ class DatabaseBenchmark:
                 future = executor.submit(
                     self.worker_function,
                     "vertica",
-                    type(self.vertica),  # Передаем класс клиента
+                    self.vertica.connection_params,  # Передаем параметры подключения
                     vertica_queries,
                     thread_id,
                     queries_per_thread,

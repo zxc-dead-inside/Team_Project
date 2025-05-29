@@ -105,7 +105,7 @@ class ClickHouseClient(DatabaseClient):
             # Таблица пользователей
             """
             CREATE TABLE IF NOT EXISTS users (
-                user_id UInt32,
+                user_id String,
                 email String,
                 username String,
                 first_name String,
@@ -139,7 +139,7 @@ class ClickHouseClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS ratings (
                 rating_id UInt32,
-                user_id UInt32,
+                user_id String,
                 movie_id UInt32,
                 score Float32,
                 review_text Nullable(String),
@@ -152,7 +152,7 @@ class ClickHouseClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS viewing_sessions (
                 session_id UInt32,
-                user_id UInt32,
+                user_id String,
                 movie_id UInt32,
                 started_at DateTime,
                 ended_at Nullable(DateTime),
@@ -169,7 +169,7 @@ class ClickHouseClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS user_activities (
                 activity_id UInt32,
-                user_id UInt32,
+                user_id String,
                 activity_type String,
                 activity_data Nullable(String),
                 timestamp DateTime,
@@ -198,7 +198,7 @@ class ClickHouseClient(DatabaseClient):
         for user in users:
             data.append(
                 [
-                    user.user_id,
+                    str(user.user_id),
                     user.email,
                     user.username,
                     user.first_name,
@@ -277,7 +277,7 @@ class ClickHouseClient(DatabaseClient):
             data.append(
                 [
                     rating.rating_id,
-                    rating.user_id,
+                    str(rating.user_id),
                     rating.movie_id,
                     rating.score,
                     rating.review_text,
@@ -309,7 +309,7 @@ class ClickHouseClient(DatabaseClient):
             data.append(
                 [
                     session.session_id,
-                    session.user_id,
+                    str(session.user_id),
                     session.movie_id,
                     session.started_at,
                     session.ended_at,
@@ -350,7 +350,7 @@ class ClickHouseClient(DatabaseClient):
             data.append(
                 [
                     activity.activity_id,
-                    activity.user_id,
+                    str(activity.user_id),
                     activity.activity_type,
                     activity_data_str,
                     activity.timestamp,
@@ -447,7 +447,7 @@ class VerticaClient(DatabaseClient):
             # Таблица пользователей
             """
             CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
+                user_id VARCHAR(36) PRIMARY KEY,
                 email VARCHAR(255) NOT NULL,
                 username VARCHAR(50) NOT NULL,
                 first_name VARCHAR(100) NOT NULL,
@@ -479,7 +479,7 @@ class VerticaClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS ratings (
                 rating_id INTEGER PRIMARY KEY,
-                user_id INTEGER NOT NULL,
+                user_id VARCHAR(36) NOT NULL,
                 movie_id INTEGER NOT NULL,
                 score DECIMAL(3,1) NOT NULL CHECK (score >= 1.0 AND score <= 10.0),
                 review_text VARCHAR(1000),
@@ -491,7 +491,7 @@ class VerticaClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS viewing_sessions (
                 session_id INTEGER PRIMARY KEY,
-                user_id INTEGER NOT NULL,
+                user_id VARCHAR(36) NOT NULL,
                 movie_id INTEGER NOT NULL,
                 started_at TIMESTAMP NOT NULL,
                 ended_at TIMESTAMP,
@@ -506,7 +506,7 @@ class VerticaClient(DatabaseClient):
             """
             CREATE TABLE IF NOT EXISTS user_activities (
                 activity_id INTEGER PRIMARY KEY,
-                user_id INTEGER NOT NULL,
+                user_id VARCHAR(36) NOT NULL,
                 activity_type VARCHAR(20) NOT NULL,
                 activity_data VARCHAR(1000),
                 timestamp TIMESTAMP NOT NULL,
@@ -545,7 +545,7 @@ class VerticaClient(DatabaseClient):
         for user in users:
             data.append(
                 (
-                    user.user_id,
+                    str(user.user_id),
                     user.email,
                     user.username,
                     user.first_name,
@@ -615,7 +615,7 @@ class VerticaClient(DatabaseClient):
             data.append(
                 (
                     rating.rating_id,
-                    rating.user_id,
+                    str(rating.user_id),
                     rating.movie_id,
                     rating.score,
                     rating.review_text,
@@ -644,7 +644,7 @@ class VerticaClient(DatabaseClient):
             data.append(
                 (
                     session.session_id,
-                    session.user_id,
+                    str(session.user_id),
                     session.movie_id,
                     session.started_at,
                     session.ended_at,
@@ -678,7 +678,7 @@ class VerticaClient(DatabaseClient):
             data.append(
                 (
                     activity.activity_id,
-                    activity.user_id,
+                    str(activity.user_id),
                     activity.activity_type,
                     activity_data_str,
                     activity.timestamp,

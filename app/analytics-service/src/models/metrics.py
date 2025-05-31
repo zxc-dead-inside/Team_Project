@@ -3,9 +3,6 @@ from typing import Optional, Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.core.logger import setup_logging
-
-setup_logging()
 
 class ActionType(str, Enum):
     """
@@ -81,7 +78,8 @@ class UserAction(BaseModel):
         description="Action metadata"
     )
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
+    @classmethod
     def validate_metadata(cls, values: Any) -> Any:
         """
         Validate metadata constraints based on action type.
@@ -96,14 +94,16 @@ class UserAction(BaseModel):
         Raises:
             ValueError: If required fields are missing for the action type
         """
-                
-        data = values.dict()
-        action_type = data.get('action_type')
-        metadata = data.get('metadata', {})
 
-        if not action_type:
-            raise ValueError("action_type is required")
+        if isinstance(values, dict):
+            if not "action_type" in values:
+                raise ValueError("action_type is required")
         
+            
+        
+        action_type = values.get('action_type')
+        metadata = values.get('metadata', {})
+
         if not metadata:
             metadata = ViewMetadata()
             values['metadata'] = metadata

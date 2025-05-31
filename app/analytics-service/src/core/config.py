@@ -28,13 +28,11 @@ class Settings(BaseSettings):
     @field_validator("kafka_boostrap_servers", mode="before")
     def ensure_list(cls, v: str | list[str]) -> list[str]:
         """Parse string of Kafka Boostrap Server origins into list of URLs."""
+
         if isinstance(v, list):
             return v
         elif isinstance(v, str) and not v.startswith("["):
-            # Return as strings to avoid validation issues
             return [url.strip() for url in v.split(",")]
-        elif isinstance(v, list):
-            return v
         raise ValueError(
             "KAFKA_BOOSTRAP_SERVERS should be a comma-separated string of URLs"
         )

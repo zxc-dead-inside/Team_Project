@@ -10,7 +10,6 @@ services:
       - ./:/app
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      # - KAFKA_BOOSTRAP_SERVERS=kafka-0:9094, kafka-1:9095, kafka-2:9096
       - KAFKA_BOOSTRAP_SERVERS=${KAFKA_BOOSTRAP_SERVERS:-kafka-0:9094, kafka-1:9095, kafka-2:9096}
       - KAFKA_TOPIC=${KAFKA_TOPIC:-analytics-service}
       - KAFKA_USERNAME=${KAFKA_USERNAME:-user}

@@ -35,7 +35,6 @@ class Container(containers.DeclarativeContainer):
     event_sender = providers.Factory(
         KafkaEventSender,
         producer=kafka_producer,
-        #metrics=metrics,
         topic=config.kafka_topic,
         retry_max_attempts=config.retry_max_attempts,
         retry_base_delay=config.retry_base_delay

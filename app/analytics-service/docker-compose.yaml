@@ -1,0 +1,157 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics_service_api
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./:/app
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - KAFKA_BOOSTRAP_SERVERS=${KAFKA_BOOSTRAP_SERVERS:-kafka-0:9094, kafka-1:9095, kafka-2:9096}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-analytics-service}
+      - KAFKA_USERNAME=${KAFKA_USERNAME:-user}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD:-password}
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    restart: always
+    networks:
+      - analytics_network
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8100 --reload
+  
+  kafka-0:
+    image: bitnami/kafka:3.7
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-0:9092,EXTERNAL://kafka-0:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-analytics-service}
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    networks:
+      - analytics_network
+    ports:
+      - "9094:9094"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  kafka-1:
+    image: bitnami/kafka:3.7
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9095
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9092,EXTERNAL://kafka-1:9095
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-analytics-service}
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    networks:
+      - analytics_network
+    ports:
+      - "9095:9095"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  kafka-2:
+    image: bitnami/kafka:3.7
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9096
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-2:9092,EXTERNAL://kafka-2:9096
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-analytics-service}
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+    networks:
+      - analytics_network
+    ports:
+      - "9096:9096"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.0
+    ports:
+      - "9080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
+      - KAFKA_CLUSTERS_0_NAME=kraft
+    networks:
+      - analytics_network
+  
+  kafka-init:
+    image: bitnami/kafka:3.7
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    command: |
+      bash -c '
+        echo "Waiting for cluster readiness...";
+        until kafka-broker-api-versions.sh --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092;
+        do
+          echo "Cluster not ready yet. Retrying in 10 seconds...";
+          sleep 10;
+        done;
+        
+        echo "Creating topic...";
+        kafka-topics.sh --create \
+          --topic analytics-service \
+          --partitions 3 \
+          --replication-factor 3 \
+          --config min.insync.replicas=2 \
+          --if-not-exists \
+          --bootstrap-server kafka-0:9092;
+        
+        echo "Topic status:";
+        kafka-topics.sh --describe --topic analytics-service --bootstrap-server kafka-0:9092;
+      '
+    networks:
+      - analytics_network
+
+volumes:
+  kafka_0_data:
+  kafka_1_data:
+  kafka_2_data:
+
+networks:
+  analytics_network:
+    driver: bridge

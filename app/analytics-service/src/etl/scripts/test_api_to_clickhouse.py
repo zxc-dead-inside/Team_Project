@@ -1,10 +1,5 @@
 """
-Test script to verify the full analytics pipeline from API to ClickHouse.
-
-This script:
-1. Sends a user action event to the API
-2. Waits for the ETL pipeline to process the data
-3. Queries ClickHouse to verify the action was properly stored
+чисто временная штука чтоб я проверил что пайплайн работает не настоящий тест)
 """
 import asyncio
 import logging

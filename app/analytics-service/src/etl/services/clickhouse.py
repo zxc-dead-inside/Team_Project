@@ -39,7 +39,7 @@ class ClickHouseClient:
         self.database = database
         logging.info(f"Initialized ClickHouse client for {database} database")
     
-    async def healthcheck(self) -> dict[str, Any]:
+    def healthcheck(self) -> dict[str, Any]:
         """Check if ClickHouse is available.
         
         Returns:

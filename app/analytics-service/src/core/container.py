@@ -18,7 +18,7 @@ class Container(containers.DeclarativeContainer):
         container.config.set("log_level", settings.log_level)
 
         container.config.set(
-            "kafka_boostrap_servers", settings.kafka_boostrap_servers)
+            "kafka_bootstrap_servers", settings.kafka_bootstrap_servers)
         container.config.set("kafka_topic", settings.kafka_topic)
         container.config.set("kafka_username", settings.kafka_username)
         container.config.set("kafka_password", settings.kafka_password)
@@ -29,7 +29,7 @@ class Container(containers.DeclarativeContainer):
     # Kafka producer
     kafka_producer = providers.Singleton(
         KafkaProducer,
-        bootstrap_servers=config.kafka_boostrap_servers
+        bootstrap_servers=config.kafka_bootstrap_servers
     )
 
     event_sender = providers.Factory(

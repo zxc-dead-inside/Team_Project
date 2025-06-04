@@ -1,0 +1,809 @@
+{
+  "metadata": {
+    "test_date": "2025-05-26T17:49:44.483024",
+    "config": {
+      "num_users": 2000,
+      "num_movies": 1000,
+      "num_ratings": 4000,
+      "num_sessions": 6000,
+      "num_activities": 10000,
+      "num_threads": 3,
+      "queries_per_thread": 10,
+      "batch_size": 500
+    },
+    "load_times_seconds": {
+      "clickhouse": 2.9884257316589355,
+      "vertica": 1.875093698501587
+    },
+    "summary": {
+      "clickhouse_avg_time_ms": 15.71,
+      "vertica_avg_time_ms": 36.22,
+      "clickhouse_faster_by": 56.64,
+      "total_tests": 74,
+      "duration_minutes": 0.11
+    }
+  },
+  "detailed_analysis": {
+    "summary": {
+      "total_tests": 74,
+      "clickhouse_tests": 37,
+      "vertica_tests": 37
+    },
+    "clickhouse": {
+      "total_queries": 37,
+      "successful_queries": 37,
+      "failed_queries": 0,
+      "success_rate_percent": 100.0,
+      "avg_execution_time_ms": 15.71,
+      "median_execution_time_ms": 9.8,
+      "min_execution_time_ms": 5.75,
+      "max_execution_time_ms": 69.63,
+      "std_execution_time_ms": 14.22,
+      "total_records_processed": 216,
+      "avg_memory_used_mb": 0.01,
+      "avg_cpu_usage_percent": 6.14
+    },
+    "vertica": {
+      "total_queries": 37,
+      "successful_queries": 37,
+      "failed_queries": 0,
+      "success_rate_percent": 100.0,
+      "avg_execution_time_ms": 36.22,
+      "median_execution_time_ms": 29.55,
+      "min_execution_time_ms": 14.06,
+      "max_execution_time_ms": 98.05,
+      "std_execution_time_ms": 23.16,
+      "total_records_processed": 216,
+      "avg_memory_used_mb": 0,
+      "avg_cpu_usage_percent": 3.79
+    },
+    "comparison": {
+      "clickhouse_avg_time_ms": 15.71,
+      "vertica_avg_time_ms": 36.22,
+      "clickhouse_faster_percent": 56.64,
+      "performance_winner": "ClickHouse"
+    }
+  },
+  "raw_results": [
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Топ-10 популярных фильмов по количеству просмотров",
+      "execution_time_ms": 69.62800025939941,
+      "records_processed": 10,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:01.759382"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Топ-10 популярных фильмов по количеству просмотров",
+      "execution_time_ms": 73.33827018737793,
+      "records_processed": 10,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:02.936849"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг фильмов по жанрам",
+      "execution_time_ms": 29.60038185119629,
+      "records_processed": 10,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:05.070148"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг фильмов по жанрам",
+      "execution_time_ms": 37.00542449951172,
+      "records_processed": 10,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:06.210548"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Активность пользователей за последний месяц",
+      "execution_time_ms": 28.213024139404297,
+      "records_processed": 0,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:08.344839"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Активность пользователей за последний месяц",
+      "execution_time_ms": 48.13575744628906,
+      "records_processed": 0,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:09.497041"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Статистика просмотров по устройствам и качеству",
+      "execution_time_ms": 33.58149528503418,
+      "records_processed": 16,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:11.634061"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Статистика просмотров по устройствам и качеству",
+      "execution_time_ms": 37.80698776245117,
+      "records_processed": 16,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:12.775379"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Топ пользователей по времени просмотра",
+      "execution_time_ms": 59.73005294799805,
+      "records_processed": 100,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 12.4,
+      "timestamp": "2025-05-26 17:49:14.943789"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Топ пользователей по времени просмотра",
+      "execution_time_ms": 98.05464744567871,
+      "records_processed": 100,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:16.148903"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Анализ рейтингов по возрастным группам",
+      "execution_time_ms": 35.45665740966797,
+      "records_processed": 50,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:18.288532"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Анализ рейтингов по возрастным группам",
+      "execution_time_ms": 46.16427421569824,
+      "records_processed": 50,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 6.8,
+      "timestamp": "2025-05-26 17:49:19.437654"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Тренды просмотров по месяцам",
+      "execution_time_ms": 12.323856353759766,
+      "records_processed": 0,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:21.557683"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Тренды просмотров по месяцам",
+      "execution_time_ms": 37.57143020629883,
+      "records_processed": 0,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:22.711793"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 1)",
+      "execution_time_ms": 8.14509391784668,
+      "records_processed": 1,
+      "memory_used_mb": 0.125,
+      "cpu_usage_percent": 18.2,
+      "timestamp": "2025-05-26 17:49:34.987134"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 2)",
+      "execution_time_ms": 10.46133041381836,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.0,
+      "timestamp": "2025-05-26 17:49:35.200483"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 0, запрос 3)",
+      "execution_time_ms": 9.369611740112305,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 18.1,
+      "timestamp": "2025-05-26 17:49:35.412172"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 0, запрос 4)",
+      "execution_time_ms": 8.344888687133789,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.1,
+      "timestamp": "2025-05-26 17:49:35.623415"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 5)",
+      "execution_time_ms": 7.582187652587891,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.2,
+      "timestamp": "2025-05-26 17:49:35.833387"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 6)",
+      "execution_time_ms": 5.749940872192383,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.041602"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 0, запрос 7)",
+      "execution_time_ms": 10.978460311889648,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.255771"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 0, запрос 8)",
+      "execution_time_ms": 6.353139877319336,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.3,
+      "timestamp": "2025-05-26 17:49:36.465142"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 9)",
+      "execution_time_ms": 18.579721450805664,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.686828"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 10)",
+      "execution_time_ms": 16.469955444335938,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.906540"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 1)",
+      "execution_time_ms": 8.594989776611328,
+      "records_processed": 1,
+      "memory_used_mb": 0.125,
+      "cpu_usage_percent": 9.1,
+      "timestamp": "2025-05-26 17:49:35.013190"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 2)",
+      "execution_time_ms": 9.325504302978516,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.0,
+      "timestamp": "2025-05-26 17:49:35.226340"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 1, запрос 3)",
+      "execution_time_ms": 13.220548629760742,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 17.3,
+      "timestamp": "2025-05-26 17:49:35.444327"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 1, запрос 4)",
+      "execution_time_ms": 11.182785034179688,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.9,
+      "timestamp": "2025-05-26 17:49:35.658139"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 5)",
+      "execution_time_ms": 7.896661758422852,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.1,
+      "timestamp": "2025-05-26 17:49:35.869480"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 6)",
+      "execution_time_ms": 6.532192230224609,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.3,
+      "timestamp": "2025-05-26 17:49:36.078679"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 1, запрос 7)",
+      "execution_time_ms": 14.81938362121582,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.6,
+      "timestamp": "2025-05-26 17:49:36.295796"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 1, запрос 8)",
+      "execution_time_ms": 6.196498870849609,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.504873"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 9)",
+      "execution_time_ms": 9.795188903808594,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.718624"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 10)",
+      "execution_time_ms": 9.328603744506836,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.0,
+      "timestamp": "2025-05-26 17:49:36.930930"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 1)",
+      "execution_time_ms": 8.92186164855957,
+      "records_processed": 1,
+      "memory_used_mb": 0.125,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:35.021483"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 2)",
+      "execution_time_ms": 7.763385772705078,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.1,
+      "timestamp": "2025-05-26 17:49:35.233223"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 2, запрос 3)",
+      "execution_time_ms": 26.319026947021484,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 7.8,
+      "timestamp": "2025-05-26 17:49:35.464303"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 2, запрос 4)",
+      "execution_time_ms": 14.81008529663086,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.6,
+      "timestamp": "2025-05-26 17:49:35.681811"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 5)",
+      "execution_time_ms": 10.368108749389648,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:35.895178"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 6)",
+      "execution_time_ms": 9.33218002319336,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.0,
+      "timestamp": "2025-05-26 17:49:36.108040"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 2, запрос 7)",
+      "execution_time_ms": 10.472536087036133,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.9,
+      "timestamp": "2025-05-26 17:49:36.321627"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 2, запрос 8)",
+      "execution_time_ms": 7.195949554443359,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:36.531854"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 9)",
+      "execution_time_ms": 9.571552276611328,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.0,
+      "timestamp": "2025-05-26 17:49:36.744318"
+    },
+    {
+      "database_name": "clickhouse",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 10)",
+      "execution_time_ms": 8.96143913269043,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 9.1,
+      "timestamp": "2025-05-26 17:49:36.956688"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 1)",
+      "execution_time_ms": 16.518592834472656,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.4,
+      "timestamp": "2025-05-26 17:49:42.208107"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 2)",
+      "execution_time_ms": 89.98656272888184,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 5.2,
+      "timestamp": "2025-05-26 17:49:42.507409"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 1, запрос 3)",
+      "execution_time_ms": 36.91601753234863,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.758069"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 1, запрос 4)",
+      "execution_time_ms": 22.06110954284668,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.982811"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 5)",
+      "execution_time_ms": 20.636796951293945,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.2,
+      "timestamp": "2025-05-26 17:49:43.206264"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 6)",
+      "execution_time_ms": 37.70804405212402,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.448483"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 1, запрос 7)",
+      "execution_time_ms": 30.571699142456055,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.685957"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 1, запрос 8)",
+      "execution_time_ms": 27.454137802124023,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.918241"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 1, запрос 9)",
+      "execution_time_ms": 21.622180938720703,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.1,
+      "timestamp": "2025-05-26 17:49:44.142837"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 1, запрос 10)",
+      "execution_time_ms": 18.082618713378906,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:44.364330"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 1)",
+      "execution_time_ms": 14.061927795410156,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.7,
+      "timestamp": "2025-05-26 17:49:42.207863"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 2)",
+      "execution_time_ms": 91.56990051269531,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 10.2,
+      "timestamp": "2025-05-26 17:49:42.509591"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 0, запрос 3)",
+      "execution_time_ms": 45.92776298522949,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.766615"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 0, запрос 4)",
+      "execution_time_ms": 17.795562744140625,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.986462"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 5)",
+      "execution_time_ms": 18.67198944091797,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.4,
+      "timestamp": "2025-05-26 17:49:43.207539"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 6)",
+      "execution_time_ms": 35.46881675720215,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.446932"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 0, запрос 7)",
+      "execution_time_ms": 30.970096588134766,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 14.4,
+      "timestamp": "2025-05-26 17:49:43.688496"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 0, запрос 8)",
+      "execution_time_ms": 26.957273483276367,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.920251"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 0, запрос 9)",
+      "execution_time_ms": 21.872282028198242,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.1,
+      "timestamp": "2025-05-26 17:49:44.146663"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 0, запрос 10)",
+      "execution_time_ms": 16.417741775512695,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.4,
+      "timestamp": "2025-05-26 17:49:44.368506"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 1)",
+      "execution_time_ms": 15.363931655883789,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.6,
+      "timestamp": "2025-05-26 17:49:42.210192"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 2)",
+      "execution_time_ms": 91.26448631286621,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 5.1,
+      "timestamp": "2025-05-26 17:49:42.509193"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 2, запрос 3)",
+      "execution_time_ms": 29.553651809692383,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.749585"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 2, запрос 4)",
+      "execution_time_ms": 24.41692352294922,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:42.976275"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 5)",
+      "execution_time_ms": 25.983095169067383,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 7.8,
+      "timestamp": "2025-05-26 17:49:43.205670"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 6)",
+      "execution_time_ms": 38.61808776855469,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.448293"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Средний рейтинг (поток 2, запрос 7)",
+      "execution_time_ms": 31.279563903808594,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 7.3,
+      "timestamp": "2025-05-26 17:49:43.688738"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Количество сеансов (поток 2, запрос 8)",
+      "execution_time_ms": 25.980710983276367,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 0.0,
+      "timestamp": "2025-05-26 17:49:43.919929"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет пользователей (поток 2, запрос 9)",
+      "execution_time_ms": 21.004438400268555,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.2,
+      "timestamp": "2025-05-26 17:49:44.146355"
+    },
+    {
+      "database_name": "vertica",
+      "operation": "analytical_query",
+      "query_description": "Подсчет фильмов (поток 2, запрос 10)",
+      "execution_time_ms": 17.40288734436035,
+      "records_processed": 1,
+      "memory_used_mb": 0.0,
+      "cpu_usage_percent": 8.4,
+      "timestamp": "2025-05-26 17:49:44.368386"
+    }
+  ]
+}

@@ -8,3 +8,5 @@ redis==5.2.1
 backoff==2.2.1
 httpx==0.28.1
 PyJWT==2.10.1
+sentry_sdk==2.30.0
+sentry-sdk[fastapi]

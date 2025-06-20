@@ -13,18 +13,46 @@
 
 ## How to
 
-1. Navigate to app directory
+1. Navigate to app/auth-service directory
 
 2. Execute
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-3. To stop containers
+3. Navigate to app/ directory
+
+4. Execute
+
+```bash
+docker compose up --build
+```
+
+5. To stop containers
 
 ctr + c
 
 ```bash
 docker-compose down
 ```
+
+## Kibana dashboard
+
+http://localhost:5601
+
+1. Go to: Stack Management > Data Views > Create Data View
+
+You should see indices like:
+
+- `fastapi-logs-YYYY.MM.DD`
+- `nginx-logs-YYYY.MM.DD`
+- `django-logs-YYYY.MM.DD`
+
+2. Create index patterns:
+
+- `django-logs-*` for Django logs
+- `fastapi-logs-*` for FastAPI logs
+- `nginx-logs-*` for nginx logs
+
+**Set @timestamp as the time field for all patterns**

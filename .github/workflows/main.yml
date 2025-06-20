@@ -29,13 +29,11 @@ jobs:
       
 
       - name: Lint with wemake-python-styleguide
-        continue-on-error: true
         id: wemake-python-styleguide
         run: |
           flake8 . --format=html --htmldir=flake8-report --count --statistics
 
       - name: Type check with mypy
-        continue-on-error: true
         id: mypy
         run: |
           mypy .

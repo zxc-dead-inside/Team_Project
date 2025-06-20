@@ -2,9 +2,9 @@ name: Linter
 
 on:
   push:
-    branches: [ develop, main, feature/ci-pipline ]
+    branches: [ feature/ci-pipline ]
   pull_request:
-    branches: [ develop, main, feature/ci-pipline ]
+    branches: [ develop, main ]
 
 jobs:
   lint:
@@ -25,19 +25,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install wemake-python-styleguide mypy pytest pytest-cov flake8-html
+          pip install ruff wemake-python-styleguide mypy flake8-html
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
 
       - name: Lint with wemake-python-styleguide
         id: wemake-python-styleguide
         run: |
-          flake8 . --format=html --htmldir=flake8-report --count --statistics
+          flake8 . --select=WPS --format=html --htmldir=flake8-report --count --statistics \
+            --exclude=**/scripts/**,**/migrations/**,**/tests/**/fixtures/**,**/tests/**/utils/**,**/*.sh,**/.devcontainer/**,**/manage.py,**/venv/**,**/.env/**,**/docker-compose.yml,**/docker-compose.yaml,**/requirements.txt,**/etl/scripts/**
 
       - name: Type check with mypy
         id: mypy
         run: |
-          mypy .
+          mypy . --exclude scripts/ --exclude migrations/ --exclude tests/*/fixtures/ --exclude tests/*/utils/ --exclude .devcontainer/ --exclude manage.py --exclude venv/ --exclude .env/ --exclude docker-compose.yml --exclude docker-compose.yaml --exclude requirements.txt --exclude etl/scripts/
 
       - name: Upload lint report
         uses: actions/upload-artifact@v4

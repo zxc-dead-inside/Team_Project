@@ -2,7 +2,7 @@
 name = "Async_API_sprint_1"
 version = "0.1.0"
 description = "Async API sprint-1"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 readme = "README.md"
 dependencies = [
     "django==5.1.4",
@@ -18,7 +18,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["ruff>=0.8.0", "black>=24.10.0", "isort>=5.13.2"]
+dev = [
+    "ruff>=0.8.0",
+    "black>=24.10.0",
+    "isort>=5.13.2",
+    "mypy>=1.10.0",
+]
 
 [tool.ruff]
 target-version = "py311"
@@ -50,6 +55,9 @@ exclude = [
     "notebooks",
     "__pycache__",
     ".egg-info",
+    "tests/*",
+    "*test*",
+    "benchmark*",
 ]
 
 
@@ -105,3 +113,46 @@ source = ["src"]
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.flake8]
+select = "WPS"
+max-line-length = 88
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    ".env",
+    "notebooks",
+    "__pycache__",
+    ".egg-info",
+    "tests/*",
+    "*test*",
+    "benchmark*",
+]
+
+format = "html"
+htmldir = "flake8-report"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+plugins = []

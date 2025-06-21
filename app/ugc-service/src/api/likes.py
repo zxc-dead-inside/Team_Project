@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from src.models import LikeCreate, LikeResponse, FilmRatingResponse
+from src.models import LikeCreate, LikeResponse, ReviewRatingResponse
 from src.services.like_service import LikeService
 
 router = APIRouter(prefix="/likes", tags=["likes"])
@@ -15,7 +15,7 @@ async def create_like(
     like: LikeCreate,
     service: LikeService = Depends(get_like_service)
 ):
-    """Создать лайк с оценкой"""
+    """Создать лайк/дизлайк для рецензии"""
     try:
         return await service.create_like(like)
     except ValueError as e:
@@ -31,36 +31,36 @@ async def get_user_likes(
     return await service.get_user_likes(user_id)
 
 
-@router.get("/film/{film_id}/rating", response_model=FilmRatingResponse)
-async def get_film_rating(
-    film_id: str,
+@router.get("/review/{review_id}/rating", response_model=ReviewRatingResponse)
+async def get_review_rating(
+    review_id: str,
     service: LikeService = Depends(get_like_service)
 ):
-    """Получить среднюю оценку фильма"""
-    return await service.get_film_rating(film_id)
+    """Получить статистику лайков/дизлайков для рецензии"""
+    return await service.get_review_rating(review_id)
 
 
-@router.delete("/user/{user_id}/film/{film_id}")
+@router.delete("/user/{user_id}/review/{review_id}")
 async def delete_like(
     user_id: str,
-    film_id: str,
+    review_id: str,
     service: LikeService = Depends(get_like_service)
 ):
-    """Удалить лайк"""
-    deleted = await service.delete_like(user_id, film_id)
+    """Удалить лайк/дизлайк"""
+    deleted = await service.delete_like(user_id, review_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Like not found")
     return {"message": "Like deleted successfully"}
 
 
-@router.get("/user/{user_id}/film/{film_id}/rating")
-async def get_user_rating_for_film(
+@router.get("/user/{user_id}/review/{review_id}/rating")
+async def get_user_rating_for_review(
     user_id: str,
-    film_id: str,
+    review_id: str,
     service: LikeService = Depends(get_like_service)
 ):
-    """Получить оценку пользователя для конкретного фильма"""
-    rating = await service.get_user_rating_for_film(user_id, film_id)
+    """Получить оценку пользователя для конкретной рецензии"""
+    rating = await service.get_user_rating_for_review(user_id, review_id)
     if rating is None:
         raise HTTPException(status_code=404, detail="Rating not found")
     return {"rating": rating} 

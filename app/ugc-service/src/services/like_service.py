@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Optional
 from bson import ObjectId
-from src.models import Like, LikeCreate, LikeResponse, FilmRatingResponse
+from src.models import Like, LikeCreate, LikeResponse, ReviewRatingResponse
 from src.database import get_database
 
 
@@ -11,22 +11,26 @@ class LikeService:
         self.collection: AsyncIOMotorCollection = self.db.likes
 
     async def create_like(self, like: LikeCreate) -> LikeResponse:
-        """Создать лайк с оценкой"""
+        """Создать лайк/дизлайк для рецензии"""
+        # Проверяем, что рейтинг соответствует требованиям (0 или 10)
+        if like.rating not in [0, 10]:
+            raise ValueError("Rating must be 0 (dislike) or 10 (like)")
+        
         # Проверяем, не существует ли уже оценка от этого пользователя
         existing = await self.collection.find_one({
             "user_id": like.user_id,
-            "film_id": like.film_id
+            "review_id": like.review_id
         })
         
         if existing:
             # Обновляем существующую оценку
             result = await self.collection.update_one(
-                {"user_id": like.user_id, "film_id": like.film_id},
+                {"user_id": like.user_id, "review_id": like.review_id},
                 {"$set": {"rating": like.rating}}
             )
             updated_like = await self.collection.find_one({
                 "user_id": like.user_id,
-                "film_id": like.film_id
+                "review_id": like.review_id
             })
         else:
             # Создаем новую оценку
@@ -37,7 +41,7 @@ class LikeService:
         return LikeResponse(
             id=str(updated_like["_id"]),
             user_id=updated_like["user_id"],
-            film_id=updated_like["film_id"],
+            review_id=updated_like["review_id"],
             rating=updated_like["rating"],
             created_at=updated_like["created_at"]
         )
@@ -51,53 +55,56 @@ class LikeService:
             likes.append(LikeResponse(
                 id=str(doc["_id"]),
                 user_id=doc["user_id"],
-                film_id=doc["film_id"],
+                review_id=doc["review_id"],
                 rating=doc["rating"],
                 created_at=doc["created_at"]
             ))
         
         return likes
 
-    async def get_film_rating(self, film_id: str) -> FilmRatingResponse:
-        """Получить среднюю оценку фильма"""
+    async def get_review_rating(self, review_id: str) -> ReviewRatingResponse:
+        """Получить статистику лайков/дизлайков для рецензии"""
         pipeline = [
-            {"$match": {"film_id": film_id}},
+            {"$match": {"review_id": review_id}},
             {"$group": {
-                "_id": "$film_id",
-                "average_rating": {"$avg": "$rating"},
-                "total_ratings": {"$sum": 1}
+                "_id": "$review_id",
+                "likes_count": {"$sum": {"$cond": [{"$eq": ["$rating", 10]}, 1, 0]}},
+                "dislikes_count": {"$sum": {"$cond": [{"$eq": ["$rating", 0]}, 1, 0]}},
+                "total_votes": {"$sum": 1}
             }}
         ]
         
         result = await self.collection.aggregate(pipeline).to_list(1)
         
         if result:
-            return FilmRatingResponse(
-                film_id=film_id,
-                average_rating=round(result[0]["average_rating"], 2),
-                total_ratings=result[0]["total_ratings"]
+            return ReviewRatingResponse(
+                review_id=review_id,
+                likes_count=result[0]["likes_count"],
+                dislikes_count=result[0]["dislikes_count"],
+                total_votes=result[0]["total_votes"]
             )
         else:
-            return FilmRatingResponse(
-                film_id=film_id,
-                average_rating=0.0,
-                total_ratings=0
+            return ReviewRatingResponse(
+                review_id=review_id,
+                likes_count=0,
+                dislikes_count=0,
+                total_votes=0
             )
 
-    async def delete_like(self, user_id: str, film_id: str) -> bool:
-        """Удалить лайк"""
+    async def delete_like(self, user_id: str, review_id: str) -> bool:
+        """Удалить лайк/дизлайк"""
         result = await self.collection.delete_one({
             "user_id": user_id,
-            "film_id": film_id
+            "review_id": review_id
         })
         
         return result.deleted_count > 0
 
-    async def get_user_rating_for_film(self, user_id: str, film_id: str) -> Optional[int]:
-        """Получить оценку пользователя для конкретного фильма"""
+    async def get_user_rating_for_review(self, user_id: str, review_id: str) -> Optional[int]:
+        """Получить оценку пользователя для конкретной рецензии"""
         like = await self.collection.find_one({
             "user_id": user_id,
-            "film_id": film_id
+            "review_id": review_id
         })
         
         return like["rating"] if like else None 

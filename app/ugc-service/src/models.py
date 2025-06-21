@@ -37,8 +37,8 @@ class Bookmark(BookmarkBase):
 # Модели для лайков
 class LikeBase(BaseModel):
     user_id: str = Field(..., description="ID пользователя")
-    film_id: str = Field(..., description="ID фильма")
-    rating: int = Field(..., ge=1, le=10, description="Оценка от 1 до 10")
+    review_id: str = Field(..., description="ID рецензии")
+    rating: int = Field(..., description="Оценка: 10 - лайк, 0 - дизлайк")
 
 class LikeCreate(LikeBase):
     pass
@@ -84,7 +84,7 @@ class BookmarkResponse(BaseModel):
 class LikeResponse(BaseModel):
     id: str
     user_id: str
-    film_id: str
+    review_id: str
     rating: int
     created_at: datetime
 
@@ -97,10 +97,11 @@ class ReviewResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
 
-class FilmRatingResponse(BaseModel):
-    film_id: str
-    average_rating: float
-    total_ratings: int
+class ReviewRatingResponse(BaseModel):
+    review_id: str
+    likes_count: int
+    dislikes_count: int
+    total_votes: int
 
 class ReviewSearchResponse(BaseModel):
     reviews: List[ReviewResponse]

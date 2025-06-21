@@ -32,7 +32,7 @@ jobs:
       - name: Lint with wemake-python-styleguide
         id: wemake-python-styleguide
         run: |
-          flake8 . --config=pyproject.toml || true
+          flake8 . || true
 
       - name: Type check with mypy
         id: mypy

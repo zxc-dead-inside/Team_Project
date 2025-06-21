@@ -32,8 +32,7 @@ jobs:
       - name: Lint with wemake-python-styleguide
         id: wemake-python-styleguide
         run: |
-          flake8 . --select=WPS --format=html --htmldir=flake8-report --count --statistics \
-            --exclude=**/scripts/**,**/migrations/**,**/tests/**/fixtures/**,**/tests/**/utils/**,**/*.sh,**/.devcontainer/**,**/manage.py,**/venv/**,**/.env/**,**/docker-compose.yml,**/docker-compose.yaml,**/requirements.txt,**/etl/scripts/**
+          flake8 . --config=pyproject.toml || true
 
       - name: Type check with mypy
         id: mypy

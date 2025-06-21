@@ -46,7 +46,7 @@ class RoleRepository:
             return result.scalars().first()
 
     async def create(
-        self, name: str, description: str, permission_ids: list[UUID] = None
+        self, name: str, description: str, permission_ids: list[UUID] | None = None
     ) -> Role:
         """Create a new role."""
         async with self.session_factory() as session:

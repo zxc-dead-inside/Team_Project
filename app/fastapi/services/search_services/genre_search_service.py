@@ -26,7 +26,7 @@ class GenreSearchSerivce:
 
     async def get_genres_in_search_platform(
             self, page_number: int, page_size: int,
-            sort: str = None) -> list[Genre] | None:
+            sort: str | None = None) -> list[Genre] | None:
         """Returns list of genres."""
 
         skip = (page_number - 1) * page_size

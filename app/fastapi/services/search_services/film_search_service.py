@@ -28,8 +28,8 @@ class FilmSearchService(AbstractFilmSearchService):
         return await serialize_movie_detail(doc)
     
     async def search_film_in_search_platform(
-            self, page_number: int, page_size: int, search_query: str = None,
-            genre: UUID = None, sort: str = '-imdb_rating'
+            self, page_number: int, page_size: int, search_query: str | None = None,
+            genre: UUID | None = None, sort: str = '-imdb_rating'
     ) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the es."""
 

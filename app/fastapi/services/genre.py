@@ -15,7 +15,7 @@ class GenreService(AbstractService):
 
     async def search_query(
             self, page_number: int, page_size: int,
-            sort: str = None) -> list[Genre] | None:
+            sort: str | None = None) -> list[Genre] | None:
         """Getting list of genres."""
 
         search_query  = f"{page_number}:{page_size}:{sort}"

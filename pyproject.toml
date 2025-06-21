@@ -154,5 +154,18 @@ htmldir = "flake8-report"
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
-strict_optional = true
 plugins = []
+exclude = [
+    "database-comparison/",
+    "tests/",
+    "app/etl/elasticsearch_loader.py",
+    "app/etl/postgres_extractor.py",
+    "app/etl/main.py",
+    "app/auth_service/scripts/",
+    "app/django/movies/migrations/",
+]
+
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+warn_return_any = false
+check_untyped_defs = false

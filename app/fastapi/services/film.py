@@ -37,8 +37,8 @@ class FilmService(AbstractService):
 
     async def search_query(
             self, page_number: int, page_size: int,
-            sort: str = None, search_query: str = None,
-            genre: UUID = None) -> list[MovieShortListResponse] | None:
+            sort: str | None = None, search_query: str | None = None,
+            genre: UUID | None = None) -> list[MovieShortListResponse] | None:
         """Returns the list of movies.
         
         Optional:

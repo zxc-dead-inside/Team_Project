@@ -27,7 +27,7 @@ class PersonSearchService:
 
     async def search_person_in_search_platform(
             self, page_number: int, page_size: int,
-            search_query: str = None, sort: str = None) -> list[Person] | None:
+            search_query: str | None = None, sort: str | None = None) -> list[Person] | None:
         """Returns list of people."""
 
         query = {"bool": {"must": [{"match_all": {}}]}}

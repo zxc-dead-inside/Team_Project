@@ -15,8 +15,8 @@ class PersonService(AbstractService):
 
     async def search_query(
             self, page_number: int, page_size: int,
-            search_query: str = None,
-            sort: str = None ) -> list[Person] | None:
+            search_query: str | None = None,
+            sort: str | None = None ) -> list[Person] | None:
         """Search persons in search platform."""
         
         key  = f"{page_number}:{page_size}:{sort}:{search_query}"

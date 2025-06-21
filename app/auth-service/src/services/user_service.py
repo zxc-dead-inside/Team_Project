@@ -32,7 +32,7 @@ class UserService:
         redis_service: RedisService,
         role_repository: RoleRepository,
         oauth_service: BaseOAuthProvider | None = None,
-        user: User = None
+        user: User | None = None
     ):
         """Initialize the user service."""
         

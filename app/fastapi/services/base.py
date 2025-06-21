@@ -25,7 +25,7 @@ class AbstractService(ABC):
     @abstractmethod
     async def search_query(
         self, page_number: int, page_size: int,
-        sort: str = None, search_query: str = None,
-        genre: UUID = None
+        sort: str | None = None, search_query: str | None = None,
+        genre: UUID | None = None
     ):
         pass

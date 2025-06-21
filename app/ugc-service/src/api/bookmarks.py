@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from ..models import BookmarkCreate, BookmarkResponse
-from ..services.bookmark_service import BookmarkService
+from src.models import BookmarkCreate, BookmarkResponse
+from src.services.bookmark_service import BookmarkService
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 

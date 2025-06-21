@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..database import get_database
+from src.database import get_database
 
 router = APIRouter(prefix="/health", tags=["health"])
 

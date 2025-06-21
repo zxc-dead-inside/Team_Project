@@ -1,8 +1,8 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Optional
 from bson import ObjectId
-from ..models import Bookmark, BookmarkCreate, BookmarkResponse
-from ..database import get_database
+from src.models import Bookmark, BookmarkCreate, BookmarkResponse
+from src.database import get_database
 
 
 class BookmarkService:

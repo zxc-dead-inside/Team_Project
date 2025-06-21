@@ -2,8 +2,8 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime
-from ..models import Review, ReviewCreate, ReviewResponse, ReviewSearchResponse
-from ..database import get_database
+from src.models import Review, ReviewCreate, ReviewResponse, ReviewSearchResponse
+from src.database import get_database
 
 
 class ReviewService:

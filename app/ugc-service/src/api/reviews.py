@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional
-from ..models import ReviewCreate, ReviewResponse, ReviewSearchResponse
-from ..services.review_service import ReviewService
+from src.models import ReviewCreate, ReviewResponse, ReviewSearchResponse
+from src.services.review_service import ReviewService
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 

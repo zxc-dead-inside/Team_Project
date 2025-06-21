@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from ..models import LikeCreate, LikeResponse, FilmRatingResponse
-from ..services.like_service import LikeService
+from src.models import LikeCreate, LikeResponse, FilmRatingResponse
+from src.services.like_service import LikeService
 
 router = APIRouter(prefix="/likes", tags=["likes"])
 

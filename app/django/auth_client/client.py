@@ -1,6 +1,6 @@
 import logging
 import threading
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -113,7 +113,7 @@ class AuthServiceClient:
 
             # Check if token is expired
             exp = payload.get("exp")
-            if exp and datetime.now(UTC) > datetime.fromtimestamp(exp, tz=timezone.utc):
+            if exp and datetime.now(UTC) > datetime.fromtimestamp(exp, tz=UTC):
                 return False, None
 
             # Check if token is in blacklist (if redis is available)

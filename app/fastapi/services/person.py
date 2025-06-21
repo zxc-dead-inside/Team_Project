@@ -3,6 +3,7 @@ from services.base import AbstractService
 from services.cache_services.base import AbstractPersonCacheService
 from services.search_services.base import AbstractPersonSearchService
 
+
 class PersonService(AbstractService):
     """The main logic of working with persons."""
 

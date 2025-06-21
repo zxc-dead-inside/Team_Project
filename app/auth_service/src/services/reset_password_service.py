@@ -6,10 +6,10 @@ from uuid import UUID
 import jwt
 from passlib.context import CryptContext
 from pydantic import EmailStr
-
+from src.core.logger import setup_logging
 from src.db.repositories.user_repository import UserRepository
 from src.services.redis_service import RedisService
-from src.core.logger import setup_logging
+
 
 setup_logging()
 

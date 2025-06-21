@@ -1,11 +1,11 @@
 """Main application entry point for the Analytics Service."""
-from contextlib import asynccontextmanager
 import logging
-
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
 from src.api import health_router, metrics_router
-from src.core import get_settings, setup_logging, Container
+from src.core import Container, get_settings, setup_logging
+
+from fastapi import FastAPI
 
 
 @asynccontextmanager

@@ -2,13 +2,11 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
-from models.models import Person, PersonBase, MovieRole, MovieShort
+from models.models import MovieRole, MovieShort, Person, PersonBase
 from services.base import AbstractService
-from services.di import get_person_service
-from services.di import get_film_service
+from services.di import get_film_service, get_person_service
 
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 
 router = APIRouter()

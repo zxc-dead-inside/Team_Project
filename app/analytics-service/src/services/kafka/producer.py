@@ -4,8 +4,8 @@ import logging
 import backoff
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
-
 from src.core.logger import setup_logging
+
 
 setup_logging()
 

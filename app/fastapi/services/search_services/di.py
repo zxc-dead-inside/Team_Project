@@ -1,5 +1,4 @@
 from services.search_platform.di import get_search_platform
-
 from services.search_services.film_search_service import FilmSearchService
 from services.search_services.genre_search_service import GenreSearchSerivce
 from services.search_services.person_search_service import PersonSearchService

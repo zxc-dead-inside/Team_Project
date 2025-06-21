@@ -1,9 +1,8 @@
 from dependency_injector import containers, providers
-
-from src.etl.services.consumer import KafkaConsumer
-from src.etl.services.clickhouse import ClickHouseClient
-from src.etl.services.etl import AnalyticsETLService
 from src.core.config import Settings
+from src.etl.services.clickhouse import ClickHouseClient
+from src.etl.services.consumer import KafkaConsumer
+from src.etl.services.etl import AnalyticsETLService
 
 
 class ETLContainer(containers.DeclarativeContainer):

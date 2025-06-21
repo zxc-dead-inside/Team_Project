@@ -1,9 +1,6 @@
 """API dependencies for dependency injection."""
 
-import logging
 from typing import Annotated
-
-from fastapi import Depends, HTTPException, Request, status
 
 from src.core.logger import setup_logging
 from src.db.models.user import User
@@ -11,9 +8,13 @@ from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.oauth.oauth_service import OAuthService
 from src.services.reset_password_service import ResetPasswordService
+from src.services.role_service import RoleService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
-from src.services.role_service import RoleService
+
+from fastapi import Depends, HTTPException, Request, status
+
+
 # from src.services.yandex_oauth_service import YandexOAuthService
 
 setup_logging()

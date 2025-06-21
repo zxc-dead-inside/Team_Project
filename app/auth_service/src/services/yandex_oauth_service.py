@@ -1,9 +1,9 @@
 """Service to authenticate through with Yandex account."""
 
 import base64
-import httpx
 import secrets
 
+import httpx
 from src.services.redis_service import RedisService
 
 

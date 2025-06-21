@@ -2,9 +2,10 @@
 Script to create a public and private keys for JWT with algorithm RS256.
 """
 
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
 from pathlib import Path
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 def create_keys_pair(keys_dir: str ='secrets', key_size: int =2048, overwrite: bool =False):

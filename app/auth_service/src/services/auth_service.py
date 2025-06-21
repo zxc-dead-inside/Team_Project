@@ -7,13 +7,13 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import jwt
-from fastapi import HTTPException
 from passlib.context import CryptContext
-
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User
 from src.db.repositories.user_repository import UserRepository
 from src.services.email_verification_service import EmailService
+
+from fastapi import HTTPException
 
 
 class AuthService:
@@ -119,7 +119,7 @@ class AuthService:
             str: JWT access token
         """
 
-        if not to_encode.get('exp', None):
+        if not to_encode.get('exp'):
             expires_delta = timedelta(minutes=self.access_token_expire_minutes)
             expire = datetime.now(UTC) + expires_delta
             to_encode["exp"] = expire

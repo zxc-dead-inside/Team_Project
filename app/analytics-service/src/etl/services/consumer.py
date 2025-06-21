@@ -1,13 +1,14 @@
 import asyncio
 import json
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import backoff
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaError
-
 from src.core.logger import setup_logging
+
 
 setup_logging()
 

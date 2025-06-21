@@ -1,11 +1,12 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
 from models.models import Genre
 from services.base import AbstractService
 from services.di import get_genre_service
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 
 router = APIRouter()
 

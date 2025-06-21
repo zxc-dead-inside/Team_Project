@@ -1,10 +1,10 @@
 import logging
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from clickhouse_driver import Client
-
 from src.core.logger import setup_logging
+
 
 setup_logging()
 

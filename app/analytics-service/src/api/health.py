@@ -1,13 +1,14 @@
 """Health check endpoints."""
 
 import logging
-from pydantic import BaseModel
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends
-
+from pydantic import BaseModel
 from src.core.container import Container
 from src.services.kafka.producer import KafkaProducer
+
+from fastapi import APIRouter, Depends
+
 
 router = APIRouter()
 

@@ -1,12 +1,13 @@
 import base64
 import secrets
-from typing import Callable, Dict
-from fastapi import HTTPException
-from starlette import status
+from collections.abc import Callable
 
-from src.services.redis_service import RedisService
 from src.db.repositories.user_repository import UserRepository
 from src.services.oauth.base import BaseOAuthProvider
+from src.services.redis_service import RedisService
+from starlette import status
+
+from fastapi import HTTPException
 
 
 class OAuthError(HTTPException):
@@ -21,7 +22,7 @@ class OAuthError(HTTPException):
 class OAuthService:
     def __init__(
         self,
-        provider_factory: Dict[str, Callable[[], BaseOAuthProvider]],
+        provider_factory: dict[str, Callable[[], BaseOAuthProvider]],
         redis_service: RedisService,
         user_repository: UserRepository,
         state_ttl: int,

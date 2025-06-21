@@ -1,8 +1,9 @@
-from sqlalchemy import Column, DateTime, ForeignKey, String, UUID
+from sqlalchemy import UUID, Column, ForeignKey, String
 from sqlalchemy.orm import relationship
-# from uuid import UUID
 
-from src.db.base_models import Base, PreBase, IdMixin
+# from uuid import UUID
+from src.db.base_models import Base, IdMixin
+
 
 class OAuthAccount(IdMixin, Base):
     """Model for storing an OAuth2 accounts."""

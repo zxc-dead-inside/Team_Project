@@ -1,15 +1,15 @@
-from datetime import datetime, UTC
-from uuid import uuid4, uuid5, NAMESPACE_DNS
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
+from uuid import NAMESPACE_DNS, uuid5
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, FastAPI
-from typing import Callable, Awaitable
-from starlette.responses import Response
 from jose import JWTError
-
+from src.db.models import User
 from src.services.auth_service import AuthService
 from src.services.role_service import RoleService
-from src.db.models import User, Role
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+from fastapi import FastAPI, Request
 
 
 class AnonymousUserMiddleware(BaseHTTPMiddleware):

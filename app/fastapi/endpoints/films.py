@@ -2,12 +2,15 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
+from auth.dependencies import (
+    anonymous_required,
+    subscriber_required,
+)
 from models.models import Genre, MovieFull, MovieShort, Person
 from services.base import AbstractService
 from services.di import get_film_service
-from auth.dependencies import admin_required, moderator_required, subscriber_required, anonymous_required
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 
 router = APIRouter()

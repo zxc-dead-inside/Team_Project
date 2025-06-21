@@ -2,11 +2,10 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, JSON
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
-from src.db.base_models import IdMixin, Base
+from src.db.base_models import Base, IdMixin
 
 
 class AuditLog(IdMixin, Base):

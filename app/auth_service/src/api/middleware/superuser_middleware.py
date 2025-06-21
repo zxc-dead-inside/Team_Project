@@ -1,7 +1,7 @@
 """Middleware for superuser permission handling with lazy dependency resolution."""
 
 import logging
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from src.core.logger import setup_logging
 from src.db.repositories.audit_log_repository import AuditLogRepository

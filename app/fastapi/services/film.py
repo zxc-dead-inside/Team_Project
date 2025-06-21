@@ -1,8 +1,7 @@
 import random
 from uuid import UUID
 
-from models.movies_models import (
-    MovieDetailResponse, MovieShortListResponse)
+from models.movies_models import MovieDetailResponse, MovieShortListResponse
 from services.base import AbstractService
 from services.cache_services.base import AbstractFilmCacheService
 from services.search_services.base import AbstractFilmSearchService

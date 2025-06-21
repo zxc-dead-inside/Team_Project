@@ -1,7 +1,8 @@
 """Repository for login history."""
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import AsyncContextManager, Callable
+from typing import AsyncContextManager
 from uuid import UUID
 
 from sqlalchemy import func, select

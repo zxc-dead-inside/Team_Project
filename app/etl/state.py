@@ -1,8 +1,8 @@
 import abc
 import json
 import os
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 
 class BaseStorage(abc.ABC):
@@ -35,7 +35,7 @@ class JsonFileStorage(BaseStorage):
             return {}
 
         try:
-            with open(self.file_path, "r", encoding="utf-8") as f:
+            with open(self.file_path, encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
             return {}

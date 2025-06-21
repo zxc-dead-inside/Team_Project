@@ -24,7 +24,7 @@ class ETLState:
         """Load the last processed ID from the state file."""
         try:
             if self.file_path.exists():
-                with open(self.file_path, "r") as f:
+                with open(self.file_path) as f:
                     state = json.load(f)
                     self.last_processed_id = state.get("last_processed_id")
                     logger.info(

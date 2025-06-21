@@ -1,7 +1,7 @@
 """Database configuration and session management."""
 
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Callable
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import (

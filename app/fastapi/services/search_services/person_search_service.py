@@ -1,9 +1,7 @@
 
-from elasticsearch import NotFoundError
-
 from core.config import settings
-from models.person import (
-    Person, serialize_person_detail, serialize_person_list)
+from elasticsearch import NotFoundError
+from models.person import Person, serialize_person_detail, serialize_person_list
 from services.search_platform.base import AbstractSearchPlatfrom
 
 

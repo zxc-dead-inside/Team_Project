@@ -2,11 +2,15 @@
 from uuid import UUID
 
 from core.config import settings
-from  models.movies_models import (
-    MovieDetailResponse, MovieShortListResponse, serialize_movie_detail,
-    serialize_movie_short_list)
+from models.movies_models import (
+    MovieDetailResponse,
+    MovieShortListResponse,
+    serialize_movie_detail,
+    serialize_movie_short_list,
+)
 from services.search_platform.base import AbstractSearchPlatfrom
 from services.search_services.base import AbstractFilmSearchService
+
 
 class FilmSearchService(AbstractFilmSearchService):
     """"

@@ -1,25 +1,15 @@
 """Authentication endpoints."""
 
-import logging
 from http import HTTPStatus
 from typing import Annotated
-
-from fastapi import (
-    APIRouter, Depends, HTTPException, Request, status, Header, Form
-)
-from fastapi.responses import RedirectResponse
-
-
-from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
 
 from src.api.dependencies import (
     get_auth_service,
     get_email_service,
-    get_reset_password_service,
-    get_user_service,
-    get_reset_password_service,
     # get_yandex_oauth_service,
     get_oauth_service,
+    get_reset_password_service,
+    get_user_service,
 )
 from src.api.schemas.auth import (
     EmailConfirmation,
@@ -34,11 +24,12 @@ from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
 from src.services.oauth.oauth_service import OAuthService
 from src.services.reset_password_service import ResetPasswordService
+
 # from src.services.yandex_oauth_service import YandexOAuthService
 from src.services.user_service import UserService
 
-from dependency_injector.wiring import Provide, inject
-from src.core.container import Container
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, Request, status
+
 
 setup_logging()
 

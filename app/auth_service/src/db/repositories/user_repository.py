@@ -4,13 +4,11 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
-from uuid import UUID
 from src.db.models import Role
-from src.db.models.user import User
-from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.login_history import LoginHistory
 from src.db.models.oauth import OAuthAccount
-
+from src.db.models.token_blacklist import TokenBlacklist
+from src.db.models.user import User
 
 
 class UserRepository:

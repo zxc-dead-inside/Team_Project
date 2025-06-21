@@ -1,6 +1,6 @@
 import time
+from collections.abc import Generator
 from datetime import UTC, datetime
-from typing import Generator
 
 from config import Settings
 from elasticsearch_loader import ElasticsearchLoader

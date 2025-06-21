@@ -1,19 +1,20 @@
 import logging
 import time
-from typing import Callable, Awaitable
-from uuid import uuid5, NAMESPACE_DNS
+from collections.abc import Awaitable, Callable
+from uuid import NAMESPACE_DNS, uuid5
 
 from dependency_injector.wiring import Provide
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
-
 from src.core.container import Container
 from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.redis_service import RedisService
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
+
 
 setup_logging()
 

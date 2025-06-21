@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import UUID, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
-from src.db.base_models import IdMixin, Base
+from src.db.base_models import Base, IdMixin
 
 
 class LoginHistory(IdMixin, Base):

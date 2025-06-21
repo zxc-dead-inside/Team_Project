@@ -1,6 +1,6 @@
 import httpx
-
 from src.services.oauth.base import BaseOAuthProvider
+
 
 class YandexOAuthProvider(BaseOAuthProvider):
     async def get_user_data(self, tokens: dict) -> dict:

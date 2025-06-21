@@ -189,7 +189,7 @@ async def seed_permissions_from_file(
 
     try:
         if file_path.endswith(".json"):
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 permissions_data = json.load(f)
 
             if not isinstance(permissions_data, list):
@@ -197,7 +197,7 @@ async def seed_permissions_from_file(
                 return results
 
         elif file_path.endswith(".csv"):
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 reader = csv.DictReader(f)
                 permissions_data = list(reader)
 

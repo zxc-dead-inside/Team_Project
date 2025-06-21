@@ -2,9 +2,10 @@ import asyncio
 import logging
 from typing import Any
 
-from src.etl.services.consumer import KafkaConsumer
-from src.etl.services.clickhouse import ClickHouseClient
 from src.core.logger import setup_logging
+from src.etl.services.clickhouse import ClickHouseClient
+from src.etl.services.consumer import KafkaConsumer
+
 
 setup_logging()
 

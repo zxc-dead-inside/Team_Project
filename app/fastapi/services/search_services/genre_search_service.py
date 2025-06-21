@@ -1,7 +1,6 @@
-from elasticsearch import NotFoundError
-
 from core.config import settings
-from models.genre import Genre, serialize_genres_list, serialize_genre_detail
+from elasticsearch import NotFoundError
+from models.genre import Genre, serialize_genre_detail, serialize_genres_list
 from services.search_platform.base import AbstractSearchPlatfrom
 
 

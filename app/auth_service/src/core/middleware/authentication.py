@@ -1,16 +1,16 @@
 """Middleware for global depense to authenticate requests"""
-from datetime import datetime, UTC
-from uuid import uuid5, NAMESPACE_DNS
+from datetime import UTC, datetime
+from uuid import NAMESPACE_DNS, uuid5
+
+from src.api.dependencies import get_role_service, get_user_service
+from src.db.models import User
+from src.services.role_service import RoleService
+from src.services.user_service import UserService
 
 from fastapi import Depends, Request
+from fastapi.openapi.models import OAuth2 as OAuth2Model, OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security.base import SecurityBase
-from fastapi.openapi.models import OAuth2 as OAuth2Model
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
-from src.api.dependencies import get_user_service, get_role_service
-from src.services.user_service import UserService
-from src.services.role_service import RoleService
-from src.db.models import User
 
 
 oauth2_scheme = OAuth2PasswordBearer(

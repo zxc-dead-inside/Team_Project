@@ -1,7 +1,6 @@
 from typing import Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
-
 from services.search_platform.base import AbstractSearchPlatfrom
 
 

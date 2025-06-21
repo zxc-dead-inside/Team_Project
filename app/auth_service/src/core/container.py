@@ -9,14 +9,13 @@ from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.email_verification_service import EmailService
+from src.services.oauth.oauth_service import OAuthService
+from src.services.oauth.providers import VKOAuthProvider, YandexOAuthProvider
 from src.services.redis_service import RedisService
 from src.services.reset_password_service import ResetPasswordService
 from src.services.role_service import RoleService
 from src.services.superuser_service import SuperuserService
 from src.services.user_service import UserService
-
-from src.services.oauth.oauth_service import OAuthService
-from src.services.oauth.providers import VKOAuthProvider, YandexOAuthProvider
 
 
 class Container(containers.DeclarativeContainer):

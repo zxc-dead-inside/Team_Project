@@ -6,19 +6,18 @@ Create Date: 2025-02-28 00:51:24.083877+00:00
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 from src.db.partitioning import generate_partition_login_history
 
 
 # revision identifiers, used by Alembic.
 revision: str = "f991fb728e0a"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

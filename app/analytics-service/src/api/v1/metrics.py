@@ -1,12 +1,10 @@
 """Metrics endpoints."""
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, BackgroundTasks, Depends
-
 from src.core.container import Container
 from src.models.metrics import UserAction
 
-
+from fastapi import APIRouter, BackgroundTasks, Depends
 
 
 router = APIRouter()

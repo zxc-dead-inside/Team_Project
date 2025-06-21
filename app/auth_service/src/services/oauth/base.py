@@ -1,6 +1,7 @@
 
-import httpx
 from abc import ABC, abstractmethod
+
+import httpx
 
 
 class BaseOAuthProvider(ABC):

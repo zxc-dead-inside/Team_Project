@@ -6,7 +6,6 @@ import asyncio
 import logging
 import os
 import sys
-import uuid
 
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession

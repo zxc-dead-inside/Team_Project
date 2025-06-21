@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Any
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -36,20 +36,20 @@ class ViewMetadata(BaseModel):
         device_type: Type of device used for playback
     """
 
-    duration_seconds: Optional[float] = Field(
+    duration_seconds: float | None = Field(
         None, 
         description="Total content duration in seconds"
     )
-    current_time: Optional[float] = Field(
+    current_time: float | None = Field(
         None,
         description="Current playback position in seconds"
     )
-    percent_watched: Optional[float] = Field(
+    percent_watched: float | None = Field(
         None,
         ge=0, le=100,
         description="Percentage of content watched (0-100)"
     )
-    device_type: Optional[str] = Field(
+    device_type: str | None = Field(
         None,
         description="Device type (mobile, tv, web, etc.)"
     )
@@ -96,7 +96,7 @@ class UserAction(BaseModel):
         """
 
         if isinstance(values, dict):
-            if not "action_type" in values:
+            if "action_type" not in values:
                 raise ValueError("action_type is required")
         
             

@@ -1,5 +1,6 @@
 import socket
-from typing import Any, Callable, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 from urllib.error import URLError
 
 import backoff

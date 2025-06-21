@@ -1,11 +1,10 @@
 """Service for user-related operations."""
 
-import httpx
 import logging
 from datetime import UTC, datetime
-from fastapi import Request
 from uuid import UUID
 
+import httpx
 from src.api.schemas.user_roles import UserRoleResponse
 from src.core.logger import setup_logging
 from src.db.models.login_history import LoginHistory
@@ -14,8 +13,10 @@ from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.role_repository import RoleRepository
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
-from src.services.redis_service import RedisService
 from src.services.oauth.base import BaseOAuthProvider
+from src.services.redis_service import RedisService
+
+from fastapi import Request
 
 
 setup_logging()

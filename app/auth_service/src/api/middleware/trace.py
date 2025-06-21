@@ -1,7 +1,8 @@
 from opentelemetry import trace
-from opentelemetry.propagate import extract
 from opentelemetry.context import attach, detach
+from opentelemetry.propagate import extract
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from fastapi import Request
 
 

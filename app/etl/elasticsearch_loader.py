@@ -1,10 +1,10 @@
 from typing import Any
 
 import backoff
-from elasticsearch import Elasticsearch, helpers
-
 from config import es_indices_settings as esis
+from elasticsearch import Elasticsearch, helpers
 from logger_setup import logger
+
 from state import State
 
 

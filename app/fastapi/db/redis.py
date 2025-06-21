@@ -1,7 +1,7 @@
 import redis.asyncio as aioredis
-from redis.asyncio import Redis
 from core.config import settings
 from core.decorators.retry import exponential_backoff
+from redis.asyncio import Redis
 
 
 class RedisConnector:

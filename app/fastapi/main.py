@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 
+from api.api import api_router
+from core.config import settings
+from db.elastic import es_connector
+from db.redis import redis_connector
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.api import api_router
-from core.config import settings
-from db.redis import redis_connector
-from db.elastic import es_connector
 
 @asynccontextmanager
 async def lifespan(api: FastAPI):

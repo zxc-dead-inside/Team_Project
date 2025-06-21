@@ -3,9 +3,9 @@ from datetime import timedelta
 
 from core.config import settings
 from models.genre import Genre
-from services.utils import UUIDEncoder
 from services.cache.base import AbstractCacheStorage
 from services.cache_services.base import AbstractGenreCacheService
+from services.utils import UUIDEncoder
 
 
 class GenreCacheService(AbstractGenreCacheService):

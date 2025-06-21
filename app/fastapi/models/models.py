@@ -16,7 +16,7 @@ from pydantic import (
     Field,
     HttpUrl,
     StringConstraints,
-    model_validator
+    model_validator,
 )
 
 

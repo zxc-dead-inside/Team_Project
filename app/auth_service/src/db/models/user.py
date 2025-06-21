@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from sqlalchemy import UUID, Boolean, Column, DateTime, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
 from src.db.base_models import Base, PreBase
-from src.db.models.oauth import OAuthAccount
 
 
 # Association table for User-Role relationship

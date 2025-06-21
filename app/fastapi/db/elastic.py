@@ -1,8 +1,7 @@
-from elasticsearch import AsyncElasticsearch
 import elasticsearch.exceptions
-
 from core.config import settings
 from core.decorators.retry import exponential_backoff
+from elasticsearch import AsyncElasticsearch
 
 
 es: AsyncElasticsearch | None = None

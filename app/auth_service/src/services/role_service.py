@@ -6,9 +6,9 @@ from uuid import UUID
 from pydantic import TypeAdapter
 from src.api.schemas.roles import RoleCreate, RoleResponse, RoleUpdate
 from src.core.logger import setup_logging
+from src.db.models.role import Role
 from src.db.repositories.role_repository import RoleRepository
 from src.services.redis_service import RedisService
-from src.db.models.role import Role
 
 
 setup_logging()

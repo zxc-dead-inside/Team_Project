@@ -10,7 +10,7 @@ state
 *.egg-info
 
 *.env
-
+*tmp/
 
 __pycache__/
 

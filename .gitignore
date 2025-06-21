@@ -22,4 +22,4 @@ app/state
 *.log
 
 # Secrets
-app/auth-service/secrets/*
+app/auth_service/secrets/*

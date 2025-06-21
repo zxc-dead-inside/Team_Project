@@ -3,7 +3,6 @@ import time
 from typing import Callable, Awaitable
 from uuid import uuid5, NAMESPACE_DNS
 
-
 from dependency_injector.wiring import Provide
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -15,7 +14,6 @@ from src.core.container import Container
 from src.core.logger import setup_logging
 from src.services.auth_service import AuthService
 from src.services.redis_service import RedisService
-
 
 setup_logging()
 
@@ -34,13 +32,13 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self,
-        app: FastAPI,
-        unlimited_roles: set[str],
-        special_roles: set[str],
-        special_capacity: int,
-        default_capacity: int,
-        undefind_capacity: int
+            self,
+            app: FastAPI,
+            unlimited_roles: set[str],
+            special_roles: set[str],
+            special_capacity: int,
+            default_capacity: int,
+            undefind_capacity: int
     ):
         """
         Initialize RateLimiterMiddleware.
@@ -69,7 +67,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             request: Request,
             call_next: Callable[[Request], Awaitable[Response]],
             auth_service: AuthService = Provide[Container.auth_service]
-    ):  
+    ):
         """
         Processes incoming HTTP requests using rate limiting logic.
         Checks the token, determines the user's role, and based on that,
@@ -85,7 +83,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         """
 
         key = str(uuid5(NAMESPACE_DNS, str(request.client.host)))
-        capacity=self.undefind_capacity
+        capacity = self.undefind_capacity
         token: str = await oauth2_scheme(request=request)
 
         if token:
@@ -137,7 +135,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             tokens = await redis_service.get(key=f'tokens:{key}')
             if not tokens:
                 await redis_service.set(
-                    key=f'tokens:{key}', value=capacity-1)
+                    key=f'tokens:{key}', value=capacity - 1)
                 await redis_service.set(key=f'last_refill:{key}', value=now)
                 return True
 
@@ -156,6 +154,6 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                 f'Tokens: {tokens}, Last refill: {last_refill} Key: {key}')
             if tokens >= 1:
                 # Deduct a token for the API call
-                await redis_service.set(key=f'tokens:{key}', value=tokens-1)
+                await redis_service.set(key=f'tokens:{key}', value=tokens - 1)
                 return True  # Indicate that the API call can proceed
             return False  # Indicate that the rate limit has been exceeded

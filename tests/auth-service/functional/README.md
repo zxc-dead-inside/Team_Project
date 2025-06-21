@@ -3,13 +3,13 @@
 
 Start the service with Docker Compose:
 ```shell
-docker compose --env-file=../../../app/auth-service/.env  up --build --force-recreate tests
+docker compose --env-file=../../../app/auth_service/.env  up --build --force-recreate tests
 ```
 Use `ctrl+c` to exit.
 
 Start the service with Docker Compose in detach mode:
 ```shell
-docker compose --env-file=../../../app/auth-service/.env  up -d --build --force-recreate
+docker compose --env-file=../../../app/auth_service/.env  up -d --build --force-recreate
 ```
 
 Remove volumes with cahce

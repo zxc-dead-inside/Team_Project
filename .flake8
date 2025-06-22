@@ -15,6 +15,7 @@ ignore =
     WPS204,
     WPS210,
     WPS220,
+     WPS229,
 
 max-line-length = 88
 exclude =
@@ -46,7 +47,7 @@ exclude =
     tests/*,
     *test*,
     benchmark*,
-       database-comparison/**,
+    database-comparison/**,
     **/migrations/**,
     app/**/scripts/**,
     app/etl/elasticsearch_loader.py,

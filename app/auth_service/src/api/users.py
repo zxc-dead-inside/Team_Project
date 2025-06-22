@@ -106,9 +106,6 @@ async def update_password(
             detail=message,
         )
 
-    # No content response for successful password update
-    return None
-
 
 @router.get(
     "/me/history", response_model=LoginHistoryResponse, status_code=status.HTTP_200_OK

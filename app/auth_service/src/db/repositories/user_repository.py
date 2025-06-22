@@ -118,7 +118,6 @@ class UserRepository:
             session.add(login_history)
             await session.flush()
             await session.refresh(login_history)
-            return None
 
     async def update_token_blacklist(self, token: TokenBlacklist):
         """
@@ -134,7 +133,6 @@ class UserRepository:
             session.add(token)
             await session.flush()
             await session.refresh(token)
-            return None
 
     async def get_token_from_blacklist(self, token_jti: UUID) -> UUID | None:
         """

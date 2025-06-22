@@ -185,5 +185,3 @@ async def delete_role(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=message,
             )
-
-    return None

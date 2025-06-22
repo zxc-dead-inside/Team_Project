@@ -46,7 +46,14 @@ class Settings(BaseSettings):
 
     # Token settings
     token_blacklist_ttl: int = 86400
-    
+
+    # Sentry settings
+    sentry_dsn: str
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 1.0
+    sentry_send_default_pii: str = "false"
+    sentry_enable: str = "true"
+
     class Config:
         env_file = ".env"
 

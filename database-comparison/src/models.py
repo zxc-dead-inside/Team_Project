@@ -44,7 +44,9 @@ class Country(str, Enum):
 class User(BaseModel):
     """Модель пользователя"""
 
-    user_id: UUID = Field(default_factory=uuid4, description="Уникальный UUID пользователя")
+    user_id: UUID = Field(
+        default_factory=uuid4, description="Уникальный UUID пользователя"
+    )
     email: EmailStr = Field(description="Email пользователя")
     username: Annotated[
         str, Field(min_length=3, max_length=50, description="Имя пользователя")
@@ -80,7 +82,9 @@ class Movie(BaseModel):
         default=None, description="Оригинальное название"
     )
     genre: Genre = Field(description="Основной жанр")
-    secondary_genres: list[Genre] = Field(default_factory=list, description="Дополнительные жанры")
+    secondary_genres: list[Genre] = Field(
+        default_factory=list, description="Дополнительные жанры"
+    )
     release_date: date = Field(description="Дата выхода")
     duration_minutes: PositiveInt = Field(description="Продолжительность в минутах")
     country: Country = Field(description="Страна производства")

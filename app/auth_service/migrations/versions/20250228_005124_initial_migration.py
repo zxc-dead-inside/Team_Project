@@ -86,7 +86,7 @@ def upgrade() -> None:
             successful CHAR(1) DEFAULT 'Y'
         ) PARTITION BY RANGE (login_time);
         """)
-    sql_statements = generate_partition_login_history().split(';')
+    sql_statements = generate_partition_login_history().split(";")
     for statement in sql_statements:
         clean_statement = statement.strip()
         if clean_statement:

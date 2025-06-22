@@ -49,8 +49,9 @@ class UserRepository:
 
         async with self.session_factory() as session:
             result = await session.execute(
-                select(User).where(User.username == username).options(
-                    joinedload(User.roles).joinedload(Role.permissions))
+                select(User)
+                .where(User.username == username)
+                .options(joinedload(User.roles).joinedload(Role.permissions))
             )
             return result.scalars().first()
 
@@ -67,7 +68,7 @@ class UserRepository:
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.email == email))
             return result.scalars().first()
-    
+
     async def get_by_yandex_id(self, yandex_id: str) -> User | None:
         """
         Get user by yandex id.
@@ -80,9 +81,10 @@ class UserRepository:
         """
 
         async with self.session_factory() as session:
-            result =  await session.execute(
-                select(User).where(User.yandex_id == yandex_id).options(
-                    joinedload(User.roles).joinedload(Role.permissions))
+            result = await session.execute(
+                select(User)
+                .where(User.yandex_id == yandex_id)
+                .options(joinedload(User.roles).joinedload(Role.permissions))
             )
             return result.scalars().first()
 
@@ -146,7 +148,8 @@ class UserRepository:
         """
         async with self.session_factory() as session:
             result = await session.execute(
-                select(TokenBlacklist).filter(TokenBlacklist.jti == token_jti))
+                select(TokenBlacklist).filter(TokenBlacklist.jti == token_jti)
+            )
             return result.scalars().first()
 
     async def update(self, user: User) -> User:
@@ -200,8 +203,9 @@ class UserRepository:
             await session.commit()
 
             stmt_updated = (
-                select(User).where(User.id == user_id).options(
-                    joinedload(User.roles).joinedload(Role.permissions))
+                select(User)
+                .where(User.id == user_id)
+                .options(joinedload(User.roles).joinedload(Role.permissions))
             )
             result_updated = await session.execute(stmt_updated)
             return result_updated.scalars().first()
@@ -356,26 +360,23 @@ class UserRepository:
                 select(func.count()).select_from(User).filter(User.is_superuser == True)  # noqa: E712
             )
             return result.scalar() or 0
-    
+
     async def get_by_oauth(self, provider: str, provider_id: str) -> User | None:
         async with self.session_factory() as session:
             result = await session.execute(
-                select(User).join(OAuthAccount).where(
+                select(User)
+                .join(OAuthAccount)
+                .where(
                     OAuthAccount.provider == provider,
-                    OAuthAccount.provider_id == provider_id
-                ).options(joinedload(User.oauth_accounts)).options(joinedload(User.roles).joinedload(Role.permissions))
+                    OAuthAccount.provider_id == provider_id,
+                )
+                .options(joinedload(User.oauth_accounts))
+                .options(joinedload(User.roles).joinedload(Role.permissions))
             )
             return result.unique().scalar_one_or_none()
 
-       
-    
     async def create_oauth_user(
-        self,
-        provider: str,
-        provider_id: str,
-        email: str,
-        username: str,
-        password: str
+        self, provider: str, provider_id: str, email: str, username: str, password: str
     ) -> User:
         async with self.session_factory() as session:
             user = User(
@@ -383,13 +384,11 @@ class UserRepository:
                 username=username,
                 password=password,
                 is_active=True,
-                oauth_accounts=[OAuthAccount(
-                    provider=provider,
-                    provider_id=provider_id
-                )]
+                oauth_accounts=[
+                    OAuthAccount(provider=provider, provider_id=provider_id)
+                ],
             )
             session.add(user)
             await session.commit()
-            await session.refresh(user, ['roles'])
+            await session.refresh(user, ["roles"])
             return user
-

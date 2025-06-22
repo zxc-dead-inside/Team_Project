@@ -13,16 +13,17 @@ from services.search_services.base import AbstractFilmSearchService
 
 
 class FilmSearchService(AbstractFilmSearchService):
-    """"
+    """ "
     A service class responsible for retrieving movies data from search
     platform.
     """
 
     def __init__(self, search_platform: AbstractSearchPlatfrom):
         self.search_platform = search_platform
-    
+
     async def get_film_from_search_platform(
-            self, film_id: str) -> MovieDetailResponse | None:
+        self, film_id: str
+    ) -> MovieDetailResponse | None:
         """Returns film by id."""
 
         doc = await self.search_platform.get(settings.movie_index, film_id)
@@ -30,10 +31,14 @@ class FilmSearchService(AbstractFilmSearchService):
             return None
 
         return await serialize_movie_detail(doc)
-    
+
     async def search_film_in_search_platform(
-            self, page_number: int, page_size: int, search_query: str | None = None,
-            genre: UUID | None = None, sort: str = '-imdb_rating'
+        self,
+        page_number: int,
+        page_size: int,
+        search_query: str | None = None,
+        genre: UUID | None = None,
+        sort: str = "-imdb_rating",
     ) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the es."""
 
@@ -63,26 +68,18 @@ class FilmSearchService(AbstractFilmSearchService):
                 }
             ]
         if sort:
-            body["sort"] = [{
-                sort.lstrip("-"): {
-                    "order": "desc" if sort.startswith("-") else "asc"
-                }
-            }]
+            body["sort"] = [
+                {sort.lstrip("-"): {"order": "desc" if sort.startswith("-") else "asc"}}
+            ]
         if genre:
-            query["bool"]["filter"] = [{
-                "nested": {
-                    "path": "genres",
-                    "query": {
-                        "term": {
-                            "genres.id": genre
-                        }
-                    }
-                }
-            }]
+            query["bool"]["filter"] = [
+                {"nested": {"path": "genres", "query": {"term": {"genres.id": genre}}}}
+            ]
 
         results = await self.search_platform.search(
-            index=settings.movie_index, body=body)
-        
+            index=settings.movie_index, body=body
+        )
+
         if results is None:
             return None
         return await serialize_movie_short_list(results)

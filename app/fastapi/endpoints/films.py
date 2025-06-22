@@ -17,94 +17,97 @@ router = APIRouter()
 
 
 @router.get(
-    '/popular',
+    "/popular",
     response_model=list[MovieShort],
     summary="Get popular films by genre",
-    description="Return list of popular films by genre"
+    description="Return list of popular films by genre",
 )
 async def films_popular_by_genre(
     genre: str,
     page_number: Annotated[
-        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100,
-        description="Number of items per page, must be between 1 and 100")] = 10,
-    film_service: AbstractService = Depends(get_film_service)
+        int, Query(ge=1, description="Page number, must be >= 1")
+    ] = 1,
+    page_size: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+            description="Number of items per page, must be between 1 and 100",
+        ),
+    ] = 10,
+    film_service: AbstractService = Depends(get_film_service),
 ) -> list[MovieShort]:
     popular_films = await film_service.get_popular_by_genre_id(
-        genre,
-        page_number=page_number,
-        page_size=page_size
+        genre, page_number=page_number, page_size=page_size
     )
     if not popular_films:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Popular films not found'
+            status_code=HTTPStatus.NOT_FOUND, detail="Popular films not found"
         )
     return [
-        MovieShort(
-            uuid=film.id,
-            title=film.title,
-            imdb_rating=film.imdb_rating
-        ) for film in popular_films
+        MovieShort(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in popular_films
     ]
 
 
 @router.get(
-    '/',
+    "/",
     response_model=list[MovieShort],
     summary="Get list of films",
-    description=(
-            "Return list of films, "
-            "sorted by rating, "
-            "can be filtered by genre"
-    )
+    description=("Return list of films, sorted by rating, can be filtered by genre"),
 )
 async def film_general(
     _: Annotated[dict, Depends(anonymous_required)],
     film_service: Annotated[AbstractService, Depends(get_film_service)],
     page_number: Annotated[
-        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100,
-        description="Number of items per page, must be between 1 and 100")] = 10,
-    sort: Annotated[str | None, Query(
-        description="Sorting criteria, optional")] = None,
+        int, Query(ge=1, description="Page number, must be >= 1")
+    ] = 1,
+    page_size: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+            description="Number of items per page, must be between 1 and 100",
+        ),
+    ] = 10,
+    sort: Annotated[str | None, Query(description="Sorting criteria, optional")] = None,
     genre: UUID | None = None,
 ) -> list[MovieShort]:
     films = await film_service.search_query(
-        page_number=page_number,
-        page_size=page_size,
-        sort=sort,
-        genre=genre
+        page_number=page_number, page_size=page_size, sort=sort, genre=genre
     )
     if not films:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Films not found'
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Films not found")
     return [
-        MovieShort(
-            uuid=film.id,
-            title=film.title,
-            imdb_rating=film.imdb_rating
-        ) for film in films
+        MovieShort(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
     ]
 
 
 @router.get(
-    '/search',
+    "/search",
     response_model=list[MovieShort],
     summary="Get films by query",
-    description="Return list of films by search query"
+    description="Return list of films by search query",
 )
 async def film_search(
     _: Annotated[dict, Depends(subscriber_required)],
     film_service: Annotated[AbstractService, Depends(get_film_service)],
     page_number: Annotated[
-        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100,
-        description="Number of items per page, must be between 1 and 100")] = 10,
-    search_query: Annotated[str | None, Query(alias="query",
-        description="Search query for filtering movies")] = None,
+        int, Query(ge=1, description="Page number, must be >= 1")
+    ] = 1,
+    page_size: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+            description="Number of items per page, must be between 1 and 100",
+        ),
+    ] = 10,
+    search_query: Annotated[
+        str | None,
+        Query(alias="query", description="Search query for filtering movies"),
+    ] = None,
 ) -> list[MovieShort]:
     films = await film_service.search_query(
         page_number=page_number,
@@ -112,90 +115,68 @@ async def film_search(
         search_query=search_query,
     )
     if not films:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Films not found'
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Films not found")
     return [
-        MovieShort(
-            uuid=film.id,
-            title=film.title,
-            imdb_rating=film.imdb_rating
-        ) for film in films
+        MovieShort(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
     ]
 
 
 @router.get(
-    '/{film_id}',
+    "/{film_id}",
     response_model=MovieFull,
     summary="Get film data",
-    description="Return full film information by id"
+    description="Return full film information by id",
 )
 async def film_details(
-    film_id: str,
-    film_service: AbstractService = Depends(get_film_service)
+    film_id: str, film_service: AbstractService = Depends(get_film_service)
 ) -> MovieFull:
     film = await film_service.get_by_id(film_id)
     if not film:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Film not found'
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Film not found")
     return MovieFull(
         uuid=film.id,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genre=[
-            Genre(uuid=genre.id, name=genre.name)
-            for genre in film.genres
-        ],
-        actors=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.actors
-        ],
+        genre=[Genre(uuid=genre.id, name=genre.name) for genre in film.genres],
+        actors=[Person(uuid=actor.id, full_name=actor.name) for actor in film.actors],
         directors=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.directors
+            Person(uuid=actor.id, full_name=actor.name) for actor in film.directors
         ],
-        writers=[
-            Person(uuid=actor.id, full_name=actor.name)
-            for actor in film.writers
-        ],
+        writers=[Person(uuid=actor.id, full_name=actor.name) for actor in film.writers],
     )
 
 
 @router.get(
-    '/{film_id}/similar',
+    "/{film_id}/similar",
     response_model=list[MovieShort],
     summary="Get similar films",
-    description=(
-            "Return list of similar films, "
-            "get similar by genre"
-    )
+    description=("Return list of similar films, get similar by genre"),
 )
 async def film_similar(
     film_id: str,
     page_number: Annotated[
-        int, Query(ge=1, description="Page number, must be >= 1")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100,
-        description="Number of items per page, must be between 1 and 100")] = 10,
-    film_service: AbstractService = Depends(get_film_service)
+        int, Query(ge=1, description="Page number, must be >= 1")
+    ] = 1,
+    page_size: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=100,
+            description="Number of items per page, must be between 1 and 100",
+        ),
+    ] = 10,
+    film_service: AbstractService = Depends(get_film_service),
 ) -> list[MovieShort]:
     similar_films = await film_service.get_similar_by_id(
-        film_id,
-        page_number=page_number,
-        page_size=page_size
+        film_id, page_number=page_number, page_size=page_size
     )
     if not similar_films:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Similar films not found'
+            status_code=HTTPStatus.NOT_FOUND, detail="Similar films not found"
         )
     return [
-        MovieShort(
-            uuid=film.id,
-            title=film.title,
-            imdb_rating=film.imdb_rating
-        ) for film in similar_films
+        MovieShort(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in similar_films
     ]

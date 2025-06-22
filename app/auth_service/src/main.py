@@ -1,4 +1,5 @@
 """Main application entry point for the Authentication Service."""
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
     # Teardown
     logging.info(f"Shutting down {settings.project_name}")
 
+
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
@@ -67,7 +69,7 @@ def create_application() -> FastAPI:
         special_roles=settings.special_roles,
         special_capacity=settings.special_capacity,
         default_capacity=settings.default_capacity,
-        undefind_capacity=settings.undefind_capacity
+        undefind_capacity=settings.undefind_capacity,
     )
 
     # Configure CORS
@@ -81,13 +83,11 @@ def create_application() -> FastAPI:
 
     # Routers without required authentication
     public_router = APIRouter()
-    public_router.include_router(
-        health_router, prefix="/api/health", tags=["Health"])
+    public_router.include_router(health_router, prefix="/api/health", tags=["Health"])
     public_router.include_router(auth_public_router)
 
     # Routers with required authentication
-    private_router = APIRouter(
-        dependencies=[Depends(AuthenticationMiddleware())])
+    private_router = APIRouter(dependencies=[Depends(AuthenticationMiddleware())])
     private_router.include_router(users_router)
     private_router.include_router(roles_router)
     private_router.include_router(user_roles_router)

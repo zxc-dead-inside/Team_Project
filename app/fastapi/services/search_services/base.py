@@ -5,9 +5,8 @@ from services.search_platform.base import AbstractSearchPlatfrom
 
 class AbstractSearchService(ABC):
     """Abstract class for search service."""
-    def __init__(
-            self, search_platform: AbstractSearchPlatfrom
-    ):
+
+    def __init__(self, search_platform: AbstractSearchPlatfrom):
         self.search_platform = search_platform
 
 

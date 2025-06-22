@@ -17,11 +17,9 @@ __all__ = [
     "TokenBlacklist",
     "ContentRestriction",
     "AuditLog",
-    
     # Association tables
     "user_role",
     "role_permission",
-    
     # Base models
     "Base",
     "IdMixin",

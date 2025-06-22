@@ -12,10 +12,7 @@ logger = logging.getLogger(__name__)
 class EmailService:
     """Email verification service with secure HMAC-SHA-256 token storage."""
 
-    def __init__(
-            self, public_key: str, private_key: str,
-            email_token_ttl_seconds: int
-        ):
+    def __init__(self, public_key: str, private_key: str, email_token_ttl_seconds: int):
         self.public_key = public_key
         self.private_key = private_key
         self.email_token_ttl_seconds = email_token_ttl_seconds
@@ -37,7 +34,7 @@ class EmailService:
         return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
     def validate_confirmation_token(
-            self, token: str
+        self, token: str
     ) -> tuple[bool, dict[str, Any] | None]:
         try:
             payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
@@ -51,9 +48,7 @@ class EmailService:
             logger.error(f"Token validation failed: {e}")
             return False, None
 
-    async def send_confirmation_email(
-            self, email: EmailStr, token: str
-    ) -> bool:
+    async def send_confirmation_email(self, email: EmailStr, token: str) -> bool:
         """Send a confirmation email (mock implementation)."""
         confirmation_url = f"/api/v1/auth/confirm-email?token={token}"
         logger.info(f"[MOCK EMAIL] To: {email}, Subject: Confirm your account")

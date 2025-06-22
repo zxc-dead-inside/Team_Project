@@ -5,7 +5,9 @@
 
 __version__ = "1.0.0"
 __author__ = "Performance Research Team"
-__description__ = "Сравнение производительности ClickHouse и Vertica для онлайн-кинотеатра"
+__description__ = (
+    "Сравнение производительности ClickHouse и Vertica для онлайн-кинотеатра"
+)
 
 # Основные модули
 from .benchmark import DatabaseBenchmark
@@ -27,12 +29,19 @@ from .models import (
 
 __all__ = [
     # Модели данных
-    "User", "Movie", "Rating", "ViewingSession", "UserActivity",
-    "BenchmarkConfig", "DatabasePerformanceResult", "TestSuiteResult",
-    "Genre", "Country",
-    
+    "User",
+    "Movie",
+    "Rating",
+    "ViewingSession",
+    "UserActivity",
+    "BenchmarkConfig",
+    "DatabasePerformanceResult",
+    "TestSuiteResult",
+    "Genre",
+    "Country",
     # Основные классы
     "CinemaDataGenerator",
-    "ClickHouseClient", "VerticaClient",
-    "DatabaseBenchmark"
+    "ClickHouseClient",
+    "VerticaClient",
+    "DatabaseBenchmark",
 ]

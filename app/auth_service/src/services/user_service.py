@@ -33,10 +33,10 @@ class UserService:
         redis_service: RedisService,
         role_repository: RoleRepository,
         oauth_service: BaseOAuthProvider | None = None,
-        user: User | None = None
+        user: User | None = None,
     ):
         """Initialize the user service."""
-        
+
         self.user_repository = user_repository
         self.login_history_repository = login_history_repository
         self.auth_service = auth_service
@@ -75,7 +75,8 @@ class UserService:
         Returns:
             User | None: User if found, None otherwise
         """
-        if self.user.id == user_id: return self.user
+        if self.user.id == user_id:
+            return self.user
         return await self.user_repository.get_by_id(user_id)
 
     async def update_username(
@@ -170,9 +171,9 @@ class UserService:
             end_date=end_date,
             successful_only=successful_only,
         )
-    
+
     async def login_by_credentials(
-            self, username: str, password: str, request: Request
+        self, username: str, password: str, request: Request
     ) -> tuple[str, str] | None:
         """
         Authenticate user by credentials and return JWT pair.
@@ -185,90 +186,95 @@ class UserService:
         Returns:
             tuple[str, str | None]: (access_token, refresh_jwt), None if Login failed
         """
-        user: User = await self.auth_service.identificate_user(
-            username=username)
-        
+        user: User = await self.auth_service.identificate_user(username=username)
+
         if not user or user.is_active == False:
             return None
-        
+
         login_history = LoginHistory(
-            user_id = user.id,
-            user_agent = request.headers.get('User-Agent', None),
-            ip_address = request.client.host,
-            login_time = datetime.now(UTC),
-            successful = 'Y'
+            user_id=user.id,
+            user_agent=request.headers.get("User-Agent", None),
+            ip_address=request.client.host,
+            login_time=datetime.now(UTC),
+            successful="Y",
         )
 
-        if not await self.auth_service.authenticate_user(
-            user=user, password=password):
-            login_history.successful = 'N'
+        if not await self.auth_service.authenticate_user(user=user, password=password):
+            login_history.successful = "N"
             await self.auth_service.user_repository.update_history(
-                login_history=login_history)
+                login_history=login_history
+            )
             return None
 
         # Check token_version for multi-device-logout
         if user.token_version == None:
             user.token_version = datetime.now(UTC)
-        
+
         jwt_pair = await self.auth_service.refresh_tokens_for_user(user=user)
 
         await self.auth_service.user_repository.update(user=user)
 
         await self.auth_service.user_repository.update_history(
-            login_history=login_history)
+            login_history=login_history
+        )
 
         return jwt_pair
-    
+
     async def login_via_oauth(
-        self, 
-        provider: str,
-        code: str,
-        state: str,
-        request: Request) -> tuple[str, str] | None:
+        self, provider: str, code: str, state: str, request: Request
+    ) -> tuple[str, str] | None:
         """Authenticate user via Yandex OAuth"""
-        
+
         if not await self.oauth_service.validate_state(provider, state):
             return None
 
         try:
-            tokens = await self.oauth_service.provider_factory[
-                provider].get_tokens(code)
+            tokens = await self.oauth_service.provider_factory[provider].get_tokens(
+                code
+            )
             user_data = await self.oauth_service.provider_factory[
-                provider].get_user_data(tokens)
+                provider
+            ].get_user_data(tokens)
         except httpx.HTTPStatusError:
             return None
         logging.info(f"user_info: {user_data}")
         login_history = LoginHistory(
-            user_agent=request.headers.get('User-Agent'),
+            user_agent=request.headers.get("User-Agent"),
             ip_address=request.client.host,
             login_time=datetime.now(UTC),
-            successful='N'
+            successful="N",
         )
 
-        user = await self.user_repository.get_by_oauth(provider, user_data["provider_id"])
+        user = await self.user_repository.get_by_oauth(
+            provider, user_data["provider_id"]
+        )
         if not user:
-            username = self.auth_service.generate_user_name(provider, user_data["username"])
-            password =self.auth_service.hash_password(self.auth_service.generate_password())
+            username = self.auth_service.generate_user_name(
+                provider, user_data["username"]
+            )
+            password = self.auth_service.hash_password(
+                self.auth_service.generate_password()
+            )
             user = await self.user_repository.create_oauth_user(
                 provider=provider,
                 provider_id=user_data["provider_id"],
                 email=user_data["email"],
                 username=username,
-                password=password
+                password=password,
             )
-        
+
         if not user or not user.is_active:
             await self.auth_service.user_repository.update_history(login_history)
             return None
 
         login_history.user_id = user.id
-        login_history.successful = 'Y'
+        login_history.successful = "Y"
 
         if user.token_version is None:
             user.token_version = datetime.now(UTC)
-        
+
         jwt_pair = await self.auth_service.refresh_tokens_for_user(user)
-        
+
         await self.auth_service.user_repository.update(user)
         await self.auth_service.user_repository.update_history(login_history)
 
@@ -284,11 +290,11 @@ class UserService:
 
         self.user.token_version = datetime.now(UTC)
         jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
-        
+
         await self.auth_service.user_repository.update(user=self.user)
 
         return jwt_pair
-    
+
     async def refresh_token(self, refresh_token: str) -> tuple[str, str]:
         """
         Validate refresh token and create new JWT pair.
@@ -298,15 +304,13 @@ class UserService:
             tuple[str, str] | None: (access_token, refresh_jwt)
         """
         self.user = await self.auth_service.validate_token(
-            token=refresh_token, type='refresh')
-        await self.auth_service.check_refresh_token_blacklist(
-            token=refresh_token)
-        
+            token=refresh_token, type="refresh"
+        )
+        await self.auth_service.check_refresh_token_blacklist(token=refresh_token)
+
         jwt_pair = await self.auth_service.refresh_tokens_for_user(user=self.user)
 
-        await self.auth_service.update_token_blacklist(
-            refresh_token
-        )
+        await self.auth_service.update_token_blacklist(refresh_token)
         return jwt_pair
 
     async def assign_role_to_user(

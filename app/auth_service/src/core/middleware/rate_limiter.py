@@ -19,9 +19,7 @@ from fastapi.security import OAuth2PasswordBearer
 setup_logging()
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login",
-    scheme_name="LoginRequest",
-    auto_error=False
+    tokenUrl="/api/v1/auth/login", scheme_name="LoginRequest", auto_error=False
 )
 
 
@@ -33,13 +31,13 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-            self,
-            app: FastAPI,
-            unlimited_roles: set[str],
-            special_roles: set[str],
-            special_capacity: int,
-            default_capacity: int,
-            undefind_capacity: int
+        self,
+        app: FastAPI,
+        unlimited_roles: set[str],
+        special_roles: set[str],
+        special_capacity: int,
+        default_capacity: int,
+        undefind_capacity: int,
     ):
         """
         Initialize RateLimiterMiddleware.
@@ -64,10 +62,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         self.undefind_capacity = undefind_capacity
 
     async def dispatch(
-            self,
-            request: Request,
-            call_next: Callable[[Request], Awaitable[Response]],
-            auth_service: AuthService = Provide[Container.auth_service]
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+        auth_service: AuthService = Provide[Container.auth_service],
     ):
         """
         Processes incoming HTTP requests using rate limiting logic.
@@ -90,11 +88,11 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         if token:
             try:
                 payload = await auth_service.decode_token(token=token)
-                roles = (payload.get('roles', None))
+                roles = payload.get("roles", None)
                 if roles & self.unlimited_roles:
                     return await call_next(request)
 
-                key = payload.get('sub')
+                key = payload.get("sub")
                 capacity = self.default_capacity
                 if roles & self.special_roles:
                     capacity = self.special_capacity
@@ -104,14 +102,13 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         if await self.take_token(key=key, capacity=capacity):
             return await call_next(request)
-        return JSONResponse(
-            status_code=429, content={'detail': 'Rate limit exceeded'})
+        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
 
     async def take_token(
-            self,
-            key,
-            capacity,
-            redis_service: RedisService = Provide[Container.redis_service]
+        self,
+        key,
+        capacity,
+        redis_service: RedisService = Provide[Container.redis_service],
     ) -> bool:
         """
         Attempt to take a token from a bucket while maintaining an
@@ -122,7 +119,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             key: Unique user or client identifier.
             capacity: Maximum token bucket capacity for the user.
             redis_service: Service for working with Redis.
-        
+
         Returns:
             True if the request can be fulfilled (token available), False if the limit is exceeded.
         """
@@ -133,16 +130,14 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         # Add tokens to the bucket based on the time elapsed since the last refill
 
         async with redis_service.redis_client.lock(key, timeout=0.05):
-            tokens = await redis_service.get(key=f'tokens:{key}')
+            tokens = await redis_service.get(key=f"tokens:{key}")
             if not tokens:
-                await redis_service.set(
-                    key=f'tokens:{key}', value=capacity - 1)
-                await redis_service.set(key=f'last_refill:{key}', value=now)
+                await redis_service.set(key=f"tokens:{key}", value=capacity - 1)
+                await redis_service.set(key=f"last_refill:{key}", value=now)
                 return True
 
             tokens = float(tokens)
-            last_refill = float(
-                await redis_service.get(key=f'last_refill:{key}'))
+            last_refill = float(await redis_service.get(key=f"last_refill:{key}"))
 
             if tokens < capacity:
                 # Calculate the number of tokens to add
@@ -150,11 +145,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                 # Update the token count, ensuring it doesn't exceed the capacity
                 tokens = min(capacity, tokens + tokens_to_add)
 
-            await redis_service.set(key=f'last_refill:{key}', value=now)
-            logging.debug(
-                f'Tokens: {tokens}, Last refill: {last_refill} Key: {key}')
+            await redis_service.set(key=f"last_refill:{key}", value=now)
+            logging.debug(f"Tokens: {tokens}, Last refill: {last_refill} Key: {key}")
             if tokens >= 1:
                 # Deduct a token for the API call
-                await redis_service.set(key=f'tokens:{key}', value=tokens - 1)
+                await redis_service.set(key=f"tokens:{key}", value=tokens - 1)
                 return True  # Indicate that the API call can proceed
             return False  # Indicate that the rate limit has been exceeded

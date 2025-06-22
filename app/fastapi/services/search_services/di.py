@@ -7,8 +7,10 @@ from services.search_services.person_search_service import PersonSearchService
 def get_film_search_platform_service() -> FilmSearchService:
     return FilmSearchService(get_search_platform())
 
+
 def get_genre_search_platform_service() -> GenreSearchSerivce:
     return GenreSearchSerivce(get_search_platform())
+
 
 def get_person_search_platform_service() -> PersonSearchService:
     return PersonSearchService(get_search_platform())

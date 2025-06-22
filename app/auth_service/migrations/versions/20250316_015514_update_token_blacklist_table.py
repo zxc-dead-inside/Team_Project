@@ -31,7 +31,7 @@ def upgrade() -> None:
     op.drop_index("ix_token_blacklist_token", table_name="token_blacklist")
     op.drop_index("ix_token_blacklist_token_jti", table_name="token_blacklist")
     # Use execute to run raw SQL with the USING clause
-    op.execute('ALTER TABLE token_blacklist ALTER COLUMN jti TYPE UUID USING jti::uuid')
+    op.execute("ALTER TABLE token_blacklist ALTER COLUMN jti TYPE UUID USING jti::uuid")
     op.create_index(
         "ix_token_blacklist_token_jti", "token_blacklist", ["jti"], unique=False
     )

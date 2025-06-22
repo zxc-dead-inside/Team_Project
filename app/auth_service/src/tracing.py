@@ -12,7 +12,7 @@ from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 def setup_tracer(app):
     provider = TracerProvider(
         sampler=ALWAYS_ON,  # default sampler
-        resource=Resource.create({SERVICE_NAME: "auth_service"})
+        resource=Resource.create({SERVICE_NAME: "auth_service"}),
     )
     trace.set_tracer_provider(provider)
 

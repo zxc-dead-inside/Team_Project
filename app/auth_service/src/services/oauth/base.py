@@ -1,12 +1,10 @@
-
 from abc import ABC, abstractmethod
 
 import httpx
 
 
 class BaseOAuthProvider(ABC):
-    def __init__(
-            self, config: dict):
+    def __init__(self, config: dict):
         self.client_id = config["client_id"]
         self.client_secret = config["client_secret"]
         self.redirect_uri = config["redirect_uri"]
@@ -30,8 +28,8 @@ class BaseOAuthProvider(ABC):
                     "code": code,
                     "client_id": self.client_id,
                     "client_secret": self.client_secret,
-                    "redirect_uri": self.redirect_uri
-                }
+                    "redirect_uri": self.redirect_uri,
+                },
             )
             response.raise_for_status()
             return response.json()

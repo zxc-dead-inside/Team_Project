@@ -17,6 +17,7 @@ async def lifespan(api: FastAPI):
     await redis_connector.disconnect()
     await es_connector.disconnect()
 
+
 app = FastAPI(
     title=settings.project_name,
     openapi_url=f"{settings.api_v1_str}/openapi.json",
@@ -24,7 +25,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Set CORS middleware

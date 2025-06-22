@@ -39,7 +39,7 @@ async def create_roles(session: AsyncSession) -> dict:
         "user": Role(name="user", description="Regular user"),
         "anonymous": Role(
             name="anonymous",
-            description="Role for unauthenticated users with limited access"
+            description="Role for unauthenticated users with limited access",
         ),
     }
 
@@ -56,39 +56,29 @@ async def create_permissions(session: AsyncSession) -> dict:
     logger.info("Creating permissions...")
 
     permissions = {
-        "user_create": Permission(name="user_create",
-                                  description="Create users"),
-        "user_read": Permission(name="user_read",
-                                description="Read user details"),
-        "user_update": Permission(name="user_update",
-                                  description="Update users"),
-        "user_delete": Permission(name="user_delete",
-                                  description="Delete users"),
-        "role_create": Permission(name="role_create",
-                                  description="Create roles"),
-        "role_read": Permission(name="role_read",
-                                description="Read roles"),
-        "role_update": Permission(name="role_update",
-                                  description="Update roles"),
-        "role_delete": Permission(name="role_delete",
-                                  description="Delete roles"),
-        "content_all": Permission(name="content_all",
-                                  description="Access all content"),
-        "content_recent": Permission(name="content_recent",
-                                     description="Access recent content"),
+        "user_create": Permission(name="user_create", description="Create users"),
+        "user_read": Permission(name="user_read", description="Read user details"),
+        "user_update": Permission(name="user_update", description="Update users"),
+        "user_delete": Permission(name="user_delete", description="Delete users"),
+        "role_create": Permission(name="role_create", description="Create roles"),
+        "role_read": Permission(name="role_read", description="Read roles"),
+        "role_update": Permission(name="role_update", description="Update roles"),
+        "role_delete": Permission(name="role_delete", description="Delete roles"),
+        "content_all": Permission(name="content_all", description="Access all content"),
+        "content_recent": Permission(
+            name="content_recent", description="Access recent content"
+        ),
         "view_public_content": Permission(
-            name="view_public_content",
-            description="Permission to view public content"
+            name="view_public_content", description="Permission to view public content"
         ),
         "access_public_endpoints": Permission(
             name="access_public_endpoints",
-            description="Permission to access public endpoints"
+            description="Permission to access public endpoints",
         ),
         "read_public_resources": Permission(
             name="read_public_resources",
-            description="Permission to read public resources"
+            description="Permission to read public resources",
         ),
-
     }
 
     for permission in permissions.values():

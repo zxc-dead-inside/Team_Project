@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta  # type: ignore
 
 
 def generate_partition_login_history(
-        months_ahead: int = 12, start_months: int = 0
+    months_ahead: int = 12, start_months: int = 0
 ) -> str:
     statements = []
     now = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -17,7 +17,7 @@ def generate_partition_login_history(
 
         sql = f"""
         CREATE TABLE IF NOT EXISTS {name} PARTITION OF login_history
-        FOR VALUES FROM ('{partition_start.strftime('%Y-%m-%d')}') TO ('{partition_end.strftime('%Y-%m-%d')}');
+        FOR VALUES FROM ('{partition_start.strftime("%Y-%m-%d")}') TO ('{partition_end.strftime("%Y-%m-%d")}');
         
         CREATE INDEX IF NOT EXISTS idx_{name}_id ON {name} (id);
         CREATE INDEX IF NOT EXISTS idx_{name}_user_id ON {name} (user_id);

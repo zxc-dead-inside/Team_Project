@@ -55,7 +55,6 @@ def get_oauth_service(request: Request) -> OAuthService:
     return request.app.container.oauth_service()
 
 
-
 async def get_current_user(request: Request) -> User:
     """
     Получает текущего пользователя из middleware.
@@ -63,9 +62,7 @@ async def get_current_user(request: Request) -> User:
     return request.state.user
 
 
-async def get_current_active_user(
-    user: User = Depends(get_current_user)
-) -> User:
+async def get_current_active_user(user: User = Depends(get_current_user)) -> User:
     """
     Get the current active user.
 

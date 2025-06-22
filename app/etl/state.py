@@ -86,17 +86,17 @@ class State(metaclass=SingletonMeta):
     def increment_processed(self, index: str, count: int = 1) -> None:
         """Increment the number of successfully processed movies."""
 
-        self._state[index]["total_processed"] = self._state[index].get(
-            "total_processed", 0
-        ) + count
+        self._state[index]["total_processed"] = (
+            self._state[index].get("total_processed", 0) + count
+        )
         self.storage.save_state(self._state)
 
     def increment_failed(self, index: str, count: int = 1) -> None:
         """Increment the number of failed movie processing attempts."""
 
-        self._state[index]["total_failed"] = self._state[index].get(
-            "total_failed", 0
-        ) + count
+        self._state[index]["total_failed"] = (
+            self._state[index].get("total_failed", 0) + count
+        )
         self.storage.save_state(self._state)
 
     def get_statistics(self, index: str) -> dict[str, Any]:
@@ -104,14 +104,12 @@ class State(metaclass=SingletonMeta):
 
         if self._state.get(index) is not None:
             return {
-                "total_processed": self._state[index].get(
-                    "total_processed", 0
-                ),
+                "total_processed": self._state[index].get("total_processed", 0),
                 "total_failed": self._state[index].get("total_failed", 0),
                 "last_modified": self._state[index].get("last_modified"),
                 "processing_started_at": self._state[index].get(
                     "processing_started_at"
-                )
+                ),
             }
         else:
             return {

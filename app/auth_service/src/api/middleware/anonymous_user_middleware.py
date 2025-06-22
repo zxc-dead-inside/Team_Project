@@ -44,7 +44,7 @@ class AnonymousUserMiddleware(BaseHTTPMiddleware):
                 id=anonymous_uuid,
                 username=f"anonymous_{user_ip}",
                 email="anonymous@example.com",
-                password="*"*256,
+                password="*" * 256,
                 is_active=False,
                 is_superuser=False,
                 created_at=datetime.now(UTC),

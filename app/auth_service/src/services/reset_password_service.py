@@ -20,9 +20,13 @@ class ResetPasswordService:
     password_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
     def __init__(
-            self, user_repository: UserRepository,
-            reset_token_ttl: int, max_requests_per_ttl: int,
-            public_key: str, private_key: str, cache_service: RedisService
+        self,
+        user_repository: UserRepository,
+        reset_token_ttl: int,
+        max_requests_per_ttl: int,
+        public_key: str,
+        private_key: str,
+        cache_service: RedisService,
     ):
         self.user_repository = user_repository
         self.reset_token_ttl = reset_token_ttl
@@ -34,7 +38,7 @@ class ResetPasswordService:
     async def __get_request_number(self, key: str) -> int | None:
         """
         Returns request number
-        
+
         Args:
             key for lookup up in cache
 
@@ -49,19 +53,16 @@ class ResetPasswordService:
             current_requests = int(value)
         else:
             return None
-        
+
         return current_requests
 
-    
-    async def check_requests(
-            self, email: EmailStr
-    ) -> tuple[bool, str | None]:
+    async def check_requests(self, email: EmailStr) -> tuple[bool, str | None]:
         """
         Checks if amount of request reaches the limit.
-        
+
         Args:
             User email
-        
+
         Returns:
             bool: False if limit was exceeded or lack result
             str: message if limit was exceeded
@@ -75,15 +76,13 @@ class ResetPasswordService:
 
         if current_requests > self.max_requests_per_ttl:
             return False, "Too many attempts. Please try again later."
-        
+
         return True, None
-    
-    async def increase_requests(
-            self, email: EmailStr
-    ) -> tuple[bool, str | None]:
+
+    async def increase_requests(self, email: EmailStr) -> tuple[bool, str | None]:
         """
         Increses amount of requests.
-        
+
         Args: email
 
         Returns:
@@ -98,15 +97,14 @@ class ResetPasswordService:
 
         current_requests += 1
 
-        await self.cache_service.set(
-            key, current_requests, self.reset_token_ttl)
-        
+        await self.cache_service.set(key, current_requests, self.reset_token_ttl)
+
         return True, None
 
     def create_reset_token(self, user_id: UUID, email: EmailStr) -> str:
         """
         Create a reset token for an email address.
-        
+
         Args:
            User ID and user email
 
@@ -125,10 +123,8 @@ class ResetPasswordService:
         }
 
         return jwt.encode(to_encode, self.private_key, algorithm="RS256")
-    
-    def validate_reset_token(
-            self, token: str
-    ) -> tuple[bool, dict[str, Any] | None]:
+
+    def validate_reset_token(self, token: str) -> tuple[bool, dict[str, Any] | None]:
         """
         Validates reset token.
 
@@ -152,18 +148,16 @@ class ResetPasswordService:
     def hash_password(self, password: str) -> str:
         """
         Hash a password.
-        
+
         Args:
             password: Plain password
-            
+
         Returns:
             str: Hashed password
         """
         return self.password_context.hash(password)
 
-    async def reset_password(
-            self, token: str, password: str
-    ) -> tuple[bool, str]:
+    async def reset_password(self, token: str, password: str) -> tuple[bool, str]:
         """
         Reset a password if token is valid, user exists, email is correct and
         password was validated.
@@ -179,10 +173,10 @@ class ResetPasswordService:
         """
 
         is_valid, payload = self.validate_reset_token(token)
-        
+
         if not is_valid:
             return False, "Invalid or expired token"
-        
+
         user_id = payload.get("sub")
         email = payload.get("email")
 
@@ -193,18 +187,16 @@ class ResetPasswordService:
 
         if user.email != email:
             return False, "Email mismatch"
-        
+
         user.password = self.hash_password(password)
         await self.user_repository.update(user)
-        
+
         return True, "Your password has been changed."
 
-    async def send_reset_password_email(
-        self, email: EmailStr, token: str
-    ) -> bool:
+    async def send_reset_password_email(self, email: EmailStr, token: str) -> bool:
         """
         Send an email with reset token.
-        
+
         Args:
             email: user email
             token: jwt token
@@ -219,4 +211,4 @@ class ResetPasswordService:
             f"{confirmation_url}"
         )
 
-        return True    
+        return True

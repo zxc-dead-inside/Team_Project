@@ -7,11 +7,13 @@ from pydantic import BaseModel, EmailStr, Field
 
 class SuperuserResponse(BaseModel):
     """Response model for superuser operations."""
+
     message: str
 
 
 class SuperuserUserResponse(BaseModel):
     """Response model for superuser user details."""
+
     id: UUID
     username: str
     email: EmailStr
@@ -20,12 +22,14 @@ class SuperuserUserResponse(BaseModel):
 
 class SuperuserListResponse(BaseModel):
     """Response model for listing superusers."""
+
     superusers: list[SuperuserUserResponse]
     total: int
 
 
 class AuditLogEntry(BaseModel):
     """Response model for an audit log entry."""
+
     id: UUID
     action: str
     actor_id: UUID | None = None
@@ -39,6 +43,7 @@ class AuditLogEntry(BaseModel):
 
 class AuditLogResponse(BaseModel):
     """Response model for audit log listing."""
+
     logs: list[AuditLogEntry]
     total: int
     page: int

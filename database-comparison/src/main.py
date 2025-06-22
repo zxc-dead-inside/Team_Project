@@ -126,17 +126,23 @@ class CinemaPerformanceStudy:
         load_times = {"clickhouse": 0.0, "vertica": 0.0}
 
         # Загрузка пользователей
-        logger.info(f"Генерация и загрузка {self.config.num_users:,} пользователей с UUID")
-        
+        logger.info(
+            f"Генерация и загрузка {self.config.num_users:,} пользователей с UUID"
+        )
+
         # Генерируем всех пользователей сразу, чтобы UUID были доступны для foreign keys
         logger.info("Генерация всех пользователей для создания UUID пула...")
         all_users = list(self.generator.generate_users(self.config.num_users))
-        logger.info(f"Создано {len(all_users)} пользователей с UUID. Примеры UUID: {[str(u.user_id) for u in all_users[:3]]}")
+        logger.info(
+            f"Создано {len(all_users)} пользователей с UUID. Примеры UUID: {[str(u.user_id) for u in all_users[:3]]}"
+        )
 
         # Вставка пользователей батчами в ClickHouse
         logger.info("Вставка пользователей в ClickHouse...")
         start_time = time.time()
-        for i in tqdm(range(0, len(all_users), self.config.batch_size), desc="ClickHouse Users"):
+        for i in tqdm(
+            range(0, len(all_users), self.config.batch_size), desc="ClickHouse Users"
+        ):
             batch = all_users[i : i + self.config.batch_size]
             self.clickhouse.insert_users(batch)
         load_times["clickhouse"] += time.time() - start_time
@@ -144,18 +150,23 @@ class CinemaPerformanceStudy:
         # Вставка пользователей батчами в Vertica
         logger.info("Вставка пользователей в Vertica...")
         start_time = time.time()
-        for i in tqdm(range(0, len(all_users), self.config.batch_size), desc="Vertica Users"):
+        for i in tqdm(
+            range(0, len(all_users), self.config.batch_size), desc="Vertica Users"
+        ):
             batch = all_users[i : i + self.config.batch_size]
             self.vertica.insert_users(batch)
         load_times["vertica"] += time.time() - start_time
 
-        logger.info(f"Пользователи загружены. UUID пул содержит {len(self.generator._generated_user_ids)} записей")
+        logger.info(
+            f"Пользователи загружены. UUID пул содержит {len(self.generator._generated_user_ids)} записей"
+        )
 
         # Загрузка фильмов
         logger.info(f"Генерация и загрузка {self.config.num_movies:,} фильмов")
         movies_data = []
         for batch in tqdm(
-            range(0, self.config.num_movies, self.config.batch_size), desc="Генерация фильмов"
+            range(0, self.config.num_movies, self.config.batch_size),
+            desc="Генерация фильмов",
         ):
             batch_size = min(self.config.batch_size, self.config.num_movies - batch)
             movies_batch = self.generator.generate_batch(
@@ -166,7 +177,9 @@ class CinemaPerformanceStudy:
         # Вставка фильмов в ClickHouse
         logger.info("Вставка фильмов в ClickHouse...")
         start_time = time.time()
-        for i in tqdm(range(0, len(movies_data), self.config.batch_size), desc="ClickHouse Movies"):
+        for i in tqdm(
+            range(0, len(movies_data), self.config.batch_size), desc="ClickHouse Movies"
+        ):
             batch = movies_data[i : i + self.config.batch_size]
             self.clickhouse.insert_movies(batch)
         load_times["clickhouse"] += time.time() - start_time
@@ -174,7 +187,9 @@ class CinemaPerformanceStudy:
         # Вставка фильмов в Vertica
         logger.info("Вставка фильмов в Vertica...")
         start_time = time.time()
-        for i in tqdm(range(0, len(movies_data), self.config.batch_size), desc="Vertica Movies"):
+        for i in tqdm(
+            range(0, len(movies_data), self.config.batch_size), desc="Vertica Movies"
+        ):
             batch = movies_data[i : i + self.config.batch_size]
             self.vertica.insert_movies(batch)
         load_times["vertica"] += time.time() - start_time
@@ -182,7 +197,9 @@ class CinemaPerformanceStudy:
         logger.info("Фильмы загружены")
 
         # Загрузка рейтингов
-        logger.info(f"Генерация и загрузка {self.config.num_ratings:,} рейтингов с UUID ссылками")
+        logger.info(
+            f"Генерация и загрузка {self.config.num_ratings:,} рейтингов с UUID ссылками"
+        )
         for batch_start in tqdm(
             range(0, self.config.num_ratings, self.config.batch_size), desc="Рейтинги"
         ):
@@ -331,7 +348,7 @@ class CinemaPerformanceStudy:
                 "user_id_type": "UUID",
                 "database_schemas": {
                     "clickhouse_user_id": "String (UUID as string)",
-                    "vertica_user_id": "VARCHAR(36) (UUID as string)"
+                    "vertica_user_id": "VARCHAR(36) (UUID as string)",
                 },
                 "load_times_seconds": load_times,
                 "summary": self.results.summary,
@@ -453,9 +470,7 @@ class CinemaPerformanceStudy:
 """
 
         # Сохранение отчета
-        report_file = (
-            f"results/summary_report_uuid_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        )
+        report_file = f"results/summary_report_uuid_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         with open(report_file, "w", encoding="utf-8") as f:
             f.write(report_content)
 

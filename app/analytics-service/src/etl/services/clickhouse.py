@@ -11,17 +11,10 @@ setup_logging()
 
 class ClickHouseClient:
     """Client for interacting with ClickHouse database."""
-    
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        password: str,
-        database: str
-    ):
+
+    def __init__(self, host: str, port: int, user: str, password: str, database: str):
         """Initialize ClickHouse client.
-        
+
         Args:
             host: ClickHouse server hostname
             port: ClickHouse server port
@@ -30,18 +23,14 @@ class ClickHouseClient:
             database: Database name
         """
         self.client = Client(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            database=database
+            host=host, port=port, user=user, password=password, database=database
         )
         self.database = database
         logging.info(f"Initialized ClickHouse client for {database} database")
-    
+
     def healthcheck(self) -> dict[str, Any]:
         """Check if ClickHouse is available.
-        
+
         Returns:
             Dict with status and details
         """
@@ -49,11 +38,10 @@ class ClickHouseClient:
             result = self.client.execute("SELECT 1")
             if result and result[0][0] == 1:
                 return {"status": True, "detail": ""}
-            return {"status": False,
-                    "detail": "Unexpected response from ClickHouse"}
+            return {"status": False, "detail": "Unexpected response from ClickHouse"}
         except Exception as e:
             return {"status": False, "detail": str(e)}
-    
+
     def create_tables(self) -> None:
         """Create necessary tables if they don't exist."""
         # Create user_actions table
@@ -79,43 +67,43 @@ class ClickHouseClient:
             PARTITION BY toYYYYMM(timestamp)
             ORDER BY (user_id, movie_id, timestamp)
         """)
-        
+
         logging.info("Created necessary ClickHouse tables")
-    
+
     def insert_user_actions(self, actions: list[dict[str, Any]]) -> int:
         """Insert user actions into ClickHouse.
-        
+
         Args:
             actions: List of user action dictionaries
-            
+
         Returns:
             Number of inserted rows
         """
         if not actions:
             return 0
-            
+
         # Transform data for insertion
         rows = []
         for action in actions:
-            metadata = action.get('metadata', {})
-            timestamp_ms = action['timestamp']
+            metadata = action.get("metadata", {})
+            timestamp_ms = action["timestamp"]
             if isinstance(timestamp_ms, (int, float)):
                 timestamp = datetime.fromtimestamp(timestamp_ms / 1000)
             else:
                 timestamp = timestamp_ms
-                
+
             row = (
-                action['user_id'],
-                action['movie_id'],
-                action['action_type'],
+                action["user_id"],
+                action["movie_id"],
+                action["action_type"],
                 timestamp,
-                metadata.get('duration_seconds'),
-                metadata.get('current_time'),
-                metadata.get('percent_watched'),
-                metadata.get('device_type')
+                metadata.get("duration_seconds"),
+                metadata.get("current_time"),
+                metadata.get("percent_watched"),
+                metadata.get("device_type"),
             )
             rows.append(row)
-            
+
         # Insert data
         self.client.execute(
             """
@@ -124,8 +112,8 @@ class ClickHouseClient:
                 duration_seconds, current_time, percent_watched, device_type
             ) VALUES
             """,
-            rows
+            rows,
         )
-        
+
         logging.info(f"Inserted {len(rows)} user actions into ClickHouse")
         return len(rows)

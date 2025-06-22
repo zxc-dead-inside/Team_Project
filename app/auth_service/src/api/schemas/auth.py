@@ -19,9 +19,7 @@ class UserBase(BaseModel):
     def username_alphanumeric(cls, v):
         """Username must be alphanumeric characters and underscores"""
         if not re.match(r"^[a-zA-Z0-9_]+$", v):
-            raise ValueError(
-                "Username must be alphanumeric characters and underscores"
-            )
+            raise ValueError("Username must be alphanumeric characters and underscores")
         return v
 
 
@@ -95,12 +93,14 @@ class ResetPasswordRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     """Schema for User authentication with credentials."""
+
     username: str
     password: str
 
 
 class LoginResponse(BaseModel):
     """Login response schema."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"  # Стандартное значение для токенов JWT

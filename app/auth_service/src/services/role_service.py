@@ -222,5 +222,3 @@ class RoleService:
     async def get_role_by_name(self, name: str) -> Role | None:
         """Get a role by name (returns ORM model, not Pydantic schema)."""
         return await self.role_repository.get_by_name(name)
-
-

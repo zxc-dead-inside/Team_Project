@@ -84,7 +84,6 @@ class RoleRepository:
     ) -> Role | None:
         """Update a role."""
         async with self.session_factory() as session:
-
             stmt = (
                 select(Role)
                 .options(joinedload(Role.permissions))
@@ -104,7 +103,6 @@ class RoleRepository:
 
             # Update permissions if provided
             if permission_ids is not None:
-
                 permissions_stmt = select(Permission).where(
                     Permission.id.in_(permission_ids)
                 )

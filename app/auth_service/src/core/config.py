@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # RPS limits
-    unlimited_roles: str | set[str] = {'admin', 'moderator'}
-    special_roles: str | set[str] = {'subscriber'}
+    unlimited_roles: str | set[str] = {"admin", "moderator"}
+    special_roles: str | set[str] = {"subscriber"}
     special_capacity: int = 40
     default_capacity: int = 20
     undefind_capacity: int = 10
@@ -30,9 +30,8 @@ class Settings(BaseSettings):
             return set(origins)
         elif isinstance(v, set):
             return v
-        raise ValueError(
-            "UNLIMITED_ROLES should be a comma-separated string of Roles")
-    
+        raise ValueError("UNLIMITED_ROLES should be a comma-separated string of Roles")
+
     @field_validator("special_roles", mode="before")
     def assemble_special_roles(cls, v: str | list[str]) -> list[str]:
         """Parse string SPECIAL_ROLES into set of Roles."""
@@ -41,9 +40,7 @@ class Settings(BaseSettings):
             return set(origins)
         elif isinstance(v, set):
             return v
-        raise ValueError(
-            "SPECIAL_ROLES should be a comma-separated string of Roles")
-
+        raise ValueError("SPECIAL_ROLES should be a comma-separated string of Roles")
 
     # Authentication
     access_token_expire_minutes: int = 30
@@ -54,9 +51,9 @@ class Settings(BaseSettings):
     max_requests_per_ttl: int = 5  # 5 attempts
 
     # JWT
-    secrets_path: str = 'secrets'
-    private_key: str | None = None # Value of private key
-    public_key: str | None = None # Value of public key
+    secrets_path: str = "secrets"
+    private_key: str | None = None  # Value of private key
+    public_key: str | None = None  # Value of public key
 
     # Yandex OAuth
     yandex_client_id: str | None = None
@@ -83,7 +80,7 @@ class Settings(BaseSettings):
             return v
         try:
             path = values.data.get("secrets_path") + "/private_key.pem"
-            return open(path, 'rb').read()
+            return open(path, "rb").read()
         except Exception:
             raise ValueError(f"Not found private_key.pem by path: {path}")
 
@@ -94,7 +91,7 @@ class Settings(BaseSettings):
             return v
         try:
             path = values.data.get("secrets_path") + "/public_key.pem"
-            return open(path, 'rb').read()
+            return open(path, "rb").read()
         except Exception:
             raise ValueError(f"Not found public_key.pem by path: {path}")
 

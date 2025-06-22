@@ -22,7 +22,7 @@ class Container(containers.DeclarativeContainer):
     """Application container for dependency injection."""
 
     config = providers.Configuration()
-    
+
     @classmethod
     def init_config_from_settings(cls, container, settings: Settings):
         """Initialize configuration from settings."""
@@ -45,7 +45,7 @@ class Container(containers.DeclarativeContainer):
         container.config.set("reset_token_ttl", int(settings.reset_token_ttl))
         container.config.set("redis_url", str(settings.redis_url))
         container.config.set("cache_ttl", 3600)  # 1 hour default for cache TTL
-        
+
         # OAuth providers
         container.config.set("yandex_client_id", str(settings.yandex_client_id))
         container.config.set("yandex_client_secret", str(settings.yandex_client_secret))
@@ -62,7 +62,6 @@ class Container(containers.DeclarativeContainer):
         container.config.set("vk_user_info_url", str(settings.vk_user_info_url))
 
         container.config.set("oauth_state_ttl", str(settings.oauth_state_ttl))
-
 
     # Database
     db = providers.Singleton(
@@ -112,7 +111,7 @@ class Container(containers.DeclarativeContainer):
         private_key=config.private_key,
         reset_token_ttl=config.reset_token_ttl,
         max_requests_per_ttl=config.max_requests_per_ttl,
-        cache_service=redis_service
+        cache_service=redis_service,
     )
 
     auth_service = providers.Factory(
@@ -125,45 +124,40 @@ class Container(containers.DeclarativeContainer):
         email_service=email_service,
     )
 
-    yandex_config = providers.Dict({
-        "client_id": config.yandex_client_id,
-        "client_secret": config.yandex_client_secret,
-        "redirect_uri": config.yandex_redirect_uri,
-        "auth_url": config.yandex_oauth_url,
-        "token_url": config.yandex_token_url,
-        "user_info_url": config.yandex_user_info_url
-    })
-
-    vk_config = providers.Dict({
-        "client_id": config.vk_client_id,
-        "client_secret": config.vk_client_secret,
-        "redirect_uri": config.vk_redirect_uri,
-        "auth_url": config.vk_oauth_url,
-        "token_url": config.vk_token_url,
-        "user_info_url": config.vk_user_info_url
-    })
-
-    yandex_provider = providers.Factory(
-        YandexOAuthProvider,
-        config=yandex_config
+    yandex_config = providers.Dict(
+        {
+            "client_id": config.yandex_client_id,
+            "client_secret": config.yandex_client_secret,
+            "redirect_uri": config.yandex_redirect_uri,
+            "auth_url": config.yandex_oauth_url,
+            "token_url": config.yandex_token_url,
+            "user_info_url": config.yandex_user_info_url,
+        }
     )
 
-    vk_provider = providers.Factory(
-        VKOAuthProvider,
-        config=vk_config
+    vk_config = providers.Dict(
+        {
+            "client_id": config.vk_client_id,
+            "client_secret": config.vk_client_secret,
+            "redirect_uri": config.vk_redirect_uri,
+            "auth_url": config.vk_oauth_url,
+            "token_url": config.vk_token_url,
+            "user_info_url": config.vk_user_info_url,
+        }
     )
 
-    provider_factory = providers.Dict({
-        "yandex": yandex_provider,
-        "vk": vk_provider
-    })
+    yandex_provider = providers.Factory(YandexOAuthProvider, config=yandex_config)
+
+    vk_provider = providers.Factory(VKOAuthProvider, config=vk_config)
+
+    provider_factory = providers.Dict({"yandex": yandex_provider, "vk": vk_provider})
 
     oauth_service = providers.Factory(
         OAuthService,
         provider_factory=provider_factory,
         redis_service=redis_service,
         user_repository=user_repository,
-        state_ttl=config.oauth_state_ttl
+        state_ttl=config.oauth_state_ttl,
     )
 
     user_service = providers.Factory(

@@ -30,7 +30,9 @@ class User(PreBase, Base):
     token_version = Column(DateTime(timezone=True), nullable=True)
 
     # External OAuth
-    oauth_accounts = relationship("OAuthAccount", cascade="all, delete-orphan", back_populates="user")
+    oauth_accounts = relationship(
+        "OAuthAccount", cascade="all, delete-orphan", back_populates="user"
+    )
 
     # Relationships
     roles = relationship("Role", secondary=user_role, back_populates="users")

@@ -48,10 +48,7 @@ class Settings(BaseSettings):
             "KAFKA_BOOTSTRAP_SERVERS should be a comma-separated string of URLs"
         )
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 @lru_cache

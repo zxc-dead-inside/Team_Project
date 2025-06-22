@@ -99,7 +99,9 @@ class RedisService:
             if not data:
                 return None
 
-            json_data = json.loads(data.decode('utf-8') if isinstance(data, bytes) else data)
+            json_data = json.loads(
+                data.decode("utf-8") if isinstance(data, bytes) else data
+            )
             return model_class.model_validate(json_data)
         except Exception as e:
             logging.error(f"Error getting model for key {key} from Redis: {e}")

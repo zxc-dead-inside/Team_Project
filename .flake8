@@ -1,7 +1,5 @@
 [flake8]
 select = WPS
-[flake8]
-select = WPS
 ignore =
     WPS110,  # Magic number
     WPS115,  # Upper-case constants in classes

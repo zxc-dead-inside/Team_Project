@@ -1,16 +1,16 @@
 [flake8]
 select = WPS
 ignore =
-    WPS110,  # Magic number
-    WPS115,  # Upper-case constants in classes
-    WPS226,  # Overused string literals
-    WPS237,  # Hardcoded string constant
-    WPS305,  # f-string instead of `.format()`
-    WPS306,  # Use explicit return instead of implicit
-    WPS318,  # Too long if/while/with/etc. body
-    WPS323,  # Too many expressions in a single line
-    WPS326,  # Implicit string concatenation
-    WPS428,  # Wrong module metadata (e.g. __author__)
+    WPS110,
+    WPS115,
+    WPS226,
+    WPS237,
+    WPS305,
+    WPS306,
+    WPS318,
+    WPS323,
+    WPS326,
+    WPS428,
 
 max-line-length = 88
 exclude =

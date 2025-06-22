@@ -4,7 +4,6 @@ import secrets
 import string
 import uuid
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
 
 import jwt
 from passlib.context import CryptContext
@@ -122,7 +121,7 @@ class AuthService:
 
         return jwt.encode(to_encode, self.private_key, algorithm="RS256")
 
-    def create_refresh_token(self, user_id: UUID, token_version: datetime) -> str:
+    def create_refresh_token(self, user_id: uuid.UUID, token_version: datetime) -> str:
         """
         Create a refresh token for a user.
 

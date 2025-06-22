@@ -11,6 +11,10 @@ ignore =
     WPS323,
     WPS326,
     WPS428,
+    WPS221,
+    WPS204,
+    WPS210,
+    WPS220,
 
 max-line-length = 88
 exclude =

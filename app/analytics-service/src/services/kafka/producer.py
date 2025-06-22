@@ -36,10 +36,10 @@ class KafkaEventSender:
         KafkaError,
         max_tries=10,
         base=0.1,
-        logger=logging
+        logger=logging.getLogger(__name__)
     )
     async def send_event(self, message: dict):
-            
+
         """
         Send an event to Kafka with retry logic.
     

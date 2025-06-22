@@ -91,7 +91,7 @@ class State(metaclass=SingletonMeta):
         ) + count
         self.storage.save_state(self._state)
 
-    def increment_failed(self, index: int, count: int = 1) -> None:
+    def increment_failed(self, index: str, count: int = 1) -> None:
         """Increment the number of failed movie processing attempts."""
 
         self._state[index]["total_failed"] = self._state[index].get(

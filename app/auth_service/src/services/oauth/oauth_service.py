@@ -33,8 +33,9 @@ class OAuthService:
         self.state_ttl = state_ttl
 
     async def save_state(
-            self, provider: str, state: str, ttl: int = 60) -> str:
+            self, provider: str, state: str, ttl: int = 60) -> None:
         await self.redis_service.set(f"{provider}:oauth:", state, ttl)
+        return
 
     async def validate_state(self, provider: str, state: str) -> bool:
         return await self.redis_service.exists(f"{provider}:oauth:{state}")

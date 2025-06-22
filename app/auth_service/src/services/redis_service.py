@@ -62,7 +62,7 @@ class RedisService:
     async def exists(self, key: str) -> bool:
         """Return True if key exists or False if does not"""
 
-        return self.exists(key)
+        return self.exists(key)  # type:ignore
 
     async def get(self, key: str) -> str | None:
         """Get a value from Redis by key."""

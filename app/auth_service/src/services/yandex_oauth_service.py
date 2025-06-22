@@ -61,8 +61,9 @@ class YandexOAuthService:
             response.raise_for_status()
             return response.json()
 
-    async def save_state(self, state: str, ttl: int = 60) -> str:
+    async def save_state(self, state: str, ttl: int = 60) -> None:
         await self.redis_service.set("yandex:oauth:", state, ttl)
+        return
 
     async def validate_state(self, state) -> bool:
         return await self.redis_service.exists(f"yandex:oauth:{state}")

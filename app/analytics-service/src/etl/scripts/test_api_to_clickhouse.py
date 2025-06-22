@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import uuid
+from typing import Any
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -18,7 +19,7 @@ from src.core.logger import setup_logging
 from src.models.metrics import ActionType
 
 
-async def send_action_to_api(api_url: str) -> dict:
+async def send_action_to_api(api_url: str) -> tuple[Any, dict[str, Any]]:
     """Send a test user action to the API.
 
     Args:

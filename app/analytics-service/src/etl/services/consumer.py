@@ -95,7 +95,7 @@ class KafkaConsumer:
         KafkaError,
         max_tries=5,
         base=1,
-        logger=logging
+        logger=logging.getLogger(__name__)
     )
     async def consume_batch(
         self, 

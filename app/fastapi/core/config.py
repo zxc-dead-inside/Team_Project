@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     redis_cache_db: int
 
     @computed_field
-    @property
     def redis_url(self) -> str:
         """Build Redis URL from components."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_cache_db}"
@@ -52,4 +51,4 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-settings = Settings()
+settings = Settings() # type: ignore

@@ -1,4 +1,4 @@
-
+from typing import Any
 from uuid import UUID
 
 from core.config import settings
@@ -37,7 +37,7 @@ class FilmSearchService(AbstractFilmSearchService):
     ) -> list[MovieShortListResponse] | None:
         """Trying to get the data from the es."""
 
-        query = {"bool": {"must": [{"match_all": {}}]}}
+        query: dict[str, Any] = {"bool": {"must": [{"match_all": {}}]}}
         skip = (page_number - 1) * page_size
         body = {
             "query": query,

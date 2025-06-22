@@ -126,7 +126,7 @@ class Roles:
 
         # Check if user has a higher role that includes the required role
         for user_role in user_roles:
-            if user_role in cls.HIERARCHY and required_role in cls.HIERARCHY[user_role]:
+            if user_role in cls.HIERARCHY and required_role in cls.HIERARCHY[user_role]:  # type: ignore
                 return True
 
         return False
@@ -146,6 +146,6 @@ class Roles:
 
         for role in user_roles:
             if role in cls.HIERARCHY:
-                effective_roles.update(cls.HIERARCHY[role])
+                effective_roles.update(cls.HIERARCHY[role])  # type: ignore
 
         return effective_roles

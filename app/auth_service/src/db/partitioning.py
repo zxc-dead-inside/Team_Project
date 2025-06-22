@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore
 
 
 def generate_partition_login_history(

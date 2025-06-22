@@ -1,3 +1,4 @@
+from typing import Any
 
 from core.config import settings
 from elasticsearch import NotFoundError
@@ -28,7 +29,7 @@ class PersonSearchService:
             search_query: str | None = None, sort: str | None = None) -> list[Person] | None:
         """Returns list of people."""
 
-        query = {"bool": {"must": [{"match_all": {}}]}}
+        query: dict[str, Any] = {"bool": {"must": [{"match_all": {}}]}}
         skip = (page_number - 1) * page_size
         body = {
             "query": query,

@@ -664,11 +664,12 @@ class VerticaClient(DatabaseClient):
 
     def insert_user_activities(self, activities: list[UserActivity]) -> float:
         """Вставка активностей пользователей"""
-        sql = """
-        INSERT INTO user_activities 
-        (activity_id, user_id, activity_type, activity_data, timestamp, ip_address, user_agent)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
+        sql = (
+            "INSERT INTO user_activities ("
+            "activity_id, user_id, activity_type, activity_data, "
+            "timestamp, ip_address, user_agent"
+            ") VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        )
 
         data = []
         for activity in activities:

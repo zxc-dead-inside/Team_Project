@@ -1,5 +1,19 @@
 [flake8]
 select = WPS
+[flake8]
+select = WPS
+ignore =
+    WPS110,  # Magic number
+    WPS115,  # Upper-case constants in classes
+    WPS226,  # Overused string literals
+    WPS237,  # Hardcoded string constant
+    WPS305,  # f-string instead of `.format()`
+    WPS306,  # Use explicit return instead of implicit
+    WPS318,  # Too long if/while/with/etc. body
+    WPS323,  # Too many expressions in a single line
+    WPS326,  # Implicit string concatenation
+    WPS428,  # Wrong module metadata (e.g. __author__)
+
 max-line-length = 88
 exclude =
     .bzr,

@@ -87,7 +87,8 @@ class CinemaPerformanceStudy:
                 pbar.update(5)
 
         logger.error(
-            f"Таймаут ожидания БД. ClickHouse: {clickhouse_ready}, Vertica: {vertica_ready}"
+            f"Таймаут ожидания БД. ClickHouse: "
+            f"{clickhouse_ready}, Vertica: {vertica_ready}"
         )
         return False
 
@@ -134,7 +135,8 @@ class CinemaPerformanceStudy:
         logger.info("Генерация всех пользователей для создания UUID пула...")
         all_users = list(self.generator.generate_users(self.config.num_users))
         logger.info(
-            f"Создано {len(all_users)} пользователей с UUID. Примеры UUID: {[str(u.user_id) for u in all_users[:3]]}"
+            f"Создано {len(all_users)} пользователей с UUID. Примеры UUID:"
+            f" {[str(u.user_id) for u in all_users[:3]]}"
         )
 
         # Вставка пользователей батчами в ClickHouse
@@ -158,7 +160,8 @@ class CinemaPerformanceStudy:
         load_times["vertica"] += time.time() - start_time
 
         logger.info(
-            f"Пользователи загружены. UUID пул содержит {len(self.generator._generated_user_ids)} записей"
+            f"Пользователи загружены. UUID пул содержит"
+            f" {len(self.generator._generated_user_ids)} записей"
         )
 
         # Загрузка фильмов
@@ -198,7 +201,8 @@ class CinemaPerformanceStudy:
 
         # Загрузка рейтингов
         logger.info(
-            f"Генерация и загрузка {self.config.num_ratings:,} рейтингов с UUID ссылками"
+            f"Генерация и загрузка {self.config.num_ratings:,} "
+            f"рейтингов с UUID ссылками"
         )
         for batch_start in tqdm(
             range(0, self.config.num_ratings, self.config.batch_size), desc="Рейтинги"
@@ -227,7 +231,8 @@ class CinemaPerformanceStudy:
 
         # Загрузка сеансов просмотра
         logger.info(
-            f"Генерация и загрузка {self.config.num_sessions:,} сеансов просмотра с UUID ссылками"
+            f"Генерация и загрузка {self.config.num_sessions:,} "
+            f"сеансов просмотра с UUID ссылками"
         )
         for batch_start in tqdm(
             range(0, self.config.num_sessions, self.config.batch_size), desc="Сеансы"
@@ -256,7 +261,8 @@ class CinemaPerformanceStudy:
 
         # Загрузка активности пользователей
         logger.info(
-            f"Генерация и загрузка {self.config.num_activities:,} записей активности с UUID ссылками"
+            f"Генерация и загрузка {self.config.num_activities:,} "
+            f"записей активности с UUID ссылками"
         )
         for batch_start in tqdm(
             range(0, self.config.num_activities, self.config.batch_size),
@@ -358,7 +364,8 @@ class CinemaPerformanceStudy:
         }
 
         # Сохранение в JSON
-        results_file = f"results/performance_results_uuid_{test_end_time.strftime('%Y%m%d_%H%M%S')}.json"
+        results_file = (f"results/performance_results_uuid"
+                        f"_{test_end_time.strftime('%Y%m%d_%H%M%S')}.json")
         with open(results_file, "w", encoding="utf-8") as f:
             json.dump(results_data, f, ensure_ascii=False, indent=2, default=str)
 
@@ -470,7 +477,8 @@ class CinemaPerformanceStudy:
 """
 
         # Сохранение отчета
-        report_file = f"results/summary_report_uuid_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        report_file = (f"results/summary_report_uuid"
+                       f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
         with open(report_file, "w", encoding="utf-8") as f:
             f.write(report_content)
 
@@ -551,7 +559,8 @@ def main():
     print(f"   • Сеансы просмотра: {config.num_sessions:,}")
     print(f"   • Записи активности: {config.num_activities:,}")
     print(
-        f"   • Многопоточность: {config.num_threads} потоков x {config.queries_per_thread} запросов"
+        f"   • Многопоточность: {config.num_threads} потоков x"
+        f" {config.queries_per_thread} запросов"
     )
     print("   • Тип user_id: UUID (36 символов)")
     print("   • ClickHouse: user_id как String")

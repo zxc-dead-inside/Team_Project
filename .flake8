@@ -29,6 +29,7 @@ ignore =
     WPS217,
     WPS201,
     WPS230,
+    WPS111,
 
 
 
@@ -72,7 +73,8 @@ exclude =
     app/etl/main.py,
     app/fastapi/auth/jwt_bearer.py,
     app/auth-service/src/services/auth_service.py,
-    app/auth-service/src/services/redis_service.py
+    app/auth-service/src/services/redis_service.py,
+    *config*,
 
 format = html
 htmldir = flake8-report

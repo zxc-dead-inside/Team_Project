@@ -30,8 +30,12 @@ ignore =
     WPS201,
     WPS230,
     WPS111,
-
-
+    WPS407,
+    WPS602,
+    WPS211,
+    WPS212,
+    WPS238,
+    WPS332,
 
 
 

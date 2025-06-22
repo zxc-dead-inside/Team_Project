@@ -4,7 +4,6 @@ from typing import Any, ParamSpec, TypeVar
 from urllib.error import URLError
 
 import backoff
-from backoff import on_exception
 
 
 P = ParamSpec("P")
@@ -85,7 +84,7 @@ class RetryDecorators:
         """
         kwargs.setdefault("jitter", backoff.full_jitter)
 
-        return on_exception(
+        return backoff.on_exception(
             wait_gen=backoff.expo,
             exception=exceptions,
             max_tries=max_tries or self.default_max_tries,

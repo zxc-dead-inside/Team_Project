@@ -155,8 +155,6 @@ class AuthService:
             )
         )
 
-        return None
-
     async def validate_token(self, token: str, type: str) -> User | None:
         """
         Validate a JWT token and return the associated user.
@@ -197,8 +195,6 @@ class AuthService:
         payload = jwt.decode(token, self.public_key, algorithms=["RS256"])
         if await self.user_repository.get_token_from_blacklist(payload.get("jti")):
             raise HTTPException(status_code=401, detail="Token has expired")
-
-        return None
 
     async def register_user(
         self, username: str, email: str, password: str

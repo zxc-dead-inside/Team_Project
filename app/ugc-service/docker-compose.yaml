@@ -1,0 +1,28 @@
+services:
+  ugc-service:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DATABASE=ugc_service
+    depends_on:
+      - mongodb
+    networks:
+      - ugc_network
+
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ugc_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  ugc_network:
+    name: ugc_network 

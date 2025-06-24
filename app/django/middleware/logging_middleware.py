@@ -93,7 +93,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
             # Log security events for suspicious patterns
             if response.status_code == 404 and hasattr(request, "request_id"):
                 user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
-                if any(bot in user_agent for bot in ["bot", "crawler", "spider"]):
+                if any(bot in user_agent for bot in ("bot", "crawler", "spider")):
                     security_logger.log_suspicious_activity(
                         f"Bot accessing non-existent resource: {request.path}",
                         request=request,

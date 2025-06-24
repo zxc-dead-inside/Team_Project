@@ -15,3 +15,7 @@ SQL_OPTIONS=-c search_path=public,content
 DATABASE_TYPE=postgres
 
 AUTH_SERVICE_URL=http://auth_service_api:8100
+
+LOG_LEVEL=INFO
+
+COMPOSE_BAKE=true

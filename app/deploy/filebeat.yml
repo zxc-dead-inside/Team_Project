@@ -1,0 +1,149 @@
+filebeat.inputs:
+# FastAPI JSON logs (structured logging)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/app/app.log
+    - /var/log/app/error.log
+  fields:
+    service: fastapi
+    environment: production
+  fields_under_root: true
+  json.keys_under_root: true
+  json.add_error_key: true
+
+# Django JSON logs
+- type: log
+  enabled: true
+  paths:
+    - /var/log/app/django.log
+    - /var/log/app/django_security.log
+    - /var/log/app/django_performance.log
+  fields:
+    service: django
+    environment: production
+  fields_under_root: true
+  json.keys_under_root: true
+  json.add_error_key: true
+
+# Django error logs (plain text with stack traces)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/app/django_error.log
+  fields:
+    service: django
+    log_type: error
+    environment: production
+  fields_under_root: true
+  # Plain text multiline for stack traces
+  multiline.pattern: '^[[:space:]]+(at\s|\.{3}|Caused by:|Exception|Error|Traceback)'
+  multiline.negate: false
+  multiline.match: after
+  multiline.max_lines: 500
+
+# ETL logs (assume JSON format)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/app/etl*.log
+  fields:
+    service: etl
+    environment: production
+  fields_under_root: true
+  json.keys_under_root: true
+  json.add_error_key: true
+
+# Nginx access logs (JSON format from our config)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/access.log
+  fields:
+    service: nginx
+    log_type: access
+  fields_under_root: true
+  json.keys_under_root: true
+  json.add_error_key: true
+
+# Nginx error logs (plain text)
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/error.log
+  fields:
+    service: nginx
+    log_type: error
+  fields_under_root: true
+  # Nginx error log multiline pattern
+  multiline.pattern: '^\d{4}/\d{2}/\d{2}'
+  multiline.negate: true
+  multiline.match: after
+
+# Docker container logs (optional)
+- type: container
+  enabled: false  # Disable if causing issues
+  paths:
+    - /var/lib/docker/containers/*/*.log
+  fields:
+    service: docker
+  fields_under_root: true
+
+processors:
+- add_host_metadata:
+    when.not.contains.tags: forwarded
+- add_docker_metadata:
+    host: "unix:///var/run/docker.sock"
+    match_fields: ["container.id"]
+- drop_event:
+    when:
+      or:
+        - contains:
+            message: "health"
+        - contains:
+            message: "nginx-health"
+        - contains:
+            message: "/nginx-health"
+
+output.elasticsearch:
+  hosts: ["elasticsearch-logs:9200"]
+  template.enabled: true
+  template.pattern: "*logs-*"
+  indices:
+    - index: "django-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "django"
+    - index: "fastapi-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "fastapi"
+    - index: "etl-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "etl"
+    - index: "nginx-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "nginx"
+    - index: "docker-logs-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "docker"
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+  index.refresh_interval: 5s
+
+setup.kibana:
+  host: "kibana:5601"
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /usr/share/filebeat/data/logs
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# Disable monitoring to reduce overhead
+monitoring.enabled: false
+
+# Registry settings
+filebeat.registry.path: /usr/share/filebeat/data/registry

@@ -15,8 +15,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from .logging_config import setup_django_logging
+
 
 load_dotenv()
+
+LOGGING = setup_django_logging()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -77,6 +81,9 @@ MIDDLEWARE = [
     "auth_client.middleware.JWTAuthMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "middleware.logging_middleware.RequestLoggingMiddleware",
+    "middleware.logging_middleware.SecurityLoggingMiddleware",
+    "middleware.logging_middleware.PerformanceLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "example.urls"

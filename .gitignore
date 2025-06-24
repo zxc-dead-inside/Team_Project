@@ -18,7 +18,7 @@ notebooks/*
 
 app/data
 app/state
-
+app/deploy/esdata
 *.log
 
 # Secrets

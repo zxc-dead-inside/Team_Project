@@ -16,9 +16,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from .logging_config import setup_django_logging
+from .sentry_config import setup_sentry
 
 
 load_dotenv()
+setup_sentry()
 
 LOGGING = setup_django_logging()
 
@@ -79,6 +81,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "auth_client.middleware.JWTAuthMiddleware",
+    "example.sentry_config.SentryContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "middleware.logging_middleware.RequestLoggingMiddleware",

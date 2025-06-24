@@ -5,3 +5,10 @@ ELASTICSEARCH_PORT=<port_here>
 REDIS_HOST=<host_here>
 REDIS_PORT=<port_here>
 REDIS_CACHE_DB=<db_number_here>
+
+# Sentry setup
+SENTRY_DSN=SENTRY_DSN=https://{dsn_is_here}.ingest.us.sentry.io/{project_id_here}
+SENTRY_ENVIRONMENT=development
+SENTRY_TRACES_SAMPLE_RATE=1.0
+SENTRY_SEND_DEFAULT_PII=false
+SENTRY_ENABLE=true

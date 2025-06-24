@@ -18,4 +18,12 @@ AUTH_SERVICE_URL=http://auth_service_api:8100
 
 LOG_LEVEL=INFO
 
+# Sentry Configuration
+SENTRY_DSN=https://{dsn_is_here}.ingest.us.sentry.io/{project_id_here}
+SENTRY_ENVIRONMENT=development
+SENTRY_ENABLE=true
+SENTRY_TRACES_SAMPLE_RATE=1.0
+SENTRY_SEND_DEFAULT_PII=false
+SENTRY_DEBUG=True
+
 COMPOSE_BAKE=true

@@ -6,11 +6,16 @@ from api.api import api_router
 from core.config import settings
 from db.elastic import es_connector
 from db.redis import redis_connector
-from core.logging_setup import StructuredLogger, setup_logging
+
+from core.logging_setup import setup_logging
+from core.sentry_config import setup_sentry, SentryContextMiddleware, SentryStructuredLogger
 from middleware.logging import logging_middleware
 
+
+setup_sentry()
+
 setup_logging()
-app_logger = StructuredLogger(__name__)
+app_logger = SentryStructuredLogger(__name__)
 
 
 
@@ -45,6 +50,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Add Sentry context middleware before other middleware
+app.add_middleware(SentryContextMiddleware)
 
 # Logging middleware
 app.middleware("http")(logging_middleware)

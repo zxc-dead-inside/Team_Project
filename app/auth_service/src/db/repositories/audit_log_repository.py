@@ -143,7 +143,7 @@ class AuditLogRepository:
             result = await session.execute(query)
             count_result = await session.execute(count_query)
 
-            items = result.scalars().all()
+            items = list(result.scalars().all())
             total = count_result.scalar() or 0
 
             return items, total

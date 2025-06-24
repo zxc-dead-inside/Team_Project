@@ -1,5 +1,6 @@
 import time
 import random
+from multiprocessing.synchronize import Lock as LockType
 import multiprocessing
 import logging
 import time
@@ -19,7 +20,7 @@ class ProgressDisplay:
     def __init__(self, num_processes: int, total_requests: int):
         self.num_processes = num_processes
         self.total_requests = total_requests
-        self.bars = []
+        self.bars: list[tqdm] = []
         self.last_update = time.time()
         
     def start(self):
@@ -58,7 +59,7 @@ class StressTester:
         processes: int, 
         requests_per_process: int,
         load_type: str = "mixed"
-    ) -> Dict[str, List[PerformanceResult]]:
+    ) -> dict[str, dict[str, dict[str, float | int]] | list[PerformanceResult]]:
         """Запускает тесты"""
 
         logger.info(f"Starting stress tests: {processes} processes, {requests_per_process} requests per process")
@@ -143,7 +144,7 @@ class StressTester:
         load_type: str,
         results_queue: multiprocessing.Queue,
         stats_dict: Dict[str, List[float]],
-        lock: multiprocessing.Lock ,
+        lock: LockType,
         progress_bars
     ):
         """Создание процессов."""
@@ -186,7 +187,7 @@ class StressTester:
         operation: str,
         results_queue: multiprocessing.Queue,
         stats_dict: Dict[str, List[float]],
-        lock: multiprocessing.Lock
+        lock: LockType
     ):
         """Выполнение запросов."""
         try:

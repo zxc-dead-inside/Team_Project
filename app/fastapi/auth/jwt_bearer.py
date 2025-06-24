@@ -51,7 +51,7 @@ class JWTBearer(HTTPBearer):
             try:
                 cached_key = self.redis.get("auth_service_public_key")
                 if cached_key:
-                    return cached_key.decode()
+                    return cached_key.decode()  # type: ignore[union-attr]
             except redis.RedisError:
                 logger.warning("Redis unavailable for public key cache")
 
@@ -79,7 +79,7 @@ class JWTBearer(HTTPBearer):
                     emergency_key = self.redis.get("auth_service_emergency_key")
                     if emergency_mode and emergency_key:
                         logger.warning("Using emergency public key for validation")
-                        return emergency_key.decode()
+                        return emergency_key.decode()  # type: ignore[union-attr]
                 except redis.RedisError:
                     pass
 
@@ -103,13 +103,17 @@ class JWTBearer(HTTPBearer):
         try:
             cached_roles = self.redis.get(f"user_roles:{user_id}")
             if cached_roles:
-                return json.loads(cached_roles.decode())
+                return json.loads(
+                    cached_roles.decode()  # type: ignore[union-attr]
+                )
         except Exception as e:
             logger.warning(f"Failed to get cached roles: {e}")
 
         return None
 
-    async def cache_roles(self, user_id: str, roles: list[str], ttl: int | None = None):
+    async def cache_roles(
+            self, user_id: str, roles: list[str], ttl: int | None = None
+    ):
         """Cache user roles in Redis with proper TTL."""
         if not self.redis:
             return
@@ -169,7 +173,9 @@ class JWTBearer(HTTPBearer):
             try:
                 cached_user = self.redis.get(cache_key)
                 if cached_user:
-                    user_data = json.loads(cached_user.decode())
+                    user_data = json.loads(
+                        cached_user.decode()  # type: ignore[union-attr]
+                    )
                     return self._convert_to_user_data(user_data)
             except redis.RedisError:
                 logger.warning("Redis unavailable for anonymous user cache")

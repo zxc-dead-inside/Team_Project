@@ -6,13 +6,12 @@ from api.api import api_router
 from core.config import settings
 from db.elastic import es_connector
 from db.redis import redis_connector
-
 from core.logging_setup import StructuredLogger, setup_logging
 from middleware.logging import logging_middleware
 
-
 setup_logging()
 app_logger = StructuredLogger(__name__)
+
 
 
 @asynccontextmanager
@@ -34,6 +33,7 @@ async def lifespan(api: FastAPI):
         app_logger.info("Shutting down FastAPI application")
         await redis_connector.disconnect()
         await es_connector.disconnect()
+
 
 
 app = FastAPI(

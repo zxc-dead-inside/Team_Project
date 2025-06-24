@@ -1,11 +1,11 @@
-from django.http import HttpResponse, JsonResponse, Http404
-from django.views import View
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Q, Value
 from django.db.models.functions import Coalesce
-from django.views.generic.list import BaseListView
+from django.http import Http404, HttpResponse, JsonResponse
+from django.views import View
 from django.views.generic.detail import BaseDetailView
+from django.views.generic.list import BaseListView
 from movies.models import FilmWork
 
 

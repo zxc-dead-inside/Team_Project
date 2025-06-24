@@ -1,0 +1,71 @@
+name: Linter
+
+on:
+  push:
+    branches: [ feature/ci-pipline ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ '3.10', '3.11', '3.12' ]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wemake-python-styleguide mypy flake8-html
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+
+      - name: Lint with wemake-python-styleguide
+        id: wemake-python-styleguide
+        run: |
+          flake8 . 
+
+      - name: Type check with mypy
+        id: mypy
+        run: |
+          mypy . --exclude scripts/ --exclude migrations/ --exclude tests/*/fixtures/ --exclude tests/*/utils/ --exclude .devcontainer/ --exclude manage.py --exclude venv/ --exclude .env/ --exclude docker-compose.yml --exclude docker-compose.yaml --exclude requirements.txt --exclude etl/scripts/
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flake8-report-${{ matrix.python-version }}
+          path: flake8-report
+
+      - name: Send Telegram notification
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ CI прошел успешно на Python ${{ matrix.python-version }}!
+            Репозиторий: ${{ github.repository }}
+            Ветка: ${{ github.ref }}
+            Коммит: ${{ github.sha }}
+
+      - name: Send Telegram notification
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ CI не прошел на Python ${{ matrix.python-version }}!
+            Репозиторий: ${{ github.repository }}
+            Ветка: ${{ github.ref }}
+            Коммит: ${{ github.sha }}

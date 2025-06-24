@@ -1,6 +1,7 @@
 from datetime import timedelta
-from pydantic_settings import BaseSettings
+
 from pydantic import computed_field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -8,26 +9,20 @@ class Settings(BaseSettings):
     api_v1_str: str = "/api/v1"
 
     # CORS
-    cors_origins: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000"
-    ]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
     # Elasticsearch
-    elasticsearch_host: str = (
-        "elasticsearch"
-    )
+    elasticsearch_host: str = "elasticsearch"
     elasticsearch_port: int = 9200
     elasticsearch_username: str = ""
     elasticsearch_password: str = ""
 
-    #Redis
+    # Redis
     redis_host: str
     redis_port: int
     redis_cache_db: int
 
     @computed_field
-    @property
     def redis_url(self) -> str:
         """Build Redis URL from components."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_cache_db}"
@@ -46,9 +41,9 @@ class Settings(BaseSettings):
 
     # Token settings
     token_blacklist_ttl: int = 86400
-    
+
     class Config:
         env_file = ".env"
 
 
-settings = Settings()
+settings = Settings()  # type: ignore

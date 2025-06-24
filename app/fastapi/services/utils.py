@@ -1,6 +1,7 @@
 import json
 from uuid import UUID
 
+
 class UUIDEncoder(json.JSONEncoder):
     """Converts UUID to str."""
 

@@ -1,4 +1,3 @@
-
 from endpoints import films, genres, health, persons
 
 from fastapi import APIRouter

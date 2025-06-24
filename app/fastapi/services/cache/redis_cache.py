@@ -1,6 +1,6 @@
 from redis.asyncio import Redis
-
 from services.cache.base import AbstractCacheStorage
+
 
 class RedisCacheStorage(AbstractCacheStorage):
     """Class for Redis cache storage."""

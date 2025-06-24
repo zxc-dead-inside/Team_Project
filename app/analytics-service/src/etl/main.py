@@ -16,21 +16,21 @@ async def main():
     ETLContainer.init_config_from_settings(container, settings)
     etl_service = container.etl_service()
     loop = asyncio.get_running_loop()
-    
+
     def signal_handler():
         logging.info("Received shutdown signal")
         asyncio.create_task(shutdown(etl_service))
-    
+
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, signal_handler)
-    
+
     try:
         logging.info(f"Starting ETL service in {settings.environment} mode")
         await etl_service.start()
 
         while True:
             await asyncio.sleep(1)
-            
+
     except Exception as e:
         logging.error(f"Error in ETL service: {e}")
         await shutdown(etl_service)
@@ -42,10 +42,10 @@ async def shutdown(etl_service):
     logging.info("Shutting down ETL service")
     await etl_service.stop()
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    
+
     for task in tasks:
         task.cancel()
-    
+
     await asyncio.gather(*tasks, return_exceptions=True)
     logging.info("ETL service shutdown complete")
 

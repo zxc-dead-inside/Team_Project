@@ -1,11 +1,10 @@
 import redis.asyncio as aioredis
-from redis.asyncio import Redis
 from core.config import settings
 from core.decorators.retry import exponential_backoff
+from redis.asyncio import Redis
 
 
 class RedisConnector:
-
     def __init__(self):
         self._redis: Redis | None = None
 
@@ -24,9 +23,7 @@ class RedisConnector:
     async def connect(self):
         if self._redis is None:
             self._redis = await aioredis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
 
     async def disconnect(self):
@@ -36,8 +33,7 @@ class RedisConnector:
 
     def get_redis(self) -> Redis:
         if self._redis is None:
-            raise RuntimeError(
-                "Redis connection has not been established.")
+            raise RuntimeError("Redis connection has not been established.")
         return self._redis
 
 

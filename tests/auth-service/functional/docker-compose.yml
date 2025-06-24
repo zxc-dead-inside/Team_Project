@@ -40,12 +40,12 @@ services:
 
   api:
     build: 
-      context: ../../../app/auth-service
+      context: ../../../app/auth_service
       dockerfile: Dockerfile
     image: auth-service-image
-    container_name: auth-service
+    container_name: auth_service
     volumes:
-      - ../../../app/auth-service:/app
+      - ../../../app/auth_service:/app
     ports:
       - ${API_PORT:-8100}:8100
     environment:
@@ -80,7 +80,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
       - REDIS_HOST=redis
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379/0
-      - PYTHONPATH=/tests/auth-service/functional
+      - PYTHONPATH=/tests/auth_service/functional
     networks:
       - auth_network_test
     depends_on:

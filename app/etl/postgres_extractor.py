@@ -24,7 +24,8 @@ class PostgresExtractor:
             return cur.fetchone()[0]
 
     def extract_genres(
-            self, last_modified: str | None,
+        self,
+        last_modified: str | None,
     ) -> list[dict[str, Any]]:
         """
         Extract genres modified after a specific timestamp.
@@ -45,14 +46,17 @@ class PostgresExtractor:
             with conn.cursor() as cur:
                 cur.execute(query, (last_modified,))
                 results = cur.fetchall()
-                logger.info(f'{len(results)} records were fetched.')
+                logger.info(f"{len(results)} records were fetched.")
 
                 if results:
                     return results
             return []
 
     def extract_movies(
-        self, last_modified: str | None, batch_size: int, offset: int,
+        self,
+        last_modified: str | None,
+        batch_size: int,
+        offset: int,
     ) -> tuple[list[dict[str, Any]], datetime | None, datetime | None]:
         """
         Extract movies modified after a specific timestamp.
@@ -121,16 +125,11 @@ class PostgresExtractor:
         with self._get_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    query, (
-                        last_modified,
-                        last_modified,
-                        last_modified,
-                        batch_size,
-                        offset
-                    )
+                    query,
+                    (last_modified, last_modified, last_modified, batch_size, offset),
                 )
                 results = cur.fetchall()
-                logger.info(f'{len(results)} records were fetched.')
+                logger.info(f"{len(results)} records were fetched.")
 
                 if results:
                     processed_results = []
@@ -143,16 +142,12 @@ class PostgresExtractor:
                         # Track latest modifications
                         if row["max_person_modified"] and (
                             not latest_person_modified
-                            or row[
-                                "max_person_modified"
-                            ] > latest_person_modified
+                            or row["max_person_modified"] > latest_person_modified
                         ):
                             latest_person_modified = row["max_person_modified"]
                         if row["max_genre_modified"] and (
                             not latest_genre_modified
-                            or row[
-                                "max_genre_modified"
-                            ] > latest_genre_modified
+                            or row["max_genre_modified"] > latest_genre_modified
                         ):
                             latest_genre_modified = row["max_genre_modified"]
 
@@ -169,8 +164,7 @@ class PostgresExtractor:
                             p["name"] for p in persons if p["role"] == "writer"
                         ]
                         processed_row["directors_names"] = [
-                            p["name"]
-                            for p in persons if p["role"] == "director"
+                            p["name"] for p in persons if p["role"] == "director"
                         ]
                         processed_row["actors"] = [
                             {"id": p["id"], "name": p["name"]}
@@ -190,8 +184,7 @@ class PostgresExtractor:
                         ]
                         genres = processed_row["genres"]
                         processed_row["genres"] = [
-                            {"id": g["id"], "name": g["name"]}
-                            for g in genres
+                            {"id": g["id"], "name": g["name"]} for g in genres
                         ]
                         processed_results.append(processed_row)
 
@@ -203,7 +196,10 @@ class PostgresExtractor:
                 return [], None, None
 
     def extract_persons(
-        self, last_modified: str | None, batch_size: int, offset: int,
+        self,
+        last_modified: str | None,
+        batch_size: int,
+        offset: int,
     ) -> tuple[list[dict[str, Any]], datetime | None, datetime | None]:
         """
         Extract persons modified after a specific timestamp.
@@ -257,16 +253,9 @@ class PostgresExtractor:
 
         with self._get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    query, (
-                        last_modified,
-                        last_modified,
-                        batch_size,
-                        offset
-                    )
-                )
+                cur.execute(query, (last_modified, last_modified, batch_size, offset))
                 results = cur.fetchall()
-                logger.info(f'{len(results)} records were fetched.')
+                logger.info(f"{len(results)} records were fetched.")
 
                 if results:
                     processed_results = []
@@ -278,21 +267,14 @@ class PostgresExtractor:
                         # Track latest modifications
                         if row["max_filmwork_modified"] and (
                             not latest_filmwork_modified
-                            or row[
-                                "max_filmwork_modified"
-                            ] > latest_filmwork_modified
+                            or row["max_filmwork_modified"] > latest_filmwork_modified
                         ):
-                            latest_filmwork_modified = row[
-                                "max_filmwork_modified"
-                            ]
+                            latest_filmwork_modified = row["max_filmwork_modified"]
 
                         # Remove temporary fields
                         del processed_row["max_filmwork_modified"]
 
                         processed_results.append(processed_row)
 
-                    return (
-                        processed_results,
-                        latest_filmwork_modified
-                    )
+                    return (processed_results, latest_filmwork_modified)
                 return None, []

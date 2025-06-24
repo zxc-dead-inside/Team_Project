@@ -35,7 +35,7 @@ class TestSettings(BaseSettings):
 
 
     # FastAPI service settings
-    auth_host: str = Field(default="auth-service")
+    auth_host: str = Field(default="auth_service")
     auth_port: int = Field(default=8100)
 
     @property

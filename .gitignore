@@ -10,7 +10,7 @@ state
 *.egg-info
 
 *.env
-
+*tmp/
 
 __pycache__/
 
@@ -22,4 +22,4 @@ app/deploy/esdata
 *.log
 
 # Secrets
-app/auth-service/secrets/*
+app/auth_service/secrets/*

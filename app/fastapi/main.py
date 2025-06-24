@@ -18,6 +18,7 @@ setup_logging()
 app_logger = SentryStructuredLogger(__name__)
 
 
+
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     app_logger.info("Starting FastAPI application", service="fastapi")
@@ -37,6 +38,7 @@ async def lifespan(api: FastAPI):
         app_logger.info("Shutting down FastAPI application")
         await redis_connector.disconnect()
         await es_connector.disconnect()
+
 
 
 app = FastAPI(

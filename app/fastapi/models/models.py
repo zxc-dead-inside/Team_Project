@@ -16,7 +16,7 @@ from pydantic import (
     Field,
     HttpUrl,
     StringConstraints,
-    model_validator
+    model_validator,
 )
 
 
@@ -232,10 +232,7 @@ class MovieFull(MovieShort):
                 "imdb_rating": 8.5,
                 "description": "An amazing example movie...",
                 "genre": [
-                    {
-                        "uuid": "123e4567-e89b-12d3-a456-426614174001",
-                        "name": "Action"
-                    }
+                    {"uuid": "123e4567-e89b-12d3-a456-426614174001", "name": "Action"}
                 ],
                 "created_at": "2024-01-01T00:00:00Z",
             }
@@ -246,10 +243,7 @@ class MovieFull(MovieShort):
 class SearchParams(BaseAPIModel):
     """Base model for search parameters."""
 
-    query: Annotated[
-        str,
-        StringConstraints(min_length=1, max_length=100)
-    ] = Field(
+    query: Annotated[str, StringConstraints(min_length=1, max_length=100)] = Field(
         description="Search query string",
         examples=["star wars"],
     )

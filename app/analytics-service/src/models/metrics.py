@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Any
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 class ActionType(str, Enum):
     """
     Enumeration of possible user action types.
-    
+
     Attributes:
         VIEW_START: User started watching content
         VIEW_END: User stopped watching content
@@ -28,7 +28,7 @@ class ActionType(str, Enum):
 class ViewMetadata(BaseModel):
     """
     Metadata model for viewing-related actions.
-    
+
     Attributes:
         duration_seconds: Total content duration in seconds (required for VIEW_START/VIEW_END)
         current_time: Current playback position in seconds
@@ -36,28 +36,24 @@ class ViewMetadata(BaseModel):
         device_type: Type of device used for playback
     """
 
-    duration_seconds: Optional[float] = Field(
-        None, 
-        description="Total content duration in seconds"
+    duration_seconds: float | None = Field(
+        None, description="Total content duration in seconds"
     )
-    current_time: Optional[float] = Field(
-        None,
-        description="Current playback position in seconds"
+    current_time: float | None = Field(
+        None, description="Current playback position in seconds"
     )
-    percent_watched: Optional[float] = Field(
-        None,
-        ge=0, le=100,
-        description="Percentage of content watched (0-100)"
+    percent_watched: float | None = Field(
+        None, ge=0, le=100, description="Percentage of content watched (0-100)"
     )
-    device_type: Optional[str] = Field(
-        None,
-        description="Device type (mobile, tv, web, etc.)"
+    device_type: str | None = Field(
+        None, description="Device type (mobile, tv, web, etc.)"
     )
+
 
 class UserAction(BaseModel):
     """
     Main model representing a user action event.
-    
+
     Attributes:
         user_id: Unique identifier of the user
         movie_id: Unique identifier of the content
@@ -70,12 +66,10 @@ class UserAction(BaseModel):
     movie_id: str = Field(..., description="Movie/TV Show UUID")
     action_type: ActionType = Field(..., description="Action type")
     timestamp: float = Field(
-        ...,
-        description="Event timestamp (Unix time with milliseconds)"
+        ..., description="Event timestamp (Unix time with milliseconds)"
     )
     metadata: ViewMetadata = Field(
-        default_factory=ViewMetadata,
-        description="Action metadata"
+        default_factory=ViewMetadata, description="Action metadata"
     )
 
     @model_validator(mode="before")
@@ -83,39 +77,35 @@ class UserAction(BaseModel):
     def validate_metadata(cls, values: Any) -> Any:
         """
         Validate metadata constraints based on action type.
-        
+
         Rules:
         - VIEW_START/VIEW_END require duration_seconds
         - VIEW_END requires current_time
-        
+
         Returns:
             Validated UserActionEvent instance
-            
+
         Raises:
             ValueError: If required fields are missing for the action type
         """
 
         if isinstance(values, dict):
-            if not "action_type" in values:
+            if "action_type" not in values:
                 raise ValueError("action_type is required")
-        
-            
-        
-        action_type = values.get('action_type')
-        metadata = values.get('metadata', {})
+
+        action_type = values.get("action_type")
+        metadata = values.get("metadata", {})
 
         if not metadata:
             metadata = ViewMetadata()
-            values['metadata'] = metadata
-        
+            values["metadata"] = metadata
 
         if action_type in [ActionType.VIEW_START, ActionType.VIEW_END]:
-            if metadata.get('duration_seconds') is None:
+            if metadata.get("duration_seconds") is None:
                 raise ValueError("duration_seconds is required for this action type")
-            
 
             if action_type == ActionType.VIEW_END:
-                if metadata.get('current_time') is None:
+                if metadata.get("current_time") is None:
                     raise ValueError("current_time is required for VIEW_END action")
-        
+
         return values

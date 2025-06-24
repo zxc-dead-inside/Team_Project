@@ -44,7 +44,9 @@ class Country(str, Enum):
 class User(BaseModel):
     """Модель пользователя"""
 
-    user_id: UUID = Field(default_factory=uuid4, description="Уникальный UUID пользователя")
+    user_id: UUID = Field(
+        default_factory=uuid4, description="Уникальный UUID пользователя"
+    )
     email: EmailStr = Field(description="Email пользователя")
     username: Annotated[
         str, Field(min_length=3, max_length=50, description="Имя пользователя")
@@ -80,7 +82,9 @@ class Movie(BaseModel):
         default=None, description="Оригинальное название"
     )
     genre: Genre = Field(description="Основной жанр")
-    secondary_genres: list[Genre] = Field(default_factory=list, description="Дополнительные жанры")
+    secondary_genres: list[Genre] = Field(
+        default_factory=list, description="Дополнительные жанры"
+    )
     release_date: date = Field(description="Дата выхода")
     duration_minutes: PositiveInt = Field(description="Продолжительность в минутах")
     country: Country = Field(description="Страна производства")
@@ -185,7 +189,10 @@ class DatabasePerformanceResult(BaseModel):
     )
     cpu_usage_percent: Annotated[float, Field(ge=0)] | None = Field(
         default=None,
-        description="Использование CPU в % (может превышать 100% на многоядерных системах)",
+        description=(
+            "Использование CPU в % "
+            "(может превышать 100% на многоядерных системах)"
+        ),
     )
     timestamp: datetime = Field(description="Время выполнения теста")
 
@@ -224,7 +231,8 @@ class TestSuiteResult(BaseModel):
 
     model_config = ConfigDict(validate_assignment=True)
 
-    # config: BenchmarkConfig = Field(description="Конфигурация тестов")  # Uncomment when BenchmarkConfig is available
+    # config: BenchmarkConfig = Field(description="Конфигурация тестов")
+    # Uncomment when BenchmarkConfig is available
     clickhouse_results: list[DatabasePerformanceResult] = Field(
         description="Результаты ClickHouse"
     )

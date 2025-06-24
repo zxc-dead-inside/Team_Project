@@ -1,11 +1,12 @@
 """Main application entry point for the Analytics Service."""
-from contextlib import asynccontextmanager
-import logging
 
-from fastapi import FastAPI
+import logging
+from contextlib import asynccontextmanager
 
 from src.api import health_router, metrics_router
-from src.core import get_settings, setup_logging, Container
+from src.core import Container, get_settings, setup_logging
+
+from fastapi import FastAPI
 
 
 @asynccontextmanager
@@ -16,17 +17,17 @@ async def lifespan(app: FastAPI):
     container = Container()
     Container.init_config_from_settings(container, settings)
     await container.kafka_producer().start()
-    container.wire(modules=['src.api.v1.metrics', 'src.api.health'])
+    container.wire(modules=["src.api.v1.metrics", "src.api.health"])
     app.container = container
 
     # Start services
-    logging.info(
-        f"Starting {settings.project_name} in {settings.environment} mode")
+    logging.info(f"Starting {settings.project_name} in {settings.environment} mode")
 
     yield
 
     # Teardown
     logging.info(f"Shutting down {settings.project_name}")
+
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -39,7 +40,7 @@ def create_application() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
         docs_url="/api/docs" if settings.environment != "production" else None,
-        redoc_url="/api/redoc" if settings.environment != "production" else None
+        redoc_url="/api/redoc" if settings.environment != "production" else None,
     )
 
     # Init router
@@ -55,7 +56,4 @@ app = create_application()
 @app.get("/")
 async def root():
     """Root endpoint redirecting to documentation."""
-    return {
-        "message": "Welcome to the Analytics Service API",
-        "docs": "/api/docs"
-    }
+    return {"message": "Welcome to the Analytics Service API", "docs": "/api/docs"}

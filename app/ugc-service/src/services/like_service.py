@@ -22,10 +22,6 @@ class LikeService:
         
         if existing:
             # Обновляем существующую оценку
-            result = await self.collection.update_one(
-                {"user_id": like.user_id, "review_id": like.review_id},
-                {"$set": {"rating": like.rating}}
-            )
             updated_like = await self.collection.find_one({
                 "user_id": like.user_id,
                 "review_id": like.review_id

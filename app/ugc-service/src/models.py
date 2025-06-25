@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
 
@@ -65,7 +64,7 @@ class ReviewBase(BaseModel):
     film_id: str = Field(..., description="ID фильма")
     text: str = Field(..., min_length=1, max_length=5000,
                       description="Текст рецензии")
-    rating: Optional[int] = Field(None, ge=1, le=10,
+    rating: int | None = Field(None, ge=1, le=10,
                                   description="Оценка от 1 до 10")
 
 
@@ -76,7 +75,7 @@ class ReviewCreate(ReviewBase):
 class Review(ReviewBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     model_config = {
         "populate_by_name": True,
@@ -106,9 +105,9 @@ class ReviewResponse(BaseModel):
     user_id: str
     film_id: str
     text: str
-    rating: Optional[int]
+    rating: int | None
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
 
 
 class ReviewRatingResponse(BaseModel):
@@ -119,7 +118,7 @@ class ReviewRatingResponse(BaseModel):
 
 
 class ReviewSearchResponse(BaseModel):
-    reviews: List[ReviewResponse]
+    reviews: list[ReviewResponse]
     total: int
     page: int
     size: int

@@ -1,5 +1,4 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
-from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime
 from src.models import Review, ReviewCreate, ReviewResponse, ReviewSearchResponse
@@ -93,7 +92,7 @@ class ReviewService:
             size=limit
         )
 
-    async def update_review(self, review_id: str, user_id: str, text: str, rating: Optional[int] = None) -> ReviewResponse:
+    async def update_review(self, review_id: str, user_id: str, text: str, rating: int | None = None) -> ReviewResponse:
         """Обновить рецензию"""
         # Проверяем, что рецензия принадлежит пользователю
         existing = await self.collection.find_one({
@@ -140,7 +139,7 @@ class ReviewService:
         
         return result.deleted_count > 0
 
-    async def get_user_reviews(self, user_id: str) -> List[ReviewResponse]:
+    async def get_user_reviews(self, user_id: str) -> list[ReviewResponse]:
         """Получить все рецензии пользователя"""
         cursor = self.collection.find({"user_id": user_id}).sort("created_at", -1)
         reviews = []

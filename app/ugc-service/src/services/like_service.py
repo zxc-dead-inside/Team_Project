@@ -1,8 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
-from typing import List, Optional
-from bson import ObjectId
-from src.models import Like, LikeCreate, LikeResponse, ReviewRatingResponse
 from src.database import get_database
+from src.models import Like, LikeCreate, LikeResponse, ReviewRatingResponse
 
 
 class LikeService:
@@ -24,10 +22,6 @@ class LikeService:
         
         if existing:
             # Обновляем существующую оценку
-            result = await self.collection.update_one(
-                {"user_id": like.user_id, "review_id": like.review_id},
-                {"$set": {"rating": like.rating}}
-            )
             updated_like = await self.collection.find_one({
                 "user_id": like.user_id,
                 "review_id": like.review_id
@@ -46,7 +40,7 @@ class LikeService:
             created_at=updated_like["created_at"]
         )
 
-    async def get_user_likes(self, user_id: str) -> List[LikeResponse]:
+    async def get_user_likes(self, user_id: str) -> list[LikeResponse]:
         """Получить все лайки пользователя"""
         cursor = self.collection.find({"user_id": user_id}).sort("created_at", -1)
         likes = []
@@ -100,7 +94,7 @@ class LikeService:
         
         return result.deleted_count > 0
 
-    async def get_user_rating_for_review(self, user_id: str, review_id: str) -> Optional[int]:
+    async def get_user_rating_for_review(self, user_id: str, review_id: str) -> int | None:
         """Получить оценку пользователя для конкретной рецензии"""
         like = await self.collection.find_one({
             "user_id": user_id,

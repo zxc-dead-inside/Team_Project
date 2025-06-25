@@ -1,6 +1,4 @@
 from motor.motor_asyncio import AsyncIOMotorCollection
-from typing import List, Optional
-from bson import ObjectId
 from src.models import Bookmark, BookmarkCreate, BookmarkResponse
 from src.database import get_database
 
@@ -32,7 +30,7 @@ class BookmarkService:
             created_at=created_bookmark["created_at"]
         )
 
-    async def get_user_bookmarks(self, user_id: str) -> List[BookmarkResponse]:
+    async def get_user_bookmarks(self, user_id: str) -> list[BookmarkResponse]:
         """Получить все закладки пользователя"""
         cursor = self.collection.find({"user_id": user_id}).sort("created_at", -1)
         bookmarks = []

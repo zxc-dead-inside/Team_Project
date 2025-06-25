@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional
 from src.models import ReviewCreate, ReviewResponse, ReviewSearchResponse
 from src.services.review_service import ReviewService
 
@@ -51,7 +50,7 @@ async def update_review(
     review_id: str,
     user_id: str = Query(..., description="ID пользователя"),
     text: str = Query(..., description="Новый текст рецензии"),
-    rating: Optional[int] = Query(None, ge=1, le=10, description="Новая оценка"),
+    rating: int | None = Query(None, ge=1, le=10, description="Новая оценка"),
     service: ReviewService = Depends(get_review_service)
 ):
     """Обновить рецензию"""
@@ -74,7 +73,7 @@ async def delete_review(
     return {"message": "Review deleted successfully"}
 
 
-@router.get("/user/{user_id}", response_model=List[ReviewResponse])
+@router.get("/user/{user_id}", response_model=list[ReviewResponse])
 async def get_user_reviews(
     user_id: str,
     service: ReviewService = Depends(get_review_service)

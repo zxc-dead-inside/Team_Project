@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
+
+from pydantic import BaseModel
 from src.models import DeliveryMethod, MessageStatus
+
 
 class MessageTemplateBase(BaseModel):
     name: str
@@ -8,8 +10,10 @@ class MessageTemplateBase(BaseModel):
     content: str
     delivery_method: DeliveryMethod
 
+
 class MessageTemplateCreate(MessageTemplateBase):
     pass
+
 
 class MessageTemplateUpdate(BaseModel):
     name: str | None = None
@@ -17,12 +21,14 @@ class MessageTemplateUpdate(BaseModel):
     content: str | None = None
     delivery_method: DeliveryMethod | None = None
 
+
 class MessageTemplate(MessageTemplateBase):
     id: int
     created_at: datetime
     updated_at: datetime | None = None
-    
+
     model_config = {"from_attributes": True}
+
 
 class MessageBase(BaseModel):
     recipient: str
@@ -30,8 +36,10 @@ class MessageBase(BaseModel):
     content: str
     delivery_method: DeliveryMethod
 
+
 class MessageCreate(MessageBase):
     template_id: int | None = None
+
 
 class Message(MessageBase):
     id: int
@@ -39,8 +47,9 @@ class Message(MessageBase):
     sent_at: datetime | None = None
     created_at: datetime
     template_id: int | None = None
-    
+
     model_config = {"from_attributes": True}
+
 
 class ScheduledTaskBase(BaseModel):
     name: str
@@ -51,8 +60,10 @@ class ScheduledTaskBase(BaseModel):
     is_recurring: bool = False
     cron_expression: str | None = None
 
+
 class ScheduledTaskCreate(ScheduledTaskBase):
     pass
+
 
 class ScheduledTaskUpdate(BaseModel):
     name: str | None = None
@@ -64,9 +75,10 @@ class ScheduledTaskUpdate(BaseModel):
     cron_expression: str | None = None
     is_active: bool | None = None
 
+
 class ScheduledTask(ScheduledTaskBase):
     id: int
     is_active: bool
     created_at: datetime
-    
-    model_config = {"from_attributes": True} 
+
+    model_config = {"from_attributes": True}

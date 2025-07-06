@@ -1,26 +1,21 @@
 import logging
 from datetime import datetime
-from typing import List
+
 from sqlalchemy.orm import Session
-from src.models import (
-    Message, MessageTemplate, ScheduledTask, MessageStatus, DeliveryMethod
-)
+from src.models import DeliveryMethod, Message, MessageStatus, MessageTemplate, ScheduledTask
+
 
 logger = logging.getLogger(__name__)
+
 
 class NotificationService:
     @staticmethod
     def send_message(
-        recipient: str, 
-        subject: str | None, 
-        content: str, 
-        delivery_method: DeliveryMethod
+        recipient: str, subject: str | None, content: str, delivery_method: DeliveryMethod
     ) -> bool:
-        logger.info(
-            f"[SEND {delivery_method}] {recipient}: "
-            f"{subject or ''} | {content}"
-        )
+        logger.info(f"[SEND {delivery_method}] {recipient}: {subject or ''} | {content}")
         return True
+
 
 class MessageTemplateService:
     @staticmethod
@@ -30,43 +25,34 @@ class MessageTemplateService:
         db.commit()
         db.refresh(template)
         return template
-    
+
     @staticmethod
-    def get_templates(
-        db: Session, skip: int = 0, limit: int = 100
-    ) -> List[MessageTemplate]:
+    def get_templates(db: Session, skip: int = 0, limit: int = 100) -> list[MessageTemplate]:
         return db.query(MessageTemplate).offset(skip).limit(limit).all()
-    
+
     @staticmethod
     def get_template(db: Session, template_id: int) -> MessageTemplate | None:
-        return db.query(MessageTemplate).filter(
-            MessageTemplate.id == template_id
-        ).first()
-    
+        return db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
+
     @staticmethod
-    def update_template(
-        db: Session, template_id: int, template_data
-    ) -> MessageTemplate | None:
-        template = db.query(MessageTemplate).filter(
-            MessageTemplate.id == template_id
-        ).first()
+    def update_template(db: Session, template_id: int, template_data) -> MessageTemplate | None:
+        template = db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
         if template:
             for field, value in template_data.model_dump(exclude_unset=True).items():
                 setattr(template, field, value)
             db.commit()
             db.refresh(template)
         return template
-    
+
     @staticmethod
     def delete_template(db: Session, template_id: int) -> bool:
-        template = db.query(MessageTemplate).filter(
-            MessageTemplate.id == template_id
-        ).first()
+        template = db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
         if template:
             db.delete(template)
             db.commit()
             return True
         return False
+
 
 class MessageService:
     @staticmethod
@@ -76,14 +62,11 @@ class MessageService:
         db.commit()
         db.refresh(message)
         return message
-    
+
     @staticmethod
     def send_message_immediately(db: Session, message: Message) -> bool:
         success = NotificationService.send_message(
-            message.recipient,
-            message.subject,
-            message.content,
-            message.delivery_method
+            message.recipient, message.subject, message.content, message.delivery_method
         )
         if success:
             message.status = MessageStatus.SENT
@@ -92,16 +75,15 @@ class MessageService:
             message.status = MessageStatus.FAILED
         db.commit()
         return success
-    
+
     @staticmethod
-    def get_messages(
-        db: Session, skip: int = 0, limit: int = 100
-    ) -> List[Message]:
+    def get_messages(db: Session, skip: int = 0, limit: int = 100) -> list[Message]:
         return db.query(Message).offset(skip).limit(limit).all()
-    
+
     @staticmethod
     def get_message(db: Session, message_id: int) -> Message | None:
         return db.query(Message).filter(Message.id == message_id).first()
+
 
 class ScheduledTaskService:
     @staticmethod
@@ -111,40 +93,30 @@ class ScheduledTaskService:
         db.commit()
         db.refresh(task)
         return task
-    
+
     @staticmethod
-    def get_scheduled_tasks(
-        db: Session, skip: int = 0, limit: int = 100
-    ) -> List[ScheduledTask]:
+    def get_scheduled_tasks(db: Session, skip: int = 0, limit: int = 100) -> list[ScheduledTask]:
         return db.query(ScheduledTask).offset(skip).limit(limit).all()
-    
+
     @staticmethod
     def get_scheduled_task(db: Session, task_id: int) -> ScheduledTask | None:
-        return db.query(ScheduledTask).filter(
-            ScheduledTask.id == task_id
-        ).first()
-    
+        return db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
+
     @staticmethod
-    def update_scheduled_task(
-        db: Session, task_id: int, task_data
-    ) -> ScheduledTask | None:
-        task = db.query(ScheduledTask).filter(
-            ScheduledTask.id == task_id
-        ).first()
+    def update_scheduled_task(db: Session, task_id: int, task_data) -> ScheduledTask | None:
+        task = db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
         if task:
             for field, value in task_data.model_dump(exclude_unset=True).items():
                 setattr(task, field, value)
             db.commit()
             db.refresh(task)
         return task
-    
+
     @staticmethod
     def delete_scheduled_task(db: Session, task_id: int) -> bool:
-        task = db.query(ScheduledTask).filter(
-            ScheduledTask.id == task_id
-        ).first()
+        task = db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
         if task:
             db.delete(task)
             db.commit()
             return True
-        return False 
+        return False

@@ -1,25 +1,29 @@
 import logging
 from contextlib import asynccontextmanager
+
+from src.api import router
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api import router
+
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan setup and teardown."""
     # Setup
     logging.info("Starting Notification Service")
-    
+
     yield
-    
+
     # Teardown
     logging.info("Shutting down Notification Service")
+
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -42,8 +46,10 @@ def create_application() -> FastAPI:
 
     return app
 
+
 app = create_application()
+
 
 @app.get("/")
 def read_root():
-    return {"message": "Notification Service API", "docs": "/docs"} 
+    return {"message": "Notification Service API", "docs": "/docs"}

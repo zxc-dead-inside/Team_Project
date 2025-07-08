@@ -2,19 +2,12 @@ import logging
 from datetime import datetime
 
 from sqlalchemy.orm import Session
-from src.models import DeliveryMethod, Message, MessageStatus, MessageTemplate, ScheduledTask
 
+from notification_app.models.models import (Message, MessageStatus,
+                                            MessageTemplate, ScheduledTask)
+from notification_app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
-
-
-class NotificationService:
-    @staticmethod
-    def send_message(
-        recipient: str, subject: str | None, content: str, delivery_method: DeliveryMethod
-    ) -> bool:
-        logger.info(f"[SEND {delivery_method}] {recipient}: {subject or ''} | {content}")
-        return True
 
 
 class MessageTemplateService:

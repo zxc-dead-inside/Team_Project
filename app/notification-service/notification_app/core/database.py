@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.models import Base
+from notification_app.models.models import Base
 
 
 database_url = os.getenv(

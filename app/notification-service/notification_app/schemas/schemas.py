@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from src.models import DeliveryMethod, MessageStatus
+from notification_app.models.models import DeliveryMethod, MessageStatus
 
 
 class MessageTemplateBase(BaseModel):

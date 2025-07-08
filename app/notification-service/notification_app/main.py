@@ -1,35 +1,33 @@
-import logging
 from contextlib import asynccontextmanager
-
-from src.api import router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+from kafka.producer import startup_kafka, shutdown_kafka
+from api.admin import router as admin_router
+from api.event import router as event_router
+from core.logger import logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan setup and teardown."""
     # Setup
-    logging.info("Starting Notification Service")
+    await startup_kafka()
+    logger.info("Starting Notification Service")
 
     yield
 
     # Teardown
-    logging.info("Shutting down Notification Service")
+    await shutdown_kafka()
+    logger.info("Shutting down Notification Service")
 
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="Notification Service API",
-        description="Административная панель для создания рассылок",
+        description="API of an Admin panel and Notification service",
         version="1.0.0",
         lifespan=lifespan,
     )
@@ -42,7 +40,8 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(router, prefix="/api/v1")
+    app.include_router(admin_router, prefix="/api/v1")
+    app.include_router(event_router)
 
     return app
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Session
-from src.database import get_db
-from src.schemas import (
+from notification_app.core.database import get_db
+from notification_app.schemas.schemas import (
     Message,
     MessageCreate,
     MessageTemplate,
@@ -12,7 +12,9 @@ from src.schemas import (
     ScheduledTaskCreate,
     ScheduledTaskUpdate,
 )
-from src.services import MessageService, MessageTemplateService, ScheduledTaskService
+from notification_app.services.services import (MessageService,
+                                                MessageTemplateService,
+                                                ScheduledTaskService)
 
 from fastapi import APIRouter, Depends, HTTPException
 

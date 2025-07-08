@@ -1,4 +1,5 @@
 import json
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -8,7 +9,7 @@ from core.settings import settings
 from models.url import URL, URLClick
 from schemas.url import URLCreateRequest, URLResponse, URLStats
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from utils.short_code import ShortCodeGenerator, is_valid_url
 
 
@@ -26,9 +27,18 @@ class URLService:
         self.redis_client = redis_client
         self.short_code_generator = short_code_generator
 
-    def get_db_session(self) -> Session:
-        """Get database session"""
-        return self.session_factory()
+    @contextmanager
+    def get_db_session(self):
+        """Context manager for database session"""
+        session = self.session_factory()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     async def create_short_url(self, request: URLCreateRequest) -> URLResponse:
         """Create a shortened URL"""
@@ -45,8 +55,7 @@ class URLService:
             expires_at = datetime.now(UTC) + timedelta(hours=request.expires_in_hours)
 
         # Generate short code
-        db = self.get_db_session()
-        try:
+        with self.get_db_session() as db:
             for attempt in range(settings.max_generation_attempts):
                 short_code = request.custom_code or self.short_code_generator.generate_random()
 
@@ -57,8 +66,7 @@ class URLService:
 
                 try:
                     db.add(url_record)
-                    db.commit()
-                    db.refresh(url_record)
+                    db.flush()
 
                     logger.info("Short URL created", short_code=short_code, url_id=url_record.id)
                     break
@@ -85,9 +93,6 @@ class URLService:
                 created_at=url_record.created_at,
             )
 
-        finally:
-            db.close()
-
     async def get_original_url(self, short_code: str, client_info: dict[str, Any] = None) -> str:
         """Get original URL and log analytics"""
         logger.info("Resolving short code", short_code=short_code)
@@ -99,8 +104,7 @@ class URLService:
             return cached_url
 
         # Database lookup
-        db = self.get_db_session()
-        try:
+        with self.get_db_session() as db:
             url_record = (
                 db.query(URL).filter(URL.short_code == short_code, URL.is_active == True).first()
             )
@@ -129,21 +133,15 @@ class URLService:
                 )
                 db.add(click_record)
 
-            db.commit()
-
             # Update cache
             self._cache_url(short_code, url_record.original_url, url_record.expires_at)
 
             logger.info("URL resolved", short_code=short_code, clicks=url_record.click_count)
             return url_record.original_url
 
-        finally:
-            db.close()
-
     async def get_url_stats(self, short_code: str) -> URLStats:
         """Get URL statistics"""
-        db = self.get_db_session()
-        try:
+        with self.get_db_session() as db:
             url_record = db.query(URL).filter(URL.short_code == short_code).first()
             if not url_record:
                 raise ValueError("URL not found")
@@ -156,30 +154,23 @@ class URLService:
                 is_active=url_record.is_active,
                 expires_at=url_record.expires_at,
             )
-        finally:
-            db.close()
 
     async def deactivate_url(self, short_code: str) -> bool:
         """Deactivate a shortened URL"""
         logger.info("Deactivating URL", short_code=short_code)
 
-        db = self.get_db_session()
-        try:
+        with self.get_db_session() as db:
             url_record = db.query(URL).filter(URL.short_code == short_code).first()
             if not url_record:
                 return False
 
             url_record.is_active = False
-            db.commit()
 
             # Remove from cache
             self._remove_cached_url(short_code)
 
             logger.info("URL deactivated", short_code=short_code)
             return True
-
-        finally:
-            db.close()
 
     def _cache_url(self, short_code: str, original_url: str, expires_at: datetime | None):
         """Cache URL in Redis (synchronous)"""

@@ -1,5 +1,5 @@
 from notification_app.models.models import DeliveryMethod
-from notification_app.kafka.producer import send_to_kafka
+from notification_app.kafka_producer.producer import send_to_kafka
 from notification_app.schemas.event import (
     IncomingEvent,
     FixedEvent,

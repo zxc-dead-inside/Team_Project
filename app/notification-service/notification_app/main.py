@@ -3,18 +3,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from kafka.producer import startup_kafka, shutdown_kafka
-from api.admin import router as admin_router
-from api.event import router as event_router
-from core.logger import logger
+from notification_app.kafka_producer.producer import startup_kafka, shutdown_kafka
+from notification_app.api.admin import router as admin_router
+from notification_app.api.event import router as event_router
+from notification_app.core.logger import logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan setup and teardown."""
     # Setup
-    await startup_kafka()
     logger.info("Starting Notification Service")
+    await startup_kafka()
 
     yield
 

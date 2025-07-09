@@ -8,6 +8,7 @@ class IncomingEvent(BaseModel):
     template_id: int | None = None
     subject: str | None = None
     text: str
+    data: dict | None = {}
     delivery_method: Literal["email", "sms", "push"]
 
 
@@ -20,6 +21,7 @@ class BroadcastMessage(BaseModel):
     template_id: int
     subject: str | None = None
     content: str
+    data: dict | None = {}
 
 
 class PersonalizedMessage(BaseModel):
@@ -27,6 +29,7 @@ class PersonalizedMessage(BaseModel):
     template_id: int
     subject: str | None = None
     content: str
+    data: dict | None = {}
 
 
 class PersonalizedBatch(BaseModel):

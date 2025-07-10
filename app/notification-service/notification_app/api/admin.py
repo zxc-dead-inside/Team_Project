@@ -16,7 +16,7 @@ from notification_app.services.services import (MessageService,
                                                 MessageTemplateService,
                                                 ScheduledTaskService)
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 
 router = APIRouter()
@@ -37,7 +37,7 @@ def get_templates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 def get_template(template_id: int, db: Session = Depends(get_db)):
     template = MessageTemplateService.get_template(db, template_id)
     if template is None:
-        raise HTTPException(status_code=404, detail="Шаблон не найден")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return template
 
 
@@ -47,7 +47,7 @@ def update_template(
 ):
     updated_template = MessageTemplateService.update_template(db, template_id, template)
     if updated_template is None:
-        raise HTTPException(status_code=404, detail="Шаблон не найден")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return updated_template
 
 
@@ -55,7 +55,7 @@ def update_template(
 def delete_template(template_id: int, db: Session = Depends(get_db)):
     success = MessageTemplateService.delete_template(db, template_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Шаблон не найден")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return {"message": "Шаблон удален"}
 
 
@@ -76,7 +76,7 @@ def get_messages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 def get_message(message_id: int, db: Session = Depends(get_db)):
     message = MessageService.get_message(db, message_id)
     if message is None:
-        raise HTTPException(status_code=404, detail="Сообщение не найдено")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сообщение не найдено")
     return message
 
 
@@ -95,7 +95,7 @@ def get_scheduled_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(g
 def get_scheduled_task(task_id: int, db: Session = Depends(get_db)):
     task = ScheduledTaskService.get_scheduled_task(db, task_id)
     if task is None:
-        raise HTTPException(status_code=404, detail="Запланированная задача не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return task
 
 
@@ -103,7 +103,7 @@ def get_scheduled_task(task_id: int, db: Session = Depends(get_db)):
 def update_scheduled_task(task_id: int, task: ScheduledTaskUpdate, db: Session = Depends(get_db)):
     updated_task = ScheduledTaskService.update_scheduled_task(db, task_id, task)
     if updated_task is None:
-        raise HTTPException(status_code=404, detail="Запланированная задача не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return updated_task
 
 
@@ -111,7 +111,7 @@ def update_scheduled_task(task_id: int, task: ScheduledTaskUpdate, db: Session =
 def delete_scheduled_task(task_id: int, db: Session = Depends(get_db)):
     success = ScheduledTaskService.delete_scheduled_task(db, task_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Запланированная задача не найдена")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return {"message": "Запланированная задача удалена"}
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from notification_app.schemas.event import (IncomingEvent, FixedEvent,
                                             BroadcastMessage, PersonalizedBatch)
@@ -15,7 +15,7 @@ async def handle_custom_event(event: IncomingEvent):
         return {"status": "queued", "message": message}
     except Exception as e:
         logger.exception("Error sending custom event to Kafka")
-        raise HTTPException(status_code=500, detail="Error processing event")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing event")
 
 
 @router.post("/fixed")
@@ -25,7 +25,7 @@ async def handle_fixed_event(event: FixedEvent):
         return {"status": "queued", "message": message}
     except Exception as e:
         logger.exception("Error sending fixed event to Kafka")
-        raise HTTPException(status_code=500, detail="Error processing event")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing event")
 
 
 @router.post("/broadcast")
@@ -35,7 +35,7 @@ async def send_broadcast(msg: BroadcastMessage):
         return {"status": "queued", "message": message}
     except Exception as e:
         logger.exception("Error sending broadcast event to Kafka")
-        raise HTTPException(status_code=500, detail="Error processing event")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing event")
 
 
 @router.post("/personalized")
@@ -45,4 +45,4 @@ async def send_personalized(batch: PersonalizedBatch):
         return {"status": "queued", "count": count}
     except Exception as e:
         logger.exception("Error sending personalized events to Kafka")
-        raise HTTPException(status_code=500, detail="Error processing event")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing event")

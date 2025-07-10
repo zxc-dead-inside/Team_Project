@@ -1,29 +1,28 @@
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from notification_app.models.models import Base
 
-
-database_url = os.getenv(
+DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://notification_user:notification_pass@localhost:5432/notification_db",
+    "postgresql+asyncpg://notification_user:notification_pass@localhost:5432/notification_db",
 )
 
-engine = create_engine(database_url)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+async_engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+
+AsyncSessionLocal = sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-
-    except Exception:
-        pass
-    
-    finally:
-        db.close()
-
-
-Base.metadata.create_all(bind=engine)
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

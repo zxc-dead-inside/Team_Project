@@ -2,11 +2,11 @@ from src.db.base_models import Base, IdMixin, PreBase, TimestampMixin
 from src.db.models.audit_log import AuditLog
 from src.db.models.content_restriction import ContentRestriction
 from src.db.models.login_history import LoginHistory
+from src.db.models.oauth import OAuthAccount
 from src.db.models.permission import Permission
 from src.db.models.role import Role, role_permission
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User, user_role
-
 
 __all__ = [
     # Models
@@ -14,6 +14,7 @@ __all__ = [
     "Role",
     "Permission",
     "LoginHistory",
+    "OAuthAccount",
     "TokenBlacklist",
     "ContentRestriction",
     "AuditLog",

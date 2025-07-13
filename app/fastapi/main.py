@@ -8,7 +8,9 @@ from db.elastic import es_connector
 from db.redis import redis_connector
 
 from core.logging_setup import setup_logging
-from core.sentry_config import setup_sentry, SentryContextMiddleware, SentryStructuredLogger
+from core.sentry_config import (
+    setup_sentry, SentryContextMiddleware, SentryStructuredLogger
+)
 from middleware.logging import logging_middleware
 
 

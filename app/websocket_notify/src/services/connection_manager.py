@@ -13,7 +13,7 @@ setup_logging()
 
 class ConnectionManager:
     def __init__(self,  redis_service: RedisService):
-        self.active_connections = defaultdict(dict)
+        self.active_connections = defaultdict(dict[str, WebSocket])
         self.redis_service = redis_service
         
     async def connect(self, user_id: str, websocket: WebSocket):

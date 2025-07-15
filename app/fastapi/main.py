@@ -19,6 +19,14 @@ setup_sentry()
 setup_logging()
 app_logger = SentryStructuredLogger(__name__)
 
+async def _disconnect_resources():
+    """
+    Extra function for disconnecting.
+    """
+
+    app_logger.info("Disconnecting from resources")
+    await redis_connector.disconnect()
+    await es_connector.disconnect()
 
 
 @asynccontextmanager
@@ -38,8 +46,7 @@ async def lifespan(api: FastAPI):
         raise
     finally:
         app_logger.info("Shutting down FastAPI application")
-        await redis_connector.disconnect()
-        await es_connector.disconnect()
+        _disconnect_resources()
 
 
 

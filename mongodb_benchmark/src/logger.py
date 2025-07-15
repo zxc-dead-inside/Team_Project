@@ -27,7 +27,7 @@ def setup_logging(
     logger.setLevel(log_level)
     
     # Очистка предыдущих обработчиков
-    for handler in logger.handlers[:]:
+    for handler in logger.handlers.copy():
         logger.removeHandler(handler)
     
     # Файловый обработчик

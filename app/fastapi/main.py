@@ -28,6 +28,7 @@ async def _disconnect_resources():
     await redis_connector.disconnect()
     await es_connector.disconnect()
 
+
 @asynccontextmanager
 async def lifespan(api: FastAPI):
     app_logger.info("Starting FastAPI application", service="fastapi")

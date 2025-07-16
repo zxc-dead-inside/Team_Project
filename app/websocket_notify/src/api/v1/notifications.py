@@ -26,7 +26,7 @@ async def websocket_endpoint(
     """
 
     try:
-        logging.info(f"Getting token: {token}")
+        logging.info(f"Getting token.")
         user_id = await validate_token(token)
         logging.info(f"User {user_id} connecting via WebSocket...")
         
@@ -68,7 +68,7 @@ async def validate_token(token: str) -> str:
             response = await client.post(
                 f"{settings.auth_service_url}{settings.validate_token_path}",
                 json={"token": token},
-                timeout=2.0
+                timeout=settings.auth_time_out
             )
             
             if response.status_code != 200:

@@ -30,7 +30,7 @@ class RedisService:
     async def exists(self, key: str) -> bool:
         """Return True if key exists or False if does not"""
 
-        return self.exists(key)  # type:ignore
+        return self.redis_client.exists(key)  # type:ignore
 
     async def get(self, key: str) -> str | None:
         """Get a value from Redis by key."""
@@ -90,7 +90,7 @@ class RedisService:
     async def hget(self, name: str, field: str) -> str | None:
         """Получает хэш."""
         try:
-            return self.redis_client.hget(name, field)
+            return await self.redis_client.hget(name, field)
         except Exception as e:
             logging.error(f"Error getting field {field}")
             return None

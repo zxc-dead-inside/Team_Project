@@ -51,7 +51,7 @@ class ConnectionManager:
         await self.redis_service.hdel("active_connections", user_id)
         logging.info(f"User {user_id} disconnected")
 
-    async def send_personal_message(self, user_id: str, message: str):
+    async def send_personal_message(self, user_id: str, message: dict):
         """Отправка сообщения конкретному пользователю"""
 
         websocket: WebSocket = self.active_connections.get(user_id)

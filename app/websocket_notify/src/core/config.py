@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     # Auth
     auth_service_url: str = "http://auth_service_api:8100"
     validate_token_path: str = "/api/v1/auth/validate-token"
-    
+    auth_time_out: float = 2.0
+
     # Kafka
     kafka_bootstrap_servers: str = "kafka-0:9092"
     kafka_group_id: str = "websocket-group"

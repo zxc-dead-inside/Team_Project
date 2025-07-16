@@ -71,7 +71,7 @@ class PushService:
         self, 
         message_id: str,
         user_id: str, 
-        payload: str
+        payload: dict
         ):
         """Пытаемся отправить сообщение с экспоненциальной задержкой"""
 

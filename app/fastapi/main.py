@@ -46,7 +46,7 @@ async def lifespan(api: FastAPI):
         raise
     finally:
         app_logger.info("Shutting down FastAPI application")
-        _disconnect_resources()
+        await _disconnect_resources()
 
 
 

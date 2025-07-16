@@ -2,7 +2,9 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-def setup_logging(log_dir: str = "logs", log_level: int = logging.INFO) -> None:
+def setup_logging(
+        log_dir: str = "logs", log_level: int = logging.INFO
+    ) -> None:
     """
     Настройка системы логирования
     
@@ -25,7 +27,7 @@ def setup_logging(log_dir: str = "logs", log_level: int = logging.INFO) -> None:
     logger.setLevel(log_level)
     
     # Очистка предыдущих обработчиков
-    for handler in logger.handlers[:]:
+    for handler in logger.handlers.copy():
         logger.removeHandler(handler)
     
     # Файловый обработчик

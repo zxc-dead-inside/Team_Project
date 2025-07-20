@@ -23,6 +23,10 @@ class User(PreBase, Base):
     __tablename__ = "users"
 
     username = Column(String(50), unique=True, nullable=False, index=True)
+    phone_number = Column(String(15), unique=True, nullable=True)
+    first_name = Column(String(50), nullable=True)
+    last_name = Column(String(50), nullable=True)
+    birth_date = Column(nullable=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)

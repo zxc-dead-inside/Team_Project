@@ -1,22 +1,24 @@
 import asyncio
 
-from template_worker.core.database import get_database
-from template_worker.core.settings import get_settings
-from template_worker.db.repositories.template_repository import \
-    MessageTemplateRepository
-from template_worker.service.template_service import TemplateService
+from template_worker.core.logger import logger
+from template_worker.kafka_service.consumer import start_kafka_consumer
+from template_worker.kafka_service.producer import startup_kafka, \
+    shutdown_kafka
 
 
+# Main entry point for running both producer and consumer
 async def main():
-    settings = get_settings()
-    db = get_database(settings.database_url)
-    template_repo = MessageTemplateRepository(db.session_factory)
-    template_service = TemplateService(template_repo)
+    await startup_kafka()
 
-    event = IncomingEvent(user_id="123", template_id=1, data={"key": "value"})
-    result = await notification_service.handle_custom_event(event, template_service)
+    consumer_task = asyncio.create_task(start_kafka_consumer())
+
+    try:
+        await consumer_task
+    except KeyboardInterrupt:
+        logger.info("Shutting down due to KeyboardInterrupt")
+    finally:
+        await shutdown_kafka()
 
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_kafka_consumer())
+if __name__ == '__main__':
+    asyncio.run(main())

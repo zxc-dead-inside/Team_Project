@@ -2,12 +2,13 @@ import json
 
 from aiokafka import AIOKafkaConsumer
 
-from notification_app.kafka_producer.producer import send_to_kafka
 from template_worker.core.database import get_database
 from template_worker.core.logger import logger
 from template_worker.core.settings import get_settings
 from template_worker.db.repositories.template_repository import \
     MessageTemplateRepository
+from template_worker.kafka_service.producer import send_to_kafka
+from template_worker.service.grpc_service import get_user_info_rpc
 from template_worker.service.template_service import TemplateService
 
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
 
-Base = declarative_base()
+Base = declarative_base()  # type: ignore
 
 
 class DeliveryMethod(str, enum.Enum):
@@ -20,7 +20,7 @@ class MessageStatus(str, enum.Enum):
     FAILED = "failed"
 
 
-class MessageTemplate(Base):
+class MessageTemplate(Base):  # type: ignore
     __tablename__ = "message_templates"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
@@ -32,7 +32,7 @@ class MessageTemplate(Base):
     messages = relationship("Message", back_populates="template")
 
 
-class Message(Base):
+class Message(Base):  # type: ignore
     __tablename__ = "messages"
     id = Column(Integer, primary_key=True, index=True)
     recipient = Column(String(255), nullable=False)
@@ -48,7 +48,7 @@ class Message(Base):
     scheduled_task = relationship("ScheduledTask", back_populates="messages")
 
 
-class ScheduledTask(Base):
+class ScheduledTask(Base):  # type: ignore
     __tablename__ = "scheduled_tasks"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)

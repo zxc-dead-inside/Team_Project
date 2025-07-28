@@ -3,9 +3,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
 
-Base = declarative_base()
+Base = declarative_base()  # type: ignore
 
-class URL(Base):
+class URL(Base):  # type: ignore
     __tablename__ = "urls"
     
     id = Column(BigInteger, primary_key=True, index=True)
@@ -24,7 +24,7 @@ class URL(Base):
         Index('idx_urls_expires_at', 'expires_at'),
     )
 
-class URLClick(Base):
+class URLClick(Base):  # type: ignore
     __tablename__ = "url_clicks"
     
     id = Column(BigInteger, primary_key=True, index=True)

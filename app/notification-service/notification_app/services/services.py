@@ -67,7 +67,7 @@ class MessageService:
         else:
             message.status = MessageStatus.FAILED
         db.commit()
-        return success
+        return success  # type: ignore
 
     @staticmethod
     def get_messages(db: Session, skip: int = 0, limit: int = 100) -> list[Message]:

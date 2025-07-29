@@ -1,0 +1,69 @@
+services:
+  url-shortener-app:
+    build: .
+    container_name: url-shortener-api
+    ports:
+      - "8010:8000"  # External port 8010 to avoid conflicts
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@url-shortener-db:5432/url_shortener
+      - REDIS_URL=redis://url-shortener-redis:6379
+      - BASE_URL=http://localhost:8010
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+    depends_on:
+      - url-shortener-db
+      - url-shortener-redis
+    volumes:
+      - .:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - url-shortening-network
+    restart: unless-stopped
+
+  url-shortener-db:
+    image: postgres:15
+    container_name: url-shortener-postgres
+    environment:
+      POSTGRES_DB: url_shortener
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5442:5432"  # External port 5442 to avoid conflicts
+    volumes:
+      - url_shortener_postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - url-shortening-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d url_shortener"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  url-shortener-redis:
+    image: redis:7-alpine
+    container_name: url-shortener-redis
+    ports:
+      - "6389:6379"  # External port 6389 to avoid conflicts
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - url_shortener_redis_data:/data
+    networks:
+      - url-shortening-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  url-shortening-network:
+    driver: bridge
+
+volumes:
+  url_shortener_postgres_data:
+  url_shortener_redis_data:

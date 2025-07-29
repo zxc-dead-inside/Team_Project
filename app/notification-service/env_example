@@ -1,0 +1,14 @@
+# PostgreSQL settings
+POSTGRES_DB=notification_db
+POSTGRES_USER=notification_user
+POSTGRES_PASSWORD=notification_pass
+POSTGRES_PORT=5432
+
+# API settings
+API_V1_PREFIX=/api/v1
+PROJECT_NAME=Notification Service
+VERSION=1.0.0
+
+# Server settings
+HOST=0.0.0.0
+PORT=8001 

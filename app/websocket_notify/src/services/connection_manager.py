@@ -81,7 +81,7 @@ class ConnectionManager:
             logging.error(f"Error sending to user {user_id}: {str(e)}")
             return False
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: dict):
         """Отправка сообщения всем подключенным пользователям"""
 
         tasks = []

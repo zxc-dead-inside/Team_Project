@@ -28,6 +28,9 @@ async def _disconnect_resources():
     await redis_connector.disconnect()
     await es_connector.disconnect()
 
+    app_logger.info("Disconnecting from resources")
+    await redis_connector.disconnect()
+    await es_connector.disconnect()
 
 @asynccontextmanager
 async def lifespan(api: FastAPI):

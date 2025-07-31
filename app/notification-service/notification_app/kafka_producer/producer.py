@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 
 from aiokafka import AIOKafkaProducer
 
@@ -15,12 +16,22 @@ async def startup_kafka():
         bootstrap_servers=kafka_url,
         value_serializer=lambda v: json.dumps(v).encode("utf-8")
     )
-    try:
-        await producer.start()
-        logger.info("Kafka producer started.")
-    except Exception as e:
-        logger.exception("Error initializing Kafka producer")
-        raise RuntimeError("Failed to start Kafka producer.")
+    
+    max_retries = 30
+    retry_delay = 2
+    
+    for attempt in range(max_retries):
+        try:
+            await producer.start()
+            logger.info("Kafka producer started.")
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Trying to connect to Kafka {attempt + 1}/{max_retries} failed: {e}")
+                await asyncio.sleep(retry_delay)
+            else:
+                logger.exception("Error initializing Kafka producer")
+                raise RuntimeError("Failed to start Kafka producer.")
 
 
 async def shutdown_kafka():

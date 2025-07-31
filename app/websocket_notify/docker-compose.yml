@@ -1,0 +1,76 @@
+services:
+  websocket-notify:
+    build: .
+    container_name: websocket-notify
+    environment:
+      - AUTH_SERVICE_URL=http://auth_service_api:8100
+      - KAFKA_BOOTSTRAP_SERVERS=kafka-0:9092
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8001:8000"
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - websocket-network
+      - tv-shared-network
+
+  kafka-0:
+    image: 'bitnami/kafka:latest'
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093
+      - KAFKA_KRAFT_CLUSTER_ID=websocket-develop
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-0:9092,EXTERNAL://kafka-0:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-notification.send}
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "9094:9094"
+    networks:
+      - websocket-network
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
+      - KAFKA_CLUSTERS_0_NAME=websocket-develop
+    networks:
+      - websocket-network
+
+
+  redis:
+    image: redis:latest
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+    ports:
+      - "6479:6379"
+    networks:
+      - websocket-network
+
+volumes:
+  kafka_0_data:
+
+networks:
+  websocket-network:
+    driver: bridge
+  tv-shared-network:
+    external: true

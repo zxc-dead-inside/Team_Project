@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+    // Получение информации о пользователе по user_id
+    rpc GetUserInfo (UserRequest) returns (UserInfo);
+}
+
+// Запрос на получение информации о пользователе
+message UserRequest {
+    string user_id = 1;
+}
+
+// Ответ с информацией о пользователе
+message UserInfo {
+    string id = 1;
+    string username = 2;
+    string phone_number = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string birth_date = 6;
+    string email = 7;
+    bool is_active = 8;
+    bool is_superuser = 9;
+    string created_at = 10;
+    string updated_at = 11;
+}

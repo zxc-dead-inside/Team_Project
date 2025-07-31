@@ -1,0 +1,94 @@
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification_service_api
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    restart: always
+    networks:
+      - notification_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: notification_service_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-notification_db}
+      - POSTGRES_USER=${POSTGRES_USER:-notification_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-notification_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - notification_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-notification_user} -d ${POSTGRES_DB:-notification_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+      image: bitnami/kafka:3.7
+      container_name: notification_kafka
+      ports:
+        - "9092:9092"
+      environment:
+        - KAFKA_ENABLE_KRAFT=yes
+        - ALLOW_PLAINTEXT_LISTENER=yes
+        - KAFKA_CFG_NODE_ID=1
+        - KAFKA_CFG_PROCESS_ROLES=broker,controller
+        - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+        - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+        - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+        - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+        - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      volumes:
+        - kafka_data:/bitnami/kafka
+      networks:
+        - notification_network
+      healthcheck:
+        test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+        interval: 10s
+        timeout: 10s
+        retries: 10
+
+  notification-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification_worker
+    command: ["python", "-m", "notification_app.services.notification_worker"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: always
+    networks:
+      - notification_network
+
+networks:
+  notification_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kafka_data:

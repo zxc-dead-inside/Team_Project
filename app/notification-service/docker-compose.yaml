@@ -7,7 +7,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
       - KAFKA_BROKER=kafka:9092
     depends_on:
       postgres:
@@ -68,6 +68,22 @@ services:
         interval: 10s
         timeout: 10s
         retries: 10
+
+  notification-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification_worker
+    command: ["python", "-m", "notification_app.services.notification_worker"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: always
+    networks:
+      - notification_network
 
 networks:
   notification_network:

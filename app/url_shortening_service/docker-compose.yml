@@ -5,15 +5,17 @@ services:
     ports:
       - "8010:8000"  # External port 8010 to avoid conflicts
     environment:
-      - DATABASE_URL=postgresql://postgres:password@url-shortener-db:5432/url_shortener
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@url-shortener-db:5432/url_shortener
       - REDIS_URL=redis://url-shortener-redis:6379
       - BASE_URL=http://localhost:8010
       - ENVIRONMENT=development
       - DEBUG=true
       - LOG_LEVEL=INFO
     depends_on:
-      - url-shortener-db
-      - url-shortener-redis
+      url-shortener-db:
+        condition: service_healthy
+      url-shortener-redis:
+        condition: service_healthy
     volumes:
       - .:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

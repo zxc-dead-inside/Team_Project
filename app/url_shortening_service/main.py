@@ -22,11 +22,14 @@ async def lifespan(app: FastAPI):
 
     container.wire(modules=["api.dependencies"])
 
-    engine = container.db_engine()
-    Base.metadata.create_all(bind=engine)
+    async_engine = container.async_db_engine()
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     yield
 
+    await async_engine.dispose()
+    
     logger.info("Shutting down URL Shortening Service")
 
 

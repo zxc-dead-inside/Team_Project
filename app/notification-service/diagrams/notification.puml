@@ -1,0 +1,49 @@
+@startuml notification_service
+!theme plain
+skinparam nodesep 60
+skinparam ranksep 100
+top to bottom direction
+
+
+actor Менеджер as manager
+actor Пользователь as user
+component "Внешний сервис" as external_service #d4fcbc
+
+rectangle "Сервис нотификации" {
+  component "Административная панель" as admin_panel #ffcc99
+  component "Сервис нотификаций (API)" as notification_service #ccffcc
+  component "Воркер (Sender)" as worker_sender #99ccff
+  component "WebSocket-сервер" as websocket #ffccff
+  component "Сервис сокращения ссылок" as url_shortener #ff99cc
+  
+  queue "Kafka: notification.send" as kafka_send #lightgray
+  
+  database "База шаблонов" as templates_db #lightblue
+  database "История уведомлений" as history_db #lightblue
+}
+
+component "Сервис аутентификации" as auth_service #d4fcbc
+history_db -[hidden]left- templates_db
+websocket -[hidden]left- worker_sender
+websocket -[hidden]right- auth_service
+notification_service -[hidden]right- external_service
+
+manager --> admin_panel : "Создание рассылок\nCRUD шаблонов\nОтложенные/повторяющиеся сообщения"
+admin_panel --> notification_service : "HTTP (события рассылки)""
+
+external_service --> notification_service : HTTP (фиксированные события:\nрегистрация, новый фильм)
+notification_service --> kafka_send : "Готовые сообщения\n(текст + контакты)\nPush-уведомления"
+notification_service --> auth_service : "HTTP (запрос данных пользователя)"
+user <--> websocket : "Открытие WebSocket\n для push-уведомлений"
+
+notification_service --> templates_db : "Чтение/запись шаблонов"
+notification_service --> history_db : "Запись истории уведомлений"
+
+kafka_send <-- worker_sender : "Сообщения для отправки"
+worker_sender --> (SMTP/SMS/Push) : "Отправка через внешние сервисы"
+
+kafka_send <-- websocket : "Push-уведомления"
+websocket --> auth_service : "Валидация токена"
+websocket --> user : "Доставка push"
+
+@enduml

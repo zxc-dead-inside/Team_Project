@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from notification_app.core.database import get_db
 from notification_app.schemas.schemas import (
     Message,
@@ -24,36 +24,36 @@ router = APIRouter()
 
 # Шаблоны сообщений
 @router.post("/templates/", response_model=MessageTemplate)
-def create_template(template: MessageTemplateCreate, db: Session = Depends(get_db)):
-    return MessageTemplateService.create_template(db, template)
+async def create_template(template: MessageTemplateCreate, db: AsyncSession = Depends(get_db)):
+    return await MessageTemplateService.create_template(db, template)
 
 
 @router.get("/templates/", response_model=list[MessageTemplate])
-def get_templates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return MessageTemplateService.get_templates(db, skip=skip, limit=limit)
+async def get_templates(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    return await MessageTemplateService.get_templates(db, skip=skip, limit=limit)
 
 
 @router.get("/templates/{template_id}", response_model=MessageTemplate)
-def get_template(template_id: int, db: Session = Depends(get_db)):
-    template = MessageTemplateService.get_template(db, template_id)
+async def get_template(template_id: int, db: AsyncSession = Depends(get_db)):
+    template = await MessageTemplateService.get_template(db, template_id)
     if template is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return template
 
 
 @router.put("/templates/{template_id}", response_model=MessageTemplate)
-def update_template(
-    template_id: int, template: MessageTemplateUpdate, db: Session = Depends(get_db)
+async def update_template(
+    template_id: int, template: MessageTemplateUpdate, db: AsyncSession = Depends(get_db)
 ):
-    updated_template = MessageTemplateService.update_template(db, template_id, template)
+    updated_template = await MessageTemplateService.update_template(db, template_id, template)
     if updated_template is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return updated_template
 
 
 @router.delete("/templates/{template_id}")
-def delete_template(template_id: int, db: Session = Depends(get_db)):
-    success = MessageTemplateService.delete_template(db, template_id)
+async def delete_template(template_id: int, db: AsyncSession = Depends(get_db)):
+    success = await MessageTemplateService.delete_template(db, template_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Шаблон не найден")
     return {"message": "Шаблон удален"}
@@ -61,20 +61,20 @@ def delete_template(template_id: int, db: Session = Depends(get_db)):
 
 # Сообщения
 @router.post("/messages/", response_model=Message)
-def create_message(message: MessageCreate, db: Session = Depends(get_db)):
-    message_obj = MessageService.create_message(db, message)
-    MessageService.send_message_immediately(db, message_obj)
+async def create_message(message: MessageCreate, db: AsyncSession = Depends(get_db)):
+    message_obj = await MessageService.create_message(db, message)
+    await MessageService.send_message_immediately(db, message_obj)
     return message_obj
 
 
 @router.get("/messages/", response_model=list[Message])
-def get_messages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return MessageService.get_messages(db, skip=skip, limit=limit)
+async def get_messages(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    return await MessageService.get_messages(db, skip=skip, limit=limit)
 
 
 @router.get("/messages/{message_id}", response_model=Message)
-def get_message(message_id: int, db: Session = Depends(get_db)):
-    message = MessageService.get_message(db, message_id)
+async def get_message(message_id: int, db: AsyncSession = Depends(get_db)):
+    message = await MessageService.get_message(db, message_id)
     if message is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сообщение не найдено")
     return message
@@ -82,34 +82,34 @@ def get_message(message_id: int, db: Session = Depends(get_db)):
 
 # Запланированные задачи
 @router.post("/scheduled-tasks/", response_model=ScheduledTask)
-def create_scheduled_task(task: ScheduledTaskCreate, db: Session = Depends(get_db)):
-    return ScheduledTaskService.create_scheduled_task(db, task)
+async def create_scheduled_task(task: ScheduledTaskCreate, db: AsyncSession = Depends(get_db)):
+    return await ScheduledTaskService.create_scheduled_task(db, task)
 
 
 @router.get("/scheduled-tasks/", response_model=list[ScheduledTask])
-def get_scheduled_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return ScheduledTaskService.get_scheduled_tasks(db, skip=skip, limit=limit)
+async def get_scheduled_tasks(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    return await ScheduledTaskService.get_scheduled_tasks(db, skip=skip, limit=limit)
 
 
 @router.get("/scheduled-tasks/{task_id}", response_model=ScheduledTask)
-def get_scheduled_task(task_id: int, db: Session = Depends(get_db)):
-    task = ScheduledTaskService.get_scheduled_task(db, task_id)
+async def get_scheduled_task(task_id: int, db: AsyncSession = Depends(get_db)):
+    task = await ScheduledTaskService.get_scheduled_task(db, task_id)
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return task
 
 
 @router.put("/scheduled-tasks/{task_id}", response_model=ScheduledTask)
-def update_scheduled_task(task_id: int, task: ScheduledTaskUpdate, db: Session = Depends(get_db)):
-    updated_task = ScheduledTaskService.update_scheduled_task(db, task_id, task)
+async def update_scheduled_task(task_id: int, task: ScheduledTaskUpdate, db: AsyncSession = Depends(get_db)):
+    updated_task = await ScheduledTaskService.update_scheduled_task(db, task_id, task)
     if updated_task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return updated_task
 
 
 @router.delete("/scheduled-tasks/{task_id}")
-def delete_scheduled_task(task_id: int, db: Session = Depends(get_db)):
-    success = ScheduledTaskService.delete_scheduled_task(db, task_id)
+async def delete_scheduled_task(task_id: int, db: AsyncSession = Depends(get_db)):
+    success = await ScheduledTaskService.delete_scheduled_task(db, task_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запланированная задача не найдена")
     return {"message": "Запланированная задача удалена"}

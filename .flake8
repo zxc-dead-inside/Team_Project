@@ -106,6 +106,8 @@ exclude =
     app/auth-service/src/services/auth_service.py,
     app/auth-service/src/services/redis_service.py,
     *config*,
+    *pb2*.py,
+    *pb2_grpc.py
 
 format = html
 htmldir = flake8-report

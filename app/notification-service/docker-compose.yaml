@@ -1,11 +1,22 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: notification_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      notification-service:
+        condition: service_healthy
+    networks:
+      - notification_network
+    restart: always
   notification-service:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: notification_service_api
-    ports:
-      - "8001:8001"
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}
       - KAFKA_BROKER=kafka:9092
@@ -31,8 +42,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-notification_db}
       - POSTGRES_USER=${POSTGRES_USER:-notification_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-notification_pass}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
@@ -47,8 +56,6 @@ services:
   kafka:
       image: bitnami/kafka:3.7
       container_name: notification_kafka
-      ports:
-        - "9092:9092"
       environment:
         - KAFKA_ENABLE_KRAFT=yes
         - ALLOW_PLAINTEXT_LISTENER=yes

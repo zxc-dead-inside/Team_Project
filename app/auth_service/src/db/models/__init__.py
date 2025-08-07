@@ -7,6 +7,9 @@ from src.db.models.permission import Permission
 from src.db.models.role import Role, role_permission
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User, user_role
+from src.db.models.subscription import (
+    Subscription, SubscriptionStatus
+)
 
 __all__ = [
     # Models
@@ -18,6 +21,8 @@ __all__ = [
     "TokenBlacklist",
     "ContentRestriction",
     "AuditLog",
+    "Subscription",
+    "SubscriptionStatus",
     # Association tables
     "user_role",
     "role_permission",

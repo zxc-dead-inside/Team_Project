@@ -2,7 +2,9 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import UUID, Boolean, Column, DateTime, ForeignKey, String, Table
+from sqlalchemy import (
+    UUID, Boolean, Column, Date, DateTime, ForeignKey, String, Table
+)
 from sqlalchemy.orm import relationship
 from src.db.base_models import Base, PreBase
 
@@ -26,7 +28,7 @@ class User(PreBase, Base):
     phone_number = Column(String(15), unique=True, nullable=True)
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
-    birth_date = Column(nullable=True)
+    birth_date = Column(Date, nullable=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
@@ -43,6 +45,10 @@ class User(PreBase, Base):
     login_history = relationship(
         "LoginHistory", back_populates="user", cascade="all, delete-orphan"
     )
+    subscriptions = relationship(
+        "Subscription", back_populates="user", cascade="all, delete"
+    )
+
 
     def __repr__(self):
         return f"<User {self.username}>"

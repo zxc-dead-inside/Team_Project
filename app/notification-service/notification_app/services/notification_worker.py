@@ -25,7 +25,7 @@ async def fetch_template(template_id):
     from notification_app.services.services import MessageTemplateService
     from notification_app.core.database import get_db
     async for db in get_db():
-        template = MessageTemplateService.get_template(db, template_id)
+        template = await MessageTemplateService.get_template(db, template_id)
         if template:
             return template.content
         return None

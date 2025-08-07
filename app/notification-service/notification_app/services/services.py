@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from notification_app.models.models import (Message, MessageStatus,
                                             MessageTemplate, ScheduledTask)
@@ -12,53 +13,54 @@ logger = logging.getLogger(__name__)
 
 class MessageTemplateService:
     @staticmethod
-    def create_template(db: Session, template_data) -> MessageTemplate:
+    async def create_template(db: AsyncSession, template_data) -> MessageTemplate:
         template = MessageTemplate(**template_data.model_dump())
         db.add(template)
-        db.commit()
-        db.refresh(template)
+        await db.commit()
+        await db.refresh(template)
         return template
 
     @staticmethod
-    def get_templates(db: Session, skip: int = 0, limit: int = 100) -> list[MessageTemplate]:
-        return db.query(MessageTemplate).offset(skip).limit(limit).all()
+    async def get_templates(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[MessageTemplate]:
+        result = await db.execute(select(MessageTemplate).offset(skip).limit(limit))
+        return result.scalars().all()
 
     @staticmethod
-    def get_template(db: Session, template_id: int) -> MessageTemplate | None:
-        return db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
+    async def get_template(db: AsyncSession, template_id: int) -> MessageTemplate | None:
+        return await db.get(MessageTemplate, template_id)
 
     @staticmethod
-    def update_template(db: Session, template_id: int, template_data) -> MessageTemplate | None:
-        template = db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
+    async def update_template(db: AsyncSession, template_id: int, template_data) -> MessageTemplate | None:
+        template = await db.get(MessageTemplate, template_id)
         if template:
             for field, value in template_data.model_dump(exclude_unset=True).items():
                 setattr(template, field, value)
-            db.commit()
-            db.refresh(template)
+            await db.commit()
+            await db.refresh(template)
         return template
 
     @staticmethod
-    def delete_template(db: Session, template_id: int) -> bool:
-        template = db.query(MessageTemplate).filter(MessageTemplate.id == template_id).first()
+    async def delete_template(db: AsyncSession, template_id: int) -> bool:
+        template = await db.get(MessageTemplate, template_id)
         if template:
             db.delete(template)
-            db.commit()
+            await db.commit()
             return True
         return False
 
 
 class MessageService:
     @staticmethod
-    def create_message(db: Session, message_data) -> Message:
+    async def create_message(db: AsyncSession, message_data) -> Message:
         message = Message(**message_data.model_dump())
         db.add(message)
-        db.commit()
-        db.refresh(message)
+        await db.commit()
+        await db.refresh(message)
         return message
 
     @staticmethod
-    def send_message_immediately(db: Session, message: Message) -> bool:
-        success = NotificationService.send_message(
+    async def send_message_immediately(db: AsyncSession, message: Message) -> bool:
+        success = await NotificationService.send_message(
             message.recipient, message.subject, message.content, message.delivery_method
         )
         if success:
@@ -66,50 +68,52 @@ class MessageService:
             message.sent_at = datetime.utcnow()
         else:
             message.status = MessageStatus.FAILED
-        db.commit()
+        await db.commit()
         return success  # type: ignore
 
     @staticmethod
-    def get_messages(db: Session, skip: int = 0, limit: int = 100) -> list[Message]:
-        return db.query(Message).offset(skip).limit(limit).all()
+    async def get_messages(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[Message]:
+        result = await db.execute(select(Message).offset(skip).limit(limit))
+        return result.scalars().all()
 
     @staticmethod
-    def get_message(db: Session, message_id: int) -> Message | None:
-        return db.query(Message).filter(Message.id == message_id).first()
+    async def get_message(db: AsyncSession, message_id: int) -> Message | None:
+        return await db.get(Message, message_id)
 
 
 class ScheduledTaskService:
     @staticmethod
-    def create_scheduled_task(db: Session, task_data) -> ScheduledTask:
+    async def create_scheduled_task(db: AsyncSession, task_data) -> ScheduledTask:
         task = ScheduledTask(**task_data.model_dump())
         db.add(task)
-        db.commit()
-        db.refresh(task)
+        await db.commit()
+        await db.refresh(task)
         return task
 
     @staticmethod
-    def get_scheduled_tasks(db: Session, skip: int = 0, limit: int = 100) -> list[ScheduledTask]:
-        return db.query(ScheduledTask).offset(skip).limit(limit).all()
+    async def get_scheduled_tasks(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[ScheduledTask]:
+        result = await db.execute(select(ScheduledTask).offset(skip).limit(limit))
+        return result.scalars().all()
 
     @staticmethod
-    def get_scheduled_task(db: Session, task_id: int) -> ScheduledTask | None:
-        return db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
+    async def get_scheduled_task(db: AsyncSession, task_id: int) -> ScheduledTask | None:
+        return await db.get(ScheduledTask, task_id)
 
     @staticmethod
-    def update_scheduled_task(db: Session, task_id: int, task_data) -> ScheduledTask | None:
-        task = db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
+    async def update_scheduled_task(db: AsyncSession, task_id: int, task_data) -> ScheduledTask | None:
+        task = await db.get(ScheduledTask, task_id)
         if task:
             for field, value in task_data.model_dump(exclude_unset=True).items():
                 setattr(task, field, value)
-            db.commit()
-            db.refresh(task)
+            await db.commit()
+            await db.refresh(task)
         return task
 
     @staticmethod
-    def delete_scheduled_task(db: Session, task_id: int) -> bool:
-        task = db.query(ScheduledTask).filter(ScheduledTask.id == task_id).first()
+    async def delete_scheduled_task(db: AsyncSession, task_id: int) -> bool:
+        task = await db.get(ScheduledTask, task_id)
         if task:
             db.delete(task)
-            db.commit()
+            await db.commit()
             return True
         return False

@@ -43,6 +43,9 @@ class User(PreBase, Base):
     login_history = relationship(
         "LoginHistory", back_populates="user", cascade="all, delete-orphan"
     )
+    subscriptions = relationship(
+        "Subscription", back_populates="user", cascade="all, delete"
+    )
 
     def __repr__(self):
         return f"<User {self.username}>"

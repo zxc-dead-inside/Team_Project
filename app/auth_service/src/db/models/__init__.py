@@ -10,6 +10,11 @@ from src.db.models.subscription import (
 )
 from src.db.models.token_blacklist import TokenBlacklist
 from src.db.models.user import User, user_role
+from src.db.models.transaction import (
+    Transaction,
+    TransactionStatus,
+    TransactionType,
+)
 
 __all__ = [
     # Models
@@ -23,6 +28,9 @@ __all__ = [
     "AuditLog",
     "Subscription",
     "SubscriptionStatus",
+    "Transaction",
+    "TransactionStatus",
+    "TransactionType",
     # Association tables
     "user_role",
     "role_permission",

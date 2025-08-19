@@ -50,7 +50,7 @@ class Transaction(PreBase, Base):
 
     error_message = Column(Text, nullable=True)
 
-    metadata = Column(JSONB, nullable=True)
+    transaction_metadata = Column(JSONB, nullable=True)
 
     user = relationship("User")
 

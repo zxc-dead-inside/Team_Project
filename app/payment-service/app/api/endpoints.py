@@ -57,12 +57,9 @@ async def create_refund(
             reason=request.reason
         )
         return refund
-    except PaymentNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
-    except InvalidPaymentStateError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except PaymentProviderError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    except (PaymentNotFoundError, InvalidPaymentStateError, PaymentProviderError) as e:
+        status_code = 404 if isinstance(e, PaymentNotFoundError) else 400
+        raise HTTPException(status_code=status_code, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error") from e
 

@@ -6,8 +6,13 @@ from src.db.database import Database
 from src.db.repositories.audit_log_repository import AuditLogRepository
 from src.db.repositories.login_history_repository import LoginHistoryRepository
 from src.db.repositories.role_repository import RoleRepository
+from src.db.repositories.transaction_repository import (
+    SubscriptionRepository,
+    TransactionRepository,
+)
 from src.db.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
+from src.services.billing_service import BillingService
 from src.services.email_verification_service import EmailService
 from src.services.oauth.oauth_service import OAuthService
 from src.services.oauth.providers import VKOAuthProvider, YandexOAuthProvider
@@ -62,6 +67,10 @@ class Container(containers.DeclarativeContainer):
         container.config.set("vk_user_info_url", str(settings.vk_user_info_url))
 
         container.config.set("oauth_state_ttl", str(settings.oauth_state_ttl))
+        
+        # Billing settings
+        container.config.set("payment_service_url", settings.payment_service_url)
+        container.config.set("http_client_timeout", settings.http_client_timeout)
 
     # Database
     db = providers.Singleton(
@@ -87,6 +96,16 @@ class Container(containers.DeclarativeContainer):
 
     audit_log_repository = providers.Factory(
         AuditLogRepository,
+        session_factory=db.provided.session,
+    )
+
+    transaction_repository = providers.Factory(
+        TransactionRepository,
+        session_factory=db.provided.session,
+    )
+
+    subscription_repository = providers.Factory(
+        SubscriptionRepository,
         session_factory=db.provided.session,
     )
 
@@ -180,4 +199,14 @@ class Container(containers.DeclarativeContainer):
         SuperuserService,
         user_repository=user_repository,
         audit_log_repository=audit_log_repository,
+    )
+
+    # Create a settings provider for billing service
+    settings_provider = providers.Singleton(Settings)
+
+    billing_service = providers.Factory(
+        BillingService,
+        settings=settings_provider,
+        transaction_repo=transaction_repository,
+        subscription_repo=subscription_repository,
     )

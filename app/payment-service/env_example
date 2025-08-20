@@ -1,0 +1,16 @@
+# Payment Provider Configuration
+PAYMENT_PROVIDER=yookassa
+
+# YooKassa Configuration
+YOOKASSA_SHOP_ID=shop_id_here
+YOOKASSA_SECRET_KEY=secret_key_here
+
+# Service Configuration
+SERVICE_NAME=payment-service
+SERVICE_PORT=8000
+
+# External Services
+AUTH_SERVICE_URL=http://auth-service:8001
+
+# CORS
+ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8080"]

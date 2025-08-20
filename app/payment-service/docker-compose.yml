@@ -1,0 +1,29 @@
+services:
+  payment-service:
+    build: .
+    container_name: payment-service
+    ports:
+      - "8002:8000"
+    environment:
+      - PAYMENT_PROVIDER=yookassa
+      - YOOKASSA_SHOP_ID=${YOOKASSA_SHOP_ID}
+      - YOOKASSA_SECRET_KEY=${YOOKASSA_SECRET_KEY}
+      - AUTH_SERVICE_URL=http://auth-service:8001
+    env_file:
+      - .env
+    networks:
+      - auth-service_auth_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/payments/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+networks:
+  auth-service_auth_network:
+    external: true
+
+volumes:
+  payment_redis_data:

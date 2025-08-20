@@ -1,8 +1,6 @@
-import redis
 from dependency_injector import containers, providers
 from services.url_service import URLService
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from utils.short_code import ShortCodeGenerator
 
 from core.logging import get_logger
@@ -12,35 +10,15 @@ from core.settings import settings
 logger = get_logger(__name__)
 
 
-def create_redis_client():
-    """Create Redis client with error handling"""
-    try:
-        client = redis.from_url(
-            settings.redis_url,
-            db=settings.redis_db,
-            decode_responses=True,
-            socket_timeout=5,
-            socket_connect_timeout=5,
-            retry_on_timeout=True,
-        )
-        # Test connection
-        client.ping()
-        logger.info("Redis connection established")
-        return client
-    except Exception as e:
-        logger.warning("Redis connection failed, continuing without caching", error=str(e))
-        return None
-
-
 class Container(containers.DeclarativeContainer):
     """Dependency injection container"""
 
     # Configuration
     config = providers.Configuration()
 
-    # Database
-    db_engine = providers.Singleton(
-        create_engine,
+    # Async Database
+    async_db_engine = providers.Singleton(
+        create_async_engine,
         settings.database_url,
         pool_size=settings.database_pool_size,
         max_overflow=settings.database_max_overflow,
@@ -48,12 +26,13 @@ class Container(containers.DeclarativeContainer):
         pool_pre_ping=True,
     )
 
-    db_session_factory = providers.Singleton(
-        sessionmaker, autocommit=False, autoflush=False, bind=db_engine
+    async_db_session_factory = providers.Singleton(
+        async_sessionmaker,
+        bind=async_db_engine,
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
     )
-
-    # Redis (with fallback to None if connection fails)
-    redis_client = providers.Singleton(create_redis_client)
 
     # Utils
     short_code_generator = providers.Singleton(
@@ -63,7 +42,6 @@ class Container(containers.DeclarativeContainer):
     # Services
     url_service = providers.Factory(
         URLService,
-        session_factory=db_session_factory,
-        redis_client=redis_client,
+        session_factory=async_db_session_factory,
         short_code_generator=short_code_generator,
     )

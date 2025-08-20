@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App settings
     app_name: str = "URL Shortening Service"
-    app_version: str = "1.0.0"
+    app_version: str = "1.0.1"
     debug: bool = False
     environment: str = "development"
     
@@ -43,8 +43,13 @@ class Settings(BaseSettings):
     @field_validator('database_url')
     @classmethod
     def validate_database_url(cls, v):
-        if not v.startswith(('postgresql://', 'postgresql+psycopg2://')):
-            raise ValueError('Database URL must be PostgreSQL')
+        allowed_schemes = [
+            'postgresql://',
+            'postgresql+psycopg2://',
+            'postgresql+asyncpg://',
+        ]
+        if not any(v.startswith(scheme) for scheme in allowed_schemes):
+            raise ValueError('Database URL must be PostgreSQL with a supported driver')
         return v
     
     @field_validator('redis_url')

@@ -11,10 +11,8 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:8001
     env_file:
       - .env
-    # !!! Uncomment to activate with other servcies
-    # networks:
-    #   - theatre_network_d
-    #   - auth-service_auth_network
+    networks:
+      - auth-service_auth_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/payments/health"]
       interval: 30s
@@ -23,12 +21,9 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-# !!! Uncomment to activate with other servcies
-# networks:
-#   theatre_network_d:
-#     external: true
-#   auth-service_auth_network:
-#     external: true
+networks:
+  auth-service_auth_network:
+    external: true
 
 volumes:
   payment_redis_data:

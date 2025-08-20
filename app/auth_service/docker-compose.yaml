@@ -13,6 +13,7 @@ services:
       - ENABLE_TRACING=true
       - JAEGER_HOST=jaeger
       - JAEGER_PORT=6831
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
     depends_on:
       - db
       - redis

@@ -142,6 +142,10 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: list[AnyHttpUrl] | list[str] = []
 
+    # External services
+    payment_service_url: str = "http://payment-service:8000"
+    http_client_timeout: int = 10  # seconds
+
     @field_validator("cors_origins", mode="before")
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
         """Parse string CORS origins into list of URLs."""

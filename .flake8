@@ -105,6 +105,7 @@ exclude =
     app/fastapi/auth/jwt_bearer.py,
     app/auth-service/src/services/auth_service.py,
     app/auth-service/src/services/redis_service.py,
+    app/auth_service/src/grpc_service/user_pb2_grpc.py,
     *config*,
 
 format = html

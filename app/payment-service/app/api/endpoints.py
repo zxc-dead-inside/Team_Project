@@ -1,7 +1,7 @@
-# from decimal import Decimal
+from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from app.core.abstractions import PaymentResponse, RefundResponse
 from app.core.exceptions import InvalidPaymentStateError, PaymentNotFoundError, PaymentProviderError
@@ -33,14 +33,14 @@ async def create_payment(
         payment = await service.create_subscription_payment(
             user_id=user_id,
             subscription_type=request.subscription_type,
-            amount=float(request.amount),
+            amount=Decimal(str(request.amount)),
             return_url=request.return_url
         )
         return payment
     except PaymentProviderError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e
 
 
 @router.post("/refund", response_model=RefundResponse)
@@ -53,18 +53,18 @@ async def create_refund(
     try:
         refund = await service.process_refund(
             payment_id=request.payment_id,
-            amount=float(request.amount) if request.amount else None,
+            amount=Decimal(str(request.amount)) if request.amount else None,
             reason=request.reason
         )
         return refund
     except PaymentNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except InvalidPaymentStateError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except PaymentProviderError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e
 
 
 @router.get("/status/{payment_id}", response_model=PaymentResponse)
@@ -75,14 +75,14 @@ async def get_payment_status(
     """Get payment status"""
     
     try:
-        status = await service.check_payment_status(payment_id)
-        return status
+        payment_status = await service.check_payment_status(payment_id)
+        return payment_status
     except PaymentNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except PaymentProviderError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error") from e
 
 
 @router.get("/health")

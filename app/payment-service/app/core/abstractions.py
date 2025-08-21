@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(StrEnum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     CANCELED = "canceled"
@@ -16,7 +16,7 @@ class PaymentStatus(str, Enum):
     PARTIALLY_REFUNDED = "partially_refunded"
 
 
-class Currency(str, Enum):
+class Currency(StrEnum):
     RUB = "RUB"
     USD = "USD"
     EUR = "EUR"

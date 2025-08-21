@@ -23,19 +23,10 @@ logger = logging.getLogger(__name__)
 class YooKassaProvider(PaymentProvider):
     """YooKassa payment provider adapter"""
 
-    STATUS_MAPPING = {
-        "pending": PaymentStatus.PENDING,
-        "waiting_for_capture": PaymentStatus.PENDING,
-        "succeeded": PaymentStatus.SUCCEEDED,
-        "canceled": PaymentStatus.CANCELED,
-    }
-
-    # Direct string mapping for currencies
-    CURRENCY_MAPPING = {
-        Currency.RUB: "RUB",
-        Currency.USD: "USD",
-        Currency.EUR: "EUR",
-    }
+    def _map_status(self, yookassa_status: str) -> PaymentStatus:
+        if yookassa_status == "waiting_for_capture":
+            return PaymentStatus.PENDING
+        return PaymentStatus(yookassa_status)
 
     def __init__(self, shop_id: str, secret_key: str):
         Configuration.account_id = shop_id
@@ -53,7 +44,7 @@ class YooKassaProvider(PaymentProvider):
             payment_data = {
                 "amount": {
                     "value": str(request.amount),
-                    "currency": self.CURRENCY_MAPPING[request.currency],
+                    "currency": request.currency,
                 },
                 "confirmation": {
                     "type": "redirect",
@@ -72,7 +63,7 @@ class YooKassaProvider(PaymentProvider):
 
             return PaymentResponse(
                 provider_payment_id=payment.id,
-                status=self.STATUS_MAPPING.get(payment.status, PaymentStatus.PENDING),
+                status=self._map_status(payment.status),
                 amount=Decimal(payment.amount.value),
                 currency=request.currency,
                 created_at=datetime.fromisoformat(payment.created_at),
@@ -140,12 +131,11 @@ class YooKassaProvider(PaymentProvider):
             if not payment:
                 raise PaymentNotFoundError(f"Payment {payment_id} not found")
 
-            currency_map = {"RUB": Currency.RUB, "USD": Currency.USD, "EUR": Currency.EUR}
-            currency = currency_map.get(payment.amount.currency, Currency.RUB)
+            currency = Currency(payment.amount.currency)
 
             return PaymentResponse(
                 provider_payment_id=payment.id,
-                status=self.STATUS_MAPPING.get(payment.status, PaymentStatus.PENDING),
+                status=self._map_status(payment.status),
                 amount=Decimal(payment.amount.value),
                 currency=currency,
                 created_at=datetime.fromisoformat(payment.created_at),
